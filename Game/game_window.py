@@ -3,7 +3,9 @@
 
 import logging
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import WindowProperties, CardMaker, Texture, SamplerState
+from panda3d.core import (WindowProperties, CardMaker, Texture, SamplerState,
+                          CollisionTraverser, CollisionHandlerPusher,
+                          CollisionSphere, CollisionPlane, Plane, CollisionNode)
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +34,8 @@ class Main(ShowBase):
         log.debug("Setting up the window")
         ShowBase.__init__(self)
 
+        map_size = (-MAP_SIZE['x']/2, MAP_SIZE['x']/2, -MAP_SIZE['y']/2, MAP_SIZE['y']/2)
+
         self.disable_mouse()
 
         log.debug("Resizing the window")
@@ -44,7 +48,7 @@ class Main(ShowBase):
         #which is essentially our go-to way to create flat models
         floor = CardMaker('floor')
         #setting up card size
-        floor.set_frame(-MAP_SIZE['x']/2, MAP_SIZE['x']/2, -MAP_SIZE['y']/2, MAP_SIZE['y']/2)
+        floor.set_frame(*map_size)
         #attaching card to render and creating it's object
         #I honestly dont understand the difference between
         #this and card.reparent_to(render)
@@ -61,6 +65,57 @@ class Main(ShowBase):
         floor_card.look_at((0, 0, -1))
         #and position
         floor_card.set_pos(0, 0, FLOOR_LAYER)
+
+        log.debug(f"Adding invisible walls to collide with")
+        #keeping these for reference, in case my current approach is wrong in long run
+        # wall_node = CollisionNode("wall")
+        # wall_node.add_solid(CollisionSegment(map_size[0], 0, 0, map_size[1], 0, 0))
+        # wall = render.attach_new_node(wall_node)
+        # wall.set_y(map_size[2])
+        # wall.show()
+
+        # wall_node = CollisionNode("wall")
+        # wall_node.add_solid(CollisionSegment(map_size[0], 0, 0, map_size[1], 0, 0))
+        # wall = render.attach_new_node(wall_node)
+        # wall.set_y(map_size[3])
+        # wall.show()
+
+        # wall_node = CollisionNode("wall")
+        # wall_node.add_solid(CollisionSegment(0, map_size[2], 0, 0, map_size[3], 0))
+        # wall = render.attach_new_node(wall_node)
+        # wall.set_x(map_size[0])
+        # wall.show()
+
+        # wall_node = CollisionNode("wall")
+        # wall_node.add_solid(CollisionSegment(0, map_size[2], 0, 0, map_size[3], 0))
+        # wall = render.attach_new_node(wall_node)
+        # wall.set_x(map_size[1])
+        # wall.show()
+
+        #I can probably put this on cycle, but whatever
+        wall_node = CollisionNode("wall")
+        wall_node.add_solid(CollisionPlane(Plane((map_size[0], 0, 0),
+                                                 (map_size[1], 0, 0))))
+        wall = render.attach_new_node(wall_node)
+        wall.show()
+
+        wall_node = CollisionNode("wall")
+        wall_node.add_solid(CollisionPlane(Plane((-map_size[0], 0, 0),
+                                                 (-map_size[1], 0, 0))))
+        wall = render.attach_new_node(wall_node)
+        wall.show()
+
+        wall_node = CollisionNode("wall")
+        wall_node.add_solid(CollisionPlane(Plane((0, map_size[2], 0),
+                                                 (0, map_size[3], 0))))
+        wall = render.attach_new_node(wall_node)
+        wall.show()
+
+        wall_node = CollisionNode("wall")
+        wall_node.add_solid(CollisionPlane(Plane((0, -map_size[2], 0),
+                                                 (0, -map_size[3], 0))))
+        wall = render.attach_new_node(wall_node)
+        wall.show()
 
         log.debug(f"Initializing character")
         character = CardMaker('character')
@@ -85,6 +140,22 @@ class Main(ShowBase):
         #however its useless there, coz character always face camera anyway
         #keeping there for reference to reuse on enemies
         #self.character_card.set_billboard_axis()
+
+        #setting character's collisions
+        collider = CollisionNode("player")
+        #TODO: move this to be under character's legs
+        #right now its centered on character's center
+        collider.add_solid(CollisionSphere(0, 0, 0, 15))
+        character_collision = self.character_card.attach_new_node(collider)
+        character_collision.show()
+
+        #setting collision thingie
+        #I dont exactly understand the syntax, but other variable names failed
+        self.cTrav = CollisionTraverser()
+        self.pusher = CollisionHandlerPusher()
+        self.pusher.set_horizontal(False)
+        base.pusher.add_collider(character_collision, self.character_card)
+        base.cTrav.add_collider(character_collision, self.pusher)
 
         #this will set camera to be right above card.
         #changing first value will rotate the floor
