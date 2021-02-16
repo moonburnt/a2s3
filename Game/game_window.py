@@ -7,18 +7,25 @@ from panda3d.core import WindowProperties, CardMaker, Texture, SamplerState
 
 log = logging.getLogger(__name__)
 
-WINDOW_X = 1280
-WINDOW_Y = 720
+#these will be constants determined in other file
 FLOOR_TEXTURE = 'Textures/floor.png'
 CHARACTER_TEXTURE = 'Textures/character.png'
 MENU_BGM = 'BGM/menu_theme.ogg'
-#this is a float between 0 and 1, e.g 75 equals to "75%"
-MUSIC_VOLUME = 0.75
 #the height where character sprite will reside
 CHARACTER_LAYER = 1
+FLOOR_LAYER = 0
+
+#whatever below are variables that could be changed by user... potentially
+WINDOW_X = 1280
+WINDOW_Y = 720
+#this is a float between 0 and 1, e.g 75 equals to "75%"
+MUSIC_VOLUME = 0.75
 #key is the name of action, value is the name of key in panda syntax
 CONTROLS = {"move_up": "arrow_up", "move_down": "arrow_down",
             "move_left": "arrow_left", "move_right": "arrow_right"}
+
+#it may be nice to add minimal allowed size check, but not today
+MAP_SIZE = {"x": 600, "y": 300}
 
 class Main(ShowBase):
     def __init__(self):
@@ -36,8 +43,8 @@ class Main(ShowBase):
         #initializing new cardmaker object
         #which is essentially our go-to way to create flat models
         floor = CardMaker('floor')
-        #setting up card's size to be 600x600
-        floor.set_frame(-300, 300, -300, 300)
+        #setting up card size
+        floor.set_frame(-MAP_SIZE['x']/2, MAP_SIZE['x']/2, -MAP_SIZE['y']/2, MAP_SIZE['y']/2)
         #attaching card to render and creating it's object
         #I honestly dont understand the difference between
         #this and card.reparent_to(render)
@@ -52,6 +59,8 @@ class Main(ShowBase):
         floor_card.set_texture(floor_image)
         #arranging card's angle
         floor_card.look_at((0, 0, -1))
+        #and position
+        floor_card.set_pos(0, 0, FLOOR_LAYER)
 
         log.debug(f"Initializing character")
         character = CardMaker('character')
@@ -72,13 +81,20 @@ class Main(ShowBase):
         #this is a float, e.g making it non-100% will require
         #values between 0 and 1
         self.character_card.set_transparency(1)
+        #this will be usefull to ensure that character always face camera
+        #however its useless there, coz character always face camera anyway
+        #keeping there for reference to reuse on enemies
+        #self.character_card.set_billboard_axis()
 
         #this will set camera to be right above card.
         #changing first value will rotate the floor
         #changing second - change the angle from which we see floor
-        #the last one is zoom. Should never be less than 2
-        self.camera.set_pos(0, 0, 1000)
+        #the last one is zoom. Negative values flip the screen
+        #maybe I should add ability to change camera's angle, at some point?
+        self.camera.set_pos(0, -700, -500)
         self.camera.look_at(0, 0, 0)
+        #making camera always follow character
+        self.camera.reparent_to(self.character_card)
 
         log.debug(f"Setting up background music")
         menu_theme = loader.load_music(MENU_BGM)
