@@ -7,6 +7,8 @@ from panda3d.core import (WindowProperties, CardMaker, Texture, SamplerState,
                           CollisionTraverser, CollisionHandlerPusher,
                           CollisionSphere, CollisionPlane, Plane, CollisionNode)
 
+from Game import entities
+
 log = logging.getLogger(__name__)
 
 #these will be constants determined in other file
@@ -15,7 +17,7 @@ CHARACTER_TEXTURE = 'Textures/character.png'
 ENEMY_TEXTURE = 'Textures/enemy.png'
 MENU_BGM = 'BGM/menu_theme.ogg'
 #the height where character sprite will reside
-CHARACTER_LAYER = 1
+ENTITY_LAYER = 1
 FLOOR_LAYER = 0
 
 #whatever below are variables that could be changed by user... potentially
@@ -89,53 +91,21 @@ class Main(ShowBase):
                                                  (0, -map_size[3], 0))))
         wall = render.attach_new_node(wall_node)
 
-        log.debug(f"Initializing character")
-        character = CardMaker('player')
-        #character.set_frame_fullscreen_quad()
-        #setting character's card to be 32x32, just like picture
-        character.set_frame(-16, 16, -16, 16)
-        #Im thinking about renaming this to "character object"
-        self.character_card = render.attach_new_node(character.generate())
-        character_image = loader.load_texture(CHARACTER_TEXTURE)
-        #setting filtering method to dont blur our sprite
-        character_image.set_magfilter(SamplerState.FT_nearest)
-        character_image.set_minfilter(SamplerState.FT_nearest)
-        self.character_card.set_texture(character_image)
-        self.character_card.look_at((0, 0, -1))
-        #setting character's position to always render on CHARACTER_LAYER
-        self.character_card.set_pos(0, 0, CHARACTER_LAYER)
-        #enable support for alpha channel
-        #this is a float, e.g making it non-100% will require
-        #values between 0 and 1
-        self.character_card.set_transparency(1)
-
-        #setting character's collisions
-        collider = CollisionNode("player")
-        #TODO: move this to be under character's legs
-        #right now its centered on character's center
-        collider.add_solid(CollisionSphere(0, 0, 0, 15))
-        character_collision = self.character_card.attach_new_node(collider)
+        log.debug(f"Initializing player")
+        self.player_object, player_collision = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
+        #setting character's position to always render on ENTITY_LAYER
+        #making this lower will cause glitches, coz one layer below is background
+        self.player_object.set_pos(0, 0, ENTITY_LAYER)
 
         log.debug(f"Initializing enemy")
-        enemy = CardMaker('enemy')
-        enemy.set_frame(-16, 16, -16, 16)
-        self.enemy_object = render.attach_new_node(enemy.generate())
-        enemy_image = loader.load_texture(ENEMY_TEXTURE)
-        enemy_image.set_magfilter(SamplerState.FT_nearest)
-        enemy_image.set_minfilter(SamplerState.FT_nearest)
-        self.enemy_object.set_texture(enemy_image)
-        self.enemy_object.look_at((0, 0, -1))
-        #its position is termorary, except layer - later to be decided randomly
-        self.enemy_object.set_pos(0, 30, CHARACTER_LAYER)
-        self.enemy_object.set_transparency(1)
+        self.enemy_object, enemy_collision = entities.entity_2D("enemy", ENEMY_TEXTURE, 32, 32)
+        #this is a temporary position, except for layer.
+        #in real game, these will be spawned at random places
+        self.enemy_object.set_pos(0, 30, ENTITY_LAYER)
         #billboard is effect to ensure that object always face camera the same
         #however this one has a flaw - it rotates horizontally when I move char
         #will leave it as is for now, but #TODO: fix or make custom billboard
         self.enemy_object.set_billboard_axis()
-
-        collider = CollisionNode("enemy")
-        collider.add_solid(CollisionSphere(0, 0, 0, 15))
-        enemy_collision = self.enemy_object.attach_new_node(collider)
 
         log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -144,8 +114,8 @@ class Main(ShowBase):
         self.cTrav = CollisionTraverser()
         self.pusher = CollisionHandlerPusher()
         self.pusher.set_horizontal(False)
-        base.pusher.add_collider(character_collision, self.character_card)
-        base.cTrav.add_collider(character_collision, self.pusher)
+        base.pusher.add_collider(player_collision, self.player_object)
+        base.cTrav.add_collider(player_collision, self.pusher)
         #showing all collisions on the scene (e.g visible to render)
         #this is better than manually doing collision.show() for each object
         self.cTrav.show_collisions(render)
@@ -158,7 +128,7 @@ class Main(ShowBase):
         self.camera.set_pos(0, -700, -500)
         self.camera.look_at(0, 0, 0)
         #making camera always follow character
-        self.camera.reparent_to(self.character_card)
+        self.camera.reparent_to(self.player_object)
 
         log.debug(f"Setting up background music")
         menu_theme = loader.load_music(MENU_BGM)
@@ -205,17 +175,13 @@ class Main(ShowBase):
 
         #In future, these speed values may be affected by some items
         if self.controls_status["move_up"]:
-            log.debug("Moving up!")
-            self.character_card.setPos(self.character_card.getPos() + (0, 3, 0))
+            self.player_object.setPos(self.player_object.getPos() + (0, 3, 0))
         if self.controls_status["move_down"]:
-            log.debug("Moving down!")
-            self.character_card.setPos(self.character_card.getPos() + (0, -3, 0))
+            self.player_object.setPos(self.player_object.getPos() + (0, -3, 0))
         if self.controls_status["move_left"]:
-            log.debug("Moving left!")
-            self.character_card.setPos(self.character_card.getPos() + (-3, 0, 0))
+            self.player_object.setPos(self.player_object.getPos() + (-3, 0, 0))
         if self.controls_status["move_right"]:
-            log.debug("Moving right!")
-            self.character_card.setPos(self.character_card.getPos() + (3, 0, 0))
+            self.player_object.setPos(self.player_object.getPos() + (3, 0, 0))
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want

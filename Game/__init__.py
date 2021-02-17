@@ -1,4 +1,5 @@
 from .game_window import *
+from .entities import *
 
 import logging
 
