@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 #these will be constants determined in other file
 FLOOR_TEXTURE = 'Textures/floor.png'
 CHARACTER_TEXTURE = 'Textures/character.png'
+ENEMY_TEXTURE = 'Textures/enemy.png'
 MENU_BGM = 'BGM/menu_theme.ogg'
 #the height where character sprite will reside
 CHARACTER_LAYER = 1
@@ -67,58 +68,29 @@ class Main(ShowBase):
         floor_card.set_pos(0, 0, FLOOR_LAYER)
 
         log.debug(f"Adding invisible walls to collide with")
-        #keeping these for reference, in case my current approach is wrong in long run
-        # wall_node = CollisionNode("wall")
-        # wall_node.add_solid(CollisionSegment(map_size[0], 0, 0, map_size[1], 0, 0))
-        # wall = render.attach_new_node(wall_node)
-        # wall.set_y(map_size[2])
-        # wall.show()
-
-        # wall_node = CollisionNode("wall")
-        # wall_node.add_solid(CollisionSegment(map_size[0], 0, 0, map_size[1], 0, 0))
-        # wall = render.attach_new_node(wall_node)
-        # wall.set_y(map_size[3])
-        # wall.show()
-
-        # wall_node = CollisionNode("wall")
-        # wall_node.add_solid(CollisionSegment(0, map_size[2], 0, 0, map_size[3], 0))
-        # wall = render.attach_new_node(wall_node)
-        # wall.set_x(map_size[0])
-        # wall.show()
-
-        # wall_node = CollisionNode("wall")
-        # wall_node.add_solid(CollisionSegment(0, map_size[2], 0, 0, map_size[3], 0))
-        # wall = render.attach_new_node(wall_node)
-        # wall.set_x(map_size[1])
-        # wall.show()
-
         #I can probably put this on cycle, but whatever
         wall_node = CollisionNode("wall")
         wall_node.add_solid(CollisionPlane(Plane((map_size[0], 0, 0),
                                                  (map_size[1], 0, 0))))
         wall = render.attach_new_node(wall_node)
-        wall.show()
 
         wall_node = CollisionNode("wall")
         wall_node.add_solid(CollisionPlane(Plane((-map_size[0], 0, 0),
                                                  (-map_size[1], 0, 0))))
         wall = render.attach_new_node(wall_node)
-        wall.show()
 
         wall_node = CollisionNode("wall")
         wall_node.add_solid(CollisionPlane(Plane((0, map_size[2], 0),
                                                  (0, map_size[3], 0))))
         wall = render.attach_new_node(wall_node)
-        wall.show()
 
         wall_node = CollisionNode("wall")
         wall_node.add_solid(CollisionPlane(Plane((0, -map_size[2], 0),
                                                  (0, -map_size[3], 0))))
         wall = render.attach_new_node(wall_node)
-        wall.show()
 
         log.debug(f"Initializing character")
-        character = CardMaker('character')
+        character = CardMaker('player')
         #character.set_frame_fullscreen_quad()
         #setting character's card to be 32x32, just like picture
         character.set_frame(-16, 16, -16, 16)
@@ -136,10 +108,6 @@ class Main(ShowBase):
         #this is a float, e.g making it non-100% will require
         #values between 0 and 1
         self.character_card.set_transparency(1)
-        #this will be usefull to ensure that character always face camera
-        #however its useless there, coz character always face camera anyway
-        #keeping there for reference to reuse on enemies
-        #self.character_card.set_billboard_axis()
 
         #setting character's collisions
         collider = CollisionNode("player")
@@ -147,15 +115,40 @@ class Main(ShowBase):
         #right now its centered on character's center
         collider.add_solid(CollisionSphere(0, 0, 0, 15))
         character_collision = self.character_card.attach_new_node(collider)
-        character_collision.show()
 
-        #setting collision thingie
+        log.debug(f"Initializing enemy")
+        enemy = CardMaker('enemy')
+        enemy.set_frame(-16, 16, -16, 16)
+        self.enemy_object = render.attach_new_node(enemy.generate())
+        enemy_image = loader.load_texture(ENEMY_TEXTURE)
+        enemy_image.set_magfilter(SamplerState.FT_nearest)
+        enemy_image.set_minfilter(SamplerState.FT_nearest)
+        self.enemy_object.set_texture(enemy_image)
+        self.enemy_object.look_at((0, 0, -1))
+        #its position is termorary, except layer - later to be decided randomly
+        self.enemy_object.set_pos(0, 30, CHARACTER_LAYER)
+        self.enemy_object.set_transparency(1)
+        #billboard is effect to ensure that object always face camera the same
+        #however this one has a flaw - it rotates horizontally when I move char
+        #will leave it as is for now, but #TODO: fix or make custom billboard
+        self.enemy_object.set_billboard_axis()
+
+        collider = CollisionNode("enemy")
+        collider.add_solid(CollisionSphere(0, 0, 0, 15))
+        enemy_collision = self.enemy_object.attach_new_node(collider)
+
+        log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
+        #seems like these are inherited from ShowBase the same way as render
+        #also "base" isnt typo, but thing of similar matter
         self.cTrav = CollisionTraverser()
         self.pusher = CollisionHandlerPusher()
         self.pusher.set_horizontal(False)
         base.pusher.add_collider(character_collision, self.character_card)
         base.cTrav.add_collider(character_collision, self.pusher)
+        #showing all collisions on the scene (e.g visible to render)
+        #this is better than manually doing collision.show() for each object
+        self.cTrav.show_collisions(render)
 
         #this will set camera to be right above card.
         #changing first value will rotate the floor
