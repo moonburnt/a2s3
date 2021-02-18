@@ -1,18 +1,19 @@
 import logging
-from panda3d.core import CardMaker, Texture, CollisionPlane, Plane, CollisionNode
+from panda3d.core import (CardMaker, SamplerState, TextureStage,
+                          CollisionPlane, Plane, CollisionNode)
+from math import ceil
 from Game import config
 
 log = logging.getLogger(__name__)
 
-#module where I specify character and other 2d objects
+#module where I specify everything related to generating and loading maps
 
 FLOOR_LAYER = config.FLOOR_LAYER
 
 def flat_map_generator(texture, size_x, size_y):
     '''Receive str(path to texture), int(size x) and int(size y). Generate
     flat map of selected size and attach invisible walls to its borders'''
-    log.debug(f"Generating map")
-
+    log.debug("Generating map")
     map_size = (-size_x/2, size_x/2, -size_y/2, size_y/2)
     #initializing new cardmaker object
     #which is essentially our go-to way to create flat models
@@ -23,18 +24,24 @@ def flat_map_generator(texture, size_x, size_y):
     #I honestly dont understand the difference between
     #this and card.reparent_to(render)
     #but both add object to scene graph, making it visible
-    floor_card = render.attach_new_node(floor.generate())
+    floor_object = render.attach_new_node(floor.generate())
     floor_texture = loader.load_texture(texture)
-    #settings its wrap modes (e.g the way it acts if it ends before model
-    floor_texture.set_wrap_u(Texture.WM_repeat)
-    floor_texture.set_wrap_v(Texture.WM_repeat)
-    floor_card.set_texture(floor_texture)
+    #removing the blur
+    floor_texture.set_magfilter(SamplerState.FT_nearest)
+    floor_texture.set_minfilter(SamplerState.FT_nearest)
+    floor_object.set_texture(floor_texture)
+    #determining how often do we need to repeat our texture
+    texture_x = floor_texture.get_orig_file_x_size()
+    texture_y = floor_texture.get_orig_file_y_size()
+    repeats_x = ceil(size_x/texture_x)
+    repeats_y = ceil(size_y/texture_y)
+    #repeating texture to avoid stretching when possible
+    floor_object.set_tex_scale(TextureStage.getDefault(), repeats_x, repeats_y)
     #arranging card's angle
-    floor_card.look_at((0, 0, -1))
-    floor_card.set_pos(0, 0, FLOOR_LAYER)
+    floor_object.look_at((0, 0, -1))
+    floor_object.set_pos(0, 0, FLOOR_LAYER)
 
-
-    log.debug(f"Adding invisible walls to collide with on map's borders")
+    log.debug("Adding invisible walls to collide with on map's borders")
     #I can probably put this on cycle, but whatever
     wall_node = CollisionNode("wall")
     wall_node.add_solid(CollisionPlane(Plane((map_size[0], 0, 0),
