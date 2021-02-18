@@ -1,15 +1,22 @@
 import logging
 from panda3d.core import CardMaker, SamplerState, CollisionSphere, CollisionNode
+from Game import config
 
 log = logging.getLogger(__name__)
 
 #module where I specify character and other 2d objects
 
+STATS = config.STATS
+
 def entity_2D(name, texture, size_x, size_y):
     '''Receive str(name), str(path to texture), int(size x) and int(size y)
-    Returns entity's object and enemy's collisions'''
+    Returns dictionary with entity's name, stats, object, and collision.
+    E.g dic['name']['stats']['object']['collision']'''
     log.debug(f"Initializing {name} object")
 
+    #maybe dont fetch texture like that, but go for same route as with stats?
+    #similar for frame size - we can adjust it automatically based on texture size
+    #e.g try to find it based on name, and if not found - fallback to default
     entity_texture = loader.load_texture(texture)
     #setting filtering method to dont blur our sprite
     entity_texture.set_magfilter(SamplerState.FT_nearest)
@@ -38,4 +45,18 @@ def entity_2D(name, texture, size_x, size_y):
 
     #todo: maybe move ctrav stuff there
 
-    return entity_object, entity_collision
+    #attempting to find stats of entity with name {name} in STATS
+    #if not found - will fallback to STATS['default']
+    if name in STATS:
+        entity_stats = STATS[name]
+    else:
+        entity_stats = STATS['default']
+    log.debug(f"Set {name}'s stats to be {entity_stats}")
+
+    entity = {}
+    entity['name'] = name
+    entity['stats'] = entity_stats
+    entity['object'] = entity_object
+    entity['collision'] = entity_collision
+
+    return entity

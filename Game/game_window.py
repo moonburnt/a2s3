@@ -19,8 +19,6 @@ WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
-PLAYER_STATS = config.PLAYER_STATS
-ENEMY_STATS = config.ENEMY_STATS
 
 class Main(ShowBase):
     def __init__(self):
@@ -39,21 +37,16 @@ class Main(ShowBase):
         map_loader.flat_map_generator(FLOOR_TEXTURE, MAP_SIZE['x'], MAP_SIZE['y'])
 
         log.debug(f"Initializing player")
-        #TODO: create 'self.player' dictionary to hold 'object', 'collision', 'stats' entries
-        self.player_object, player_collision = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
+        self.player = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
-        self.player_object.set_pos(0, 0, ENTITY_LAYER)
-        #setting placeholder for character's stats dictionary
-        ##TODO: move handling of this to entity creator
-        self.player_stats = PLAYER_STATS
+        self.player['object'].set_pos(0, 0, ENTITY_LAYER)
 
         log.debug(f"Initializing enemy")
-        self.enemy_object, enemy_collision = entities.entity_2D("enemy", ENEMY_TEXTURE, 32, 32)
+        self.enemy = entities.entity_2D("enemy", ENEMY_TEXTURE, 32, 32)
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
-        self.enemy_object.set_pos(0, 30, ENTITY_LAYER)
-        self.enemy_stats = ENEMY_STATS
+        self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)
 
         log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -62,8 +55,8 @@ class Main(ShowBase):
         self.cTrav = CollisionTraverser()
         self.pusher = CollisionHandlerPusher()
         self.pusher.set_horizontal(False)
-        base.pusher.add_collider(player_collision, self.player_object)
-        base.cTrav.add_collider(player_collision, self.pusher)
+        base.pusher.add_collider(self.player['collision'], self.player['object'])
+        base.cTrav.add_collider(self.player['collision'], self.pusher)
         #showing all collisions on the scene (e.g visible to render)
         #this is better than manually doing collision.show() for each object
         if config.SHOW_COLLISIONS:
@@ -77,7 +70,7 @@ class Main(ShowBase):
         self.camera.set_pos(0, 700, 500)
         self.camera.look_at(0, 0, 0)
         #making camera always follow character
-        self.camera.reparent_to(self.player_object)
+        self.camera.reparent_to(self.player['object'])
 
         log.debug(f"Setting up background music")
         menu_theme = loader.load_music(MENU_BGM)
@@ -126,25 +119,29 @@ class Main(ShowBase):
 
         #In future, these speed values may be affected by some items
         if self.controls_status["move_up"]:
-            self.player_object.setPos(self.player_object.getPos() + (0, -3, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (0, -3, 0))
         if self.controls_status["move_down"]:
-            self.player_object.setPos(self.player_object.getPos() + (0, 3, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (0, 3, 0))
         if self.controls_status["move_left"]:
-            self.player_object.setPos(self.player_object.getPos() + (3, 0, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (3, 0, 0))
         if self.controls_status["move_right"]:
-            self.player_object.setPos(self.player_object.getPos() + (-3, 0, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (-3, 0, 0))
         #this is placeholder, that will automatically deal damage to enemy
         #todo: collision check, cooldown, etc etc etc
         if self.controls_status["attack"]:
-            self.damage_target(self.enemy_stats, self.player_stats['dmg'])
+            self.damage_target(self.enemy, self.player['stats']['dmg'])
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
         return action.cont
 
     def damage_target(self, target, amount = 0):
-        '''Receive str(target_stats). Optionally receive int(amount of damage).
-        If not specified - will use 0. Decrease target's stats['hp'] by damage'''
+        '''Receive dic(name of target). Optionally receive int(amount of damage).
+        If not specified - will use 0. Decrease target's stats['hp'] by damage.
+        Example usage:
+        damage_target(enemy, player['stats']['dmg'], where enemy is
+        enemy['name']['stats']['object']['collision'] and ['stats'] has ['hp']'''
         #I probably dont need to return this, for as long as its used on self. objects
-        target['hp'] -= amount
-        log.debug(f"{target} has received {amount} damage and is now on {target['hp']} hp")
+        target['stats']['hp'] -= amount
+        log.debug(f"{target['name']} has received {amount} damage "
+                  f"and is now on {target['stats']['hp']} hp")

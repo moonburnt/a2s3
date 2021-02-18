@@ -21,10 +21,11 @@ MUSIC_VOLUME = 0.75
 CONTROLS = {"move_up": "arrow_up", "move_down": "arrow_down",
             "move_left": "arrow_left", "move_right": "arrow_right",
             "attack": "z"}
-#placeholders stats to use
-#will later move to jsons or whatever configuration files I will choose to use
-PLAYER_STATS = {"hp": 100, "dmg": 10}
-ENEMY_STATS = {"hp": 100, "dmg": 10}
+#placeholder stats to use
+#later I will build this from jsons or whatever configuration files I will choose
+STATS = {'default': {'hp': 50, 'dmg': 0},
+         'player': {"hp": 100, "dmg": 10},
+         'enemy': {"hp": 100, "dmg": 10}}
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = {"x": 600, "y": 300}
 
