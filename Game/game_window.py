@@ -19,6 +19,8 @@ WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
+PLAYER_STATS = config.PLAYER_STATS
+ENEMY_STATS = config.ENEMY_STATS
 
 class Main(ShowBase):
     def __init__(self):
@@ -37,16 +39,21 @@ class Main(ShowBase):
         map_loader.flat_map_generator(FLOOR_TEXTURE, MAP_SIZE['x'], MAP_SIZE['y'])
 
         log.debug(f"Initializing player")
+        #TODO: create 'self.player' dictionary to hold 'object', 'collision', 'stats' entries
         self.player_object, player_collision = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player_object.set_pos(0, 0, ENTITY_LAYER)
+        #setting placeholder for character's stats dictionary
+        ##TODO: move handling of this to entity creator
+        self.player_stats = PLAYER_STATS
 
         log.debug(f"Initializing enemy")
         self.enemy_object, enemy_collision = entities.entity_2D("enemy", ENEMY_TEXTURE, 32, 32)
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy_object.set_pos(0, 30, ENTITY_LAYER)
+        self.enemy_stats = ENEMY_STATS
 
         log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -85,7 +92,7 @@ class Main(ShowBase):
 
         #dictionary that stores default state of keys
         self.controls_status = {"move_up": False, "move_down": False,
-                                "move_left": False, "move_right": False}
+                                "move_left": False, "move_right": False, "attack": False}
 
         #.accept() is method that receive input from buttons and perform stuff
         #its format is the following:
@@ -102,6 +109,8 @@ class Main(ShowBase):
         self.accept(f"{CONTROLS['move_left']}-up", self.change_key_state, ["move_left", False])
         self.accept(CONTROLS['move_right'], self.change_key_state, ["move_right", True])
         self.accept(f"{CONTROLS['move_right']}-up", self.change_key_state, ["move_right", False])
+        self.accept(CONTROLS['attack'], self.change_key_state, ["attack", True])
+        self.accept(f"{CONTROLS['attack']}-up", self.change_key_state, ["attack", False])
 
     def change_key_state(self, key_name, key_status):
         '''Receive str(key_name) and bool(key_status).
@@ -124,7 +133,18 @@ class Main(ShowBase):
             self.player_object.setPos(self.player_object.getPos() + (3, 0, 0))
         if self.controls_status["move_right"]:
             self.player_object.setPos(self.player_object.getPos() + (-3, 0, 0))
+        #this is placeholder, that will automatically deal damage to enemy
+        #todo: collision check, cooldown, etc etc etc
+        if self.controls_status["attack"]:
+            self.damage_target(self.enemy_stats, self.player_stats['dmg'])
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
         return action.cont
+
+    def damage_target(self, target, amount = 0):
+        '''Receive str(target_stats). Optionally receive int(amount of damage).
+        If not specified - will use 0. Decrease target's stats['hp'] by damage'''
+        #I probably dont need to return this, for as long as its used on self. objects
+        target['hp'] -= amount
+        log.debug(f"{target} has received {amount} damage and is now on {target['hp']} hp")
