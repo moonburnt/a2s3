@@ -10,17 +10,11 @@ from Game import entities, map_loader, config, assets_loader
 
 log = logging.getLogger(__name__)
 
-#FLOOR_TEXTURE = config.FLOOR_TEXTURE
-#CHARACTER_TEXTURE = config.CHARACTER_TEXTURE
-#ENEMY_TEXTURE = config.ENEMY_TEXTURE
-#MENU_BGM = config.MENU_BGM
 ENTITY_LAYER = config.ENTITY_LAYER
 WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
-#ENEMY_DEATH_SFX = config.ENEMY_DEATH_SFX
-#DAMAGE_SFX = config.DAMAGE_SFX
 
 class Main(ShowBase):
     def __init__(self):
@@ -175,6 +169,11 @@ class Main(ShowBase):
         target.clear()
         log.debug(f"{name} is now dead")
 
-        #this is placeholder. Will need to track target's name for different sounds
-        #say, if player has been killed or enemy
-        self.assets['sfx']['enemy_death'].play()
+        death_sound = f"{name}_death"
+        #playing different sounds, depending if target has its own death sound or not
+        #if self.assets['sfx'][death_sound]:
+        try:
+            self.assets['sfx'][death_sound].play()
+        #else:
+        except KeyError:
+            self.assets['sfx']['default_death'].play()
