@@ -1,17 +1,14 @@
+from os.path import join
 import logging
 
 log = logging.getLogger(__name__)
 
 #module where I specify default config settings to reffer to from other modules
 
-FLOOR_TEXTURE = 'Textures/floor.png'
-CHARACTER_TEXTURE = 'Textures/character.png'
-ENEMY_TEXTURE = 'Textures/enemy.png'
-MENU_BGM = 'BGM/menu_theme.ogg'
-PLAYER_DEATH_SFX = 'SFX/player_death.ogg'
-ENEMY_DEATH_SFX = 'SFX/enemy_death.ogg'
-DEFAULT_DEATH_SFX = 'SFX/default_death.ogg'
-DAMAGE_SFX = 'SFX/damage.ogg'
+GAME_DIR = '.'
+SPRITE_DIR = join(GAME_DIR, 'Sprites')
+MUSIC_DIR = join(GAME_DIR, 'BGM')
+SFX_DIR = join(GAME_DIR, 'SFX')
 
 #the height where character sprite will reside
 #I dont understand the exact mechanism and will probably get issues in future

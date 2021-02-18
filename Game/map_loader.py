@@ -15,6 +15,10 @@ def flat_map_generator(texture, size_x, size_y):
     flat map of selected size and attach invisible walls to its borders'''
     log.debug("Generating map")
     map_size = (-size_x/2, size_x/2, -size_y/2, size_y/2)
+
+    #removing the blur from our texture
+    texture.set_magfilter(SamplerState.FT_nearest)
+    texture.set_minfilter(SamplerState.FT_nearest)
     #initializing new cardmaker object
     #which is essentially our go-to way to create flat models
     floor = CardMaker('floor')
@@ -25,14 +29,10 @@ def flat_map_generator(texture, size_x, size_y):
     #this and card.reparent_to(render)
     #but both add object to scene graph, making it visible
     floor_object = render.attach_new_node(floor.generate())
-    floor_texture = loader.load_texture(texture)
-    #removing the blur
-    floor_texture.set_magfilter(SamplerState.FT_nearest)
-    floor_texture.set_minfilter(SamplerState.FT_nearest)
-    floor_object.set_texture(floor_texture)
+    floor_object.set_texture(texture)
     #determining how often do we need to repeat our texture
-    texture_x = floor_texture.get_orig_file_x_size()
-    texture_y = floor_texture.get_orig_file_y_size()
+    texture_x = texture.get_orig_file_x_size()
+    texture_y = texture.get_orig_file_y_size()
     repeats_x = ceil(size_x/texture_x)
     repeats_y = ceil(size_y/texture_y)
     #repeating texture to avoid stretching when possible

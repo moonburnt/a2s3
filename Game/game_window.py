@@ -6,21 +6,21 @@ from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (WindowProperties, CollisionTraverser,
                           CollisionHandlerPusher)
 
-from Game import entities, map_loader, config
+from Game import entities, map_loader, config, assets_loader
 
 log = logging.getLogger(__name__)
 
-FLOOR_TEXTURE = config.FLOOR_TEXTURE
-CHARACTER_TEXTURE = config.CHARACTER_TEXTURE
-ENEMY_TEXTURE = config.ENEMY_TEXTURE
-MENU_BGM = config.MENU_BGM
+#FLOOR_TEXTURE = config.FLOOR_TEXTURE
+#CHARACTER_TEXTURE = config.CHARACTER_TEXTURE
+#ENEMY_TEXTURE = config.ENEMY_TEXTURE
+#MENU_BGM = config.MENU_BGM
 ENTITY_LAYER = config.ENTITY_LAYER
 WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
-ENEMY_DEATH_SFX = config.ENEMY_DEATH_SFX
-DAMAGE_SFX = config.DAMAGE_SFX
+#ENEMY_DEATH_SFX = config.ENEMY_DEATH_SFX
+#DAMAGE_SFX = config.DAMAGE_SFX
 
 class Main(ShowBase):
     def __init__(self):
@@ -30,32 +30,30 @@ class Main(ShowBase):
         #disabling mouse to dont mess with camera
         self.disable_mouse()
 
+        log.debug("Loading assets")
+        self.assets = assets_loader.load_assets()
+
         log.debug("Resizing the window")
         window_settings = WindowProperties()
         window_settings.set_size(WINDOW_SIZE['x'], WINDOW_SIZE['y'])
         self.win.request_properties(window_settings)
 
-        log.debug(f"Generating the map")
-        map_loader.flat_map_generator(FLOOR_TEXTURE, MAP_SIZE['x'], MAP_SIZE['y'])
+        log.debug("Generating the map")
+        map_loader.flat_map_generator(self.assets['sprites']['floor'], MAP_SIZE['x'], MAP_SIZE['y'])
 
-        log.debug(f"Initializing player")
-        self.player = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
+        log.debug("Initializing player")
+        self.player = entities.entity_2D("player", self.assets['sprites']['character'], 32, 32)
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player['object'].set_pos(0, 0, ENTITY_LAYER)
 
-        log.debug(f"Initializing enemy")
-        self.enemy = entities.entity_2D("enemy", ENEMY_TEXTURE, 32, 32)
+        log.debug("Initializing enemy")
+        self.enemy = entities.entity_2D("enemy", self.assets['sprites']['enemy'], 32, 32)
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)
 
-        #todo: move that thing to entity_2D generation, probably?
-        log.debug(f"Initializing sounds")
-        self.damage_sfx = loader.load_sfx(DAMAGE_SFX)
-        self.enemy_death_sfx = loader.load_sfx(ENEMY_DEATH_SFX)
-
-        log.debug(f"Initializing collision processors")
+        log.debug("Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
         #seems like these are inherited from ShowBase the same way as render
         #also "base" isnt typo, but thing of similar matter
@@ -80,7 +78,8 @@ class Main(ShowBase):
         self.camera.reparent_to(self.player['object'])
 
         log.debug(f"Setting up background music")
-        menu_theme = loader.load_music(MENU_BGM)
+        #menu_theme = loader.load_music(MENU_BGM)
+        menu_theme = self.assets['music']['menu_theme']
         menu_theme.set_loop(True)
         menu_theme.set_volume(MUSIC_VOLUME)
         menu_theme.play()
@@ -163,7 +162,7 @@ class Main(ShowBase):
 
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
-        self.damage_sfx.play()
+        self.assets['sfx']['damage'].play()
 
     def kill(self, target):
         '''Receive dic(name of target). Valid target's dictionary should be like:
@@ -178,4 +177,4 @@ class Main(ShowBase):
 
         #this is placeholder. Will need to track target's name for different sounds
         #say, if player has been killed or enemy
-        self.enemy_death_sfx.play()
+        self.assets['sfx']['enemy_death'].play()

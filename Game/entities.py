@@ -17,17 +17,17 @@ def entity_2D(name, texture, size_x, size_y):
     #maybe dont fetch texture like that, but go for same route as with stats?
     #similar for frame size - we can adjust it automatically based on texture size
     #e.g try to find it based on name, and if not found - fallback to default
-    entity_texture = loader.load_texture(texture)
+
     #setting filtering method to dont blur our sprite
-    entity_texture.set_magfilter(SamplerState.FT_nearest)
-    entity_texture.set_minfilter(SamplerState.FT_nearest)
+    texture.set_magfilter(SamplerState.FT_nearest)
+    texture.set_minfilter(SamplerState.FT_nearest)
 
     entity_frame = CardMaker(name)
     #setting character's size. Say, for 32x32 all of these need to be 16
     entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
     entity_object = render.attach_new_node(entity_frame.generate())
-    entity_object.set_texture(entity_texture)
+    entity_object.set_texture(texture)
     #billboard is effect to ensure that object always face camera the same
     #e.g this is the key to achieve that "2.5D style" I aim for
     entity_object.set_billboard_point_eye()
