@@ -10,10 +10,12 @@ log = logging.getLogger(__name__)
 
 FLOOR_LAYER = config.FLOOR_LAYER
 
-def flat_map_generator(texture, size_x, size_y):
-    '''Receive str(path to texture), int(size x) and int(size y). Generate
+def flat_map_generator(texture, size):
+    '''Receive str(path to texture) and tuple with size values (x, y). Generate
     flat map of selected size and attach invisible walls to its borders'''
-    log.debug("Generating map")
+    #todo: add fallback values in case size hasnt been specified
+    size_x, size_y = size
+    log.debug(f"Generating map of size {size_x}x{size_y}")
     map_size = (-size_x/2, size_x/2, -size_y/2, size_y/2)
 
     #removing the blur from our texture

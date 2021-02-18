@@ -8,22 +8,27 @@ log = logging.getLogger(__name__)
 
 STATS = config.STATS
 
-def entity_2D(name, texture, size_x, size_y):
-    '''Receive str(name), str(path to texture), int(size x) and int(size y)
+def entity_2D(name, texture, size=None):
+    '''Receive str(name), str(path to texture). Optionally receive size=(x, y).
+    Generate 2D object of selected size (if none - then based on image size).
     Returns dictionary with entity's name, stats, object, and collision.
     E.g dic['name']['stats']['object']['collision']'''
     log.debug(f"Initializing {name} object")
 
-    #maybe dont fetch texture like that, but go for same route as with stats?
-    #similar for frame size - we can adjust it automatically based on texture size
-    #e.g try to find it based on name, and if not found - fallback to default
+    if not size:
+        log.debug("Attempting to determine object size from image")
+        size_x = texture.get_orig_file_x_size()
+        size_y = texture.get_orig_file_y_size()
+    else:
+        size_x, size_y = size
+    log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
 
     #setting filtering method to dont blur our sprite
     texture.set_magfilter(SamplerState.FT_nearest)
     texture.set_minfilter(SamplerState.FT_nearest)
 
     entity_frame = CardMaker(name)
-    #setting character's size. Say, for 32x32 all of these need to be 16
+    #setting frame's size. Say, for 32x32 sprite all of these need to be 16
     entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
     entity_object = render.attach_new_node(entity_frame.generate())
