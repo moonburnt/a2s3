@@ -129,7 +129,9 @@ class Main(ShowBase):
         #this is placeholder, that will automatically deal damage to enemy
         #todo: collision check, cooldown, etc etc etc
         if self.controls_status["attack"]:
-            self.damage_target(self.enemy, self.player['stats']['dmg'])
+            #temporary check to ensure that enemy is alive
+            if self.enemy:
+                self.damage_target(self.enemy, self.player['stats']['dmg'])
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
@@ -142,6 +144,22 @@ class Main(ShowBase):
         damage_target(enemy, player['stats']['dmg'], where enemy is
         enemy['name']['stats']['object']['collision'] and ['stats'] has ['hp']'''
         #I probably dont need to return this, for as long as its used on self. objects
+        #I cant assign variables there, coz it will break the thing
         target['stats']['hp'] -= amount
         log.debug(f"{target['name']} has received {amount} damage "
                   f"and is now on {target['stats']['hp']} hp")
+
+        #idk if it should be there or on separate loop, but for now it will do
+        if target['stats']['hp'] <= 0:
+            self.kill(target)
+
+    def kill(self, target):
+        '''Receive dic(name of target). Valid target's dictionary should be like:
+        target['name']['stats']['collision]['object']. Remove collision and object
+        nodes, then remove target itself'''
+        #saving name into variable to print into debug output after target's clear
+        name = target['name']
+        target['collision'].remove_node()
+        target['object'].remove_node()
+        target.clear()
+        log.debug(f"{name} is now dead")
