@@ -19,6 +19,8 @@ WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
+ENEMY_DEATH_SFX = config.ENEMY_DEATH_SFX
+DAMAGE_SFX = config.DAMAGE_SFX
 
 class Main(ShowBase):
     def __init__(self):
@@ -47,6 +49,11 @@ class Main(ShowBase):
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)
+
+        #todo: move that thing to entity_2D generation, probably?
+        log.debug(f"Initializing sounds")
+        self.damage_sfx = loader.load_sfx(DAMAGE_SFX)
+        self.enemy_death_sfx = loader.load_sfx(ENEMY_DEATH_SFX)
 
         log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -152,6 +159,11 @@ class Main(ShowBase):
         #idk if it should be there or on separate loop, but for now it will do
         if target['stats']['hp'] <= 0:
             self.kill(target)
+            return
+
+        #this is placeholder. May need to track target's name in future to play
+        #different damage sounds
+        self.damage_sfx.play()
 
     def kill(self, target):
         '''Receive dic(name of target). Valid target's dictionary should be like:
@@ -163,3 +175,7 @@ class Main(ShowBase):
         target['object'].remove_node()
         target.clear()
         log.debug(f"{name} is now dead")
+
+        #this is placeholder. Will need to track target's name for different sounds
+        #say, if player has been killed or enemy
+        self.enemy_death_sfx.play()

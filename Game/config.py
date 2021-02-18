@@ -8,6 +8,11 @@ FLOOR_TEXTURE = 'Textures/floor.png'
 CHARACTER_TEXTURE = 'Textures/character.png'
 ENEMY_TEXTURE = 'Textures/enemy.png'
 MENU_BGM = 'BGM/menu_theme.ogg'
+PLAYER_DEATH_SFX = 'SFX/player_death.ogg'
+ENEMY_DEATH_SFX = 'SFX/enemy_death.ogg'
+DEFAULT_DEATH_SFX = 'SFX/default_death.ogg'
+DAMAGE_SFX = 'SFX/damage.ogg'
+
 #the height where character sprite will reside
 #I dont understand the exact mechanism and will probably get issues in future
 #but for now layers difference needs to be kind of the same as half of sprite's y
