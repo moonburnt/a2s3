@@ -21,7 +21,9 @@ def entity_2D(name, texture, size_x, size_y):
 
     entity_object = render.attach_new_node(entity_frame.generate())
     entity_object.set_texture(entity_texture)
-    entity_object.look_at((0, 0, -1))
+    #billboard is effect to ensure that object always face camera the same
+    #e.g this is the key to achieve that "2.5D style" I aim for
+    entity_object.set_billboard_point_eye()
     #enable support for alpha channel
     #this is a float, e.g making it non-100% will require
     #values between 0 and 1

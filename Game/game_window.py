@@ -17,9 +17,10 @@ CHARACTER_TEXTURE = 'Textures/character.png'
 ENEMY_TEXTURE = 'Textures/enemy.png'
 MENU_BGM = 'BGM/menu_theme.ogg'
 #the height where character sprite will reside
-ENTITY_LAYER = 1
-FLOOR_LAYER = 0
-
+#I dont understand the exact mechanism and will probably get issues in future
+#but for now layers difference needs to be kind of the same as half of sprite's y
+ENTITY_LAYER = 16
+FLOOR_LAYER = ENTITY_LAYER-16
 #whatever below are variables that could be changed by user... potentially
 WINDOW_X = 1280
 WINDOW_Y = 720
@@ -66,8 +67,8 @@ class Main(ShowBase):
         floor_card.set_texture(floor_image)
         #arranging card's angle
         floor_card.look_at((0, 0, -1))
-        #and position
         floor_card.set_pos(0, 0, FLOOR_LAYER)
+
 
         log.debug(f"Adding invisible walls to collide with")
         #I can probably put this on cycle, but whatever
@@ -94,7 +95,7 @@ class Main(ShowBase):
         log.debug(f"Initializing player")
         self.player_object, player_collision = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
         #setting character's position to always render on ENTITY_LAYER
-        #making this lower will cause glitches, coz one layer below is background
+        #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player_object.set_pos(0, 0, ENTITY_LAYER)
 
         log.debug(f"Initializing enemy")
@@ -102,10 +103,6 @@ class Main(ShowBase):
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy_object.set_pos(0, 30, ENTITY_LAYER)
-        #billboard is effect to ensure that object always face camera the same
-        #however this one has a flaw - it rotates horizontally when I move char
-        #will leave it as is for now, but #TODO: fix or make custom billboard
-        self.enemy_object.set_billboard_axis()
 
         log.debug(f"Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -125,7 +122,7 @@ class Main(ShowBase):
         #changing second - change the angle from which we see floor
         #the last one is zoom. Negative values flip the screen
         #maybe I should add ability to change camera's angle, at some point?
-        self.camera.set_pos(0, -700, -500)
+        self.camera.set_pos(0, 700, 500)
         self.camera.look_at(0, 0, 0)
         #making camera always follow character
         self.camera.reparent_to(self.player_object)
@@ -175,13 +172,13 @@ class Main(ShowBase):
 
         #In future, these speed values may be affected by some items
         if self.controls_status["move_up"]:
-            self.player_object.setPos(self.player_object.getPos() + (0, 3, 0))
-        if self.controls_status["move_down"]:
             self.player_object.setPos(self.player_object.getPos() + (0, -3, 0))
+        if self.controls_status["move_down"]:
+            self.player_object.setPos(self.player_object.getPos() + (0, 3, 0))
         if self.controls_status["move_left"]:
-            self.player_object.setPos(self.player_object.getPos() + (-3, 0, 0))
-        if self.controls_status["move_right"]:
             self.player_object.setPos(self.player_object.getPos() + (3, 0, 0))
+        if self.controls_status["move_right"]:
+            self.player_object.setPos(self.player_object.getPos() + (-3, 0, 0))
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
