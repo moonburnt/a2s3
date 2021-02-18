@@ -59,7 +59,8 @@ class Main(ShowBase):
         base.cTrav.add_collider(player_collision, self.pusher)
         #showing all collisions on the scene (e.g visible to render)
         #this is better than manually doing collision.show() for each object
-        self.cTrav.show_collisions(render)
+        if config.SHOW_COLLISIONS:
+            self.cTrav.show_collisions(render)
 
         #this will set camera to be right above card.
         #changing first value will rotate the floor

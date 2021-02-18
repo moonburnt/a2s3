@@ -4,12 +4,26 @@
 
 import logging
 import Game
+import argparse
 
 log = logging.getLogger()
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter(fmt='[%(asctime)s][%(name)s][%(levelname)s] %(message)s', datefmt='%H:%M:%S'))
 log.addHandler(handler)
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--debug", help="Add debug messages to output",
+                action = "store_true")
+ap.add_argument("--show-collisions", help="Toggle showcase of objects collisions",
+                action = "store_true")
+args = ap.parse_args()
+
+if args.debug:
+    log.setLevel(logging.DEBUG)
+
+if args.show_collisions:
+    Game.config.SHOW_COLLISIONS = True
 
 play = Game.game_window.Main()
 log.info("Running the game")
