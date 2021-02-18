@@ -1,5 +1,6 @@
 from .game_window import *
 from .entities import *
+from .config import *
 
 import logging
 
