@@ -3,11 +3,10 @@
 
 import logging
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import (WindowProperties, CardMaker, Texture, SamplerState,
-                          CollisionTraverser, CollisionHandlerPusher,
-                          CollisionSphere, CollisionPlane, Plane, CollisionNode)
+from panda3d.core import (WindowProperties, CollisionTraverser,
+                          CollisionHandlerPusher)
 
-from Game import entities, config
+from Game import entities, map_loader, config
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +15,6 @@ CHARACTER_TEXTURE = config.CHARACTER_TEXTURE
 ENEMY_TEXTURE = config.ENEMY_TEXTURE
 MENU_BGM = config.MENU_BGM
 ENTITY_LAYER = config.ENTITY_LAYER
-FLOOR_LAYER = config.FLOOR_LAYER
 WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
@@ -27,8 +25,7 @@ class Main(ShowBase):
         log.debug("Setting up the window")
         ShowBase.__init__(self)
 
-        map_size = (-MAP_SIZE['x']/2, MAP_SIZE['x']/2, -MAP_SIZE['y']/2, MAP_SIZE['y']/2)
-
+        #disabling mouse to dont mess with camera
         self.disable_mouse()
 
         log.debug("Resizing the window")
@@ -36,50 +33,8 @@ class Main(ShowBase):
         window_settings.set_size(WINDOW_SIZE['x'], WINDOW_SIZE['y'])
         self.win.request_properties(window_settings)
 
-        log.debug("Initializing floor")
-        #initializing new cardmaker object
-        #which is essentially our go-to way to create flat models
-        floor = CardMaker('floor')
-        #setting up card size
-        floor.set_frame(*map_size)
-        #attaching card to render and creating it's object
-        #I honestly dont understand the difference between
-        #this and card.reparent_to(render)
-        #but both add object to scene graph, making it visible
-        floor_card = render.attach_new_node(floor.generate())
-        #loading texture
-        floor_image = loader.load_texture(FLOOR_TEXTURE)
-        #settings its wrap modes (e.g the way it acts if it ends before model
-        floor_image.set_wrap_u(Texture.WM_repeat)
-        floor_image.set_wrap_v(Texture.WM_repeat)
-        #applying texture to card
-        floor_card.set_texture(floor_image)
-        #arranging card's angle
-        floor_card.look_at((0, 0, -1))
-        floor_card.set_pos(0, 0, FLOOR_LAYER)
-
-
-        log.debug(f"Adding invisible walls to collide with")
-        #I can probably put this on cycle, but whatever
-        wall_node = CollisionNode("wall")
-        wall_node.add_solid(CollisionPlane(Plane((map_size[0], 0, 0),
-                                                 (map_size[1], 0, 0))))
-        wall = render.attach_new_node(wall_node)
-
-        wall_node = CollisionNode("wall")
-        wall_node.add_solid(CollisionPlane(Plane((-map_size[0], 0, 0),
-                                                 (-map_size[1], 0, 0))))
-        wall = render.attach_new_node(wall_node)
-
-        wall_node = CollisionNode("wall")
-        wall_node.add_solid(CollisionPlane(Plane((0, map_size[2], 0),
-                                                 (0, map_size[3], 0))))
-        wall = render.attach_new_node(wall_node)
-
-        wall_node = CollisionNode("wall")
-        wall_node.add_solid(CollisionPlane(Plane((0, -map_size[2], 0),
-                                                 (0, -map_size[3], 0))))
-        wall = render.attach_new_node(wall_node)
+        log.debug(f"Generating the map")
+        map_loader.flat_map_generator(FLOOR_TEXTURE, MAP_SIZE['x'], MAP_SIZE['y'])
 
         log.debug(f"Initializing player")
         self.player_object, player_collision = entities.entity_2D("player", CHARACTER_TEXTURE, 32, 32)
