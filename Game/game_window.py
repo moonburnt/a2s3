@@ -128,8 +128,12 @@ class Main(ShowBase):
             self.player['object'].setPos(self.player['object'].getPos() + (0, mov_speed, 0))
         if self.controls_status["move_left"]:
             self.player['object'].setPos(self.player['object'].getPos() + (mov_speed, 0, 0))
+            #this isnt efficient, coz it keep changing texture each frame
+            #but this is just placeholder and will be moved away anyway
+            entity_2D.change_sprite(self.player, 1)
         if self.controls_status["move_right"]:
             self.player['object'].setPos(self.player['object'].getPos() + (-mov_speed, 0, 0))
+            entity_2D.change_sprite(self.player, 0)
         #this is placeholder, that will automatically deal damage to enemy
         #todo: collision check, cooldown, etc etc etc
         if self.controls_status["attack"]:

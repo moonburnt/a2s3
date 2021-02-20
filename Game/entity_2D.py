@@ -74,8 +74,14 @@ def cut_spritesheet(spritesheet, size):
 
     return sprites
 
-#THIS SHIT WORKS. But it will fail non-perfect spritesheets. But it needs to be moved
-#to separate function. So many "but"'s. But for now its fine and Im going to sleep
+def change_sprite(entity, sprite):
+    '''Receive entity dictionary (from make_object function) and sprite number.
+    Change entity's sprite to be selected number'''
+    #this isnt the best thing in the world, as it cant iterate tru sprites yet
+    #TODO: add ability to play selected animation sets with specified speed
+    log.debug(f"Changing sprite of {entity['name']} to {sprite}")
+    entity['object'].set_tex_offset(TextureStage.getDefault(), *entity['sprites'][sprite])
+
 def make_object(name, texture, size = None):
     '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
     Generate 2D object of selected size (if none - then based on image size).
@@ -161,5 +167,6 @@ def make_object(name, texture, size = None):
     entity['stats'] = entity_stats
     entity['object'] = entity_object
     entity['collision'] = entity_collision
+    entity['sprites'] = offsets
 
     return entity
