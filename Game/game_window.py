@@ -6,7 +6,7 @@ from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (WindowProperties, CollisionTraverser,
                           CollisionHandlerPusher)
 
-from Game import entities, map_loader, config, assets_loader
+from Game import entity_2D, map_loader, config, assets_loader
 
 log = logging.getLogger(__name__)
 
@@ -37,13 +37,13 @@ class Main(ShowBase):
                                       size = (MAP_SIZE['x'], MAP_SIZE['y']))
 
         log.debug("Initializing player")
-        self.player = entities.entity_2D("player", self.assets['sprites']['character'])
+        self.player = entity_2D.make_object("player", self.assets['sprites']['character'], (32, 32))
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player['object'].set_pos(0, 0, ENTITY_LAYER)
 
         log.debug("Initializing enemy")
-        self.enemy = entities.entity_2D("enemy", self.assets['sprites']['enemy'])
+        self.enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'], (32, 32))
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)

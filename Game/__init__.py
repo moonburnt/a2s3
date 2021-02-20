@@ -1,5 +1,5 @@
 from .game_window import *
-from .entities import *
+from .entity_2D import *
 from .config import *
 from .map_loader import *
 from .assets_loader import *
