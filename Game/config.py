@@ -14,11 +14,13 @@ SFX_DIR = join(GAME_DIR, 'SFX')
 #also to make some things that rely on these variables to adjust their values
 #on fly in case they will be changed
 DEFAULT_SPRITE_SIZE = (32, 32)
-#the height where character sprite will reside
-#I dont understand the exact mechanism and will probably get issues in future
-#but for now layers difference needs to be kind of the same as half of sprite's y
-ENTITY_LAYER = DEFAULT_SPRITE_SIZE[0]
-FLOOR_LAYER = ENTITY_LAYER-DEFAULT_SPRITE_SIZE[0] #effectively zero
+#the height where character sprite will reside. This need to be half of default
+#sprite's size's y, because character's placement counts from center of char's
+#object. Make it lower - and legs will be below ground. Higher - and chararacters
+#will fly above the ground. This will backfire if there are characters of different
+#heights, but for now it will do. And floor layer is always zero. Because yes
+ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
+FLOOR_LAYER = 0
 #whatever below are variables that could be changed by user... potentially
 WINDOW_SIZE = (1280, 720)
 #this is a float between 0 and 1, e.g 75 equals to "75%"
