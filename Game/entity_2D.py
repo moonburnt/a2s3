@@ -134,7 +134,8 @@ def make_object(name, texture, size = None):
     #entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[1])
     #but, by default, offset should be always set to 0. In case our object has
     #just one sprite. Or something like that
-    entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[0])
+    default_sprite = 0
+    entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[default_sprite])
 
     #billboard is effect to ensure that object always face camera the same
     #e.g this is the key to achieve that "2.5D style" I aim for
@@ -168,5 +169,7 @@ def make_object(name, texture, size = None):
     entity['object'] = entity_object
     entity['collision'] = entity_collision
     entity['sprites'] = offsets
+    #this should be later remade to be "current animation" instead
+    entity['current_sprite'] = default_sprite
 
     return entity
