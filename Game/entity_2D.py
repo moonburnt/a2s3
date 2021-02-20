@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 #module where I specify character and other 2d objects
 
 STATS = config.STATS
+DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 
 #maybe move this to some other module? idk
 #also it would be good idea to make spritesheets not on per-character, but on
@@ -75,18 +76,15 @@ def cut_spritesheet(spritesheet, size):
 
 #THIS SHIT WORKS. But it will fail non-perfect spritesheets. But it needs to be moved
 #to separate function. So many "but"'s. But for now its fine and Im going to sleep
-def make_object(name, texture, size):
-    '''Receive str(name), str(path to texture) and tuple size = (x, y).
+def make_object(name, texture, size = None):
+    '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
     Generate 2D object of selected size (if none - then based on image size).
     Returns dictionary with entity's name, stats, object, and collision.
     E.g dic['name']['stats']['object']['collision']'''
     log.debug(f"Initializing {name} object")
 
-    #with amount of 16's in this function, I begin considering implementing
-    #standard texture size. Store it inside config, or idk. Then do like
-    #"if not size, then size = config.DEFAULT_SIZE"
-    #and this could also be used to calculate entity/floor layers
-    #TODO ^
+    if not size:
+        size = DEFAULT_SPRITE_SIZE
 
     size_x, size_y = size
     log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
@@ -143,7 +141,9 @@ def make_object(name, texture, size):
     entity_collider = CollisionNode(name)
     #TODO: move this to be under character's legs
     #right now its centered on character's center
-    entity_collider.add_solid(CollisionSphere(0, 0, 0, 16))
+    #coz its sphere and not oval - it doesnt matter if we use size_x or size_y
+    #but, for sake of convenience - we are going for size_y
+    entity_collider.add_solid(CollisionSphere(0, 0, 0, (size_y/2)))
     entity_collision = entity_object.attach_new_node(entity_collider)
 
     #todo: maybe move ctrav stuff there

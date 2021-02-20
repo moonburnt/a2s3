@@ -29,21 +29,20 @@ class Main(ShowBase):
 
         log.debug("Resizing the window")
         window_settings = WindowProperties()
-        window_settings.set_size(WINDOW_SIZE['x'], WINDOW_SIZE['y'])
+        window_settings.set_size(WINDOW_SIZE)
         self.win.request_properties(window_settings)
 
         log.debug("Generating the map")
-        map_loader.flat_map_generator(self.assets['sprites']['floor'],
-                                      size = (MAP_SIZE['x'], MAP_SIZE['y']))
+        map_loader.flat_map_generator(self.assets['sprites']['floor'], size = MAP_SIZE)
 
         log.debug("Initializing player")
-        self.player = entity_2D.make_object("player", self.assets['sprites']['character'], (32, 32))
+        self.player = entity_2D.make_object("player", self.assets['sprites']['character'])
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player['object'].set_pos(0, 0, ENTITY_LAYER)
 
         log.debug("Initializing enemy")
-        self.enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'], (32, 32))
+        self.enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'])
         #this is a temporary position, except for layer.
         #in real game, these will be spawned at random places
         self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)
@@ -118,15 +117,19 @@ class Main(ShowBase):
         checks if buttons are pressed and log it. Then
         return action back to task manager, so it keeps running in loop'''
 
+        #idk if I need to export this to variable or call directly
+        #in case it will backfire - turn this var into direct dictionary calls
+        mov_speed = self.player['stats']['mov_spd']
+
         #In future, these speed values may be affected by some items
         if self.controls_status["move_up"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (0, -3, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (0, -mov_speed, 0))
         if self.controls_status["move_down"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (0, 3, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (0, mov_speed, 0))
         if self.controls_status["move_left"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (3, 0, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (mov_speed, 0, 0))
         if self.controls_status["move_right"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (-3, 0, 0))
+            self.player['object'].setPos(self.player['object'].getPos() + (-mov_speed, 0, 0))
         #this is placeholder, that will automatically deal damage to enemy
         #todo: collision check, cooldown, etc etc etc
         if self.controls_status["attack"]:
