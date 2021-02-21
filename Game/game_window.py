@@ -15,6 +15,7 @@ WINDOW_SIZE = config.WINDOW_SIZE
 MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
+DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 
 class Main(ShowBase):
     def __init__(self):
@@ -82,6 +83,8 @@ class Main(ShowBase):
         #taskMgr is function that runs on background each frame
         #and execute whatever functions are attached to it with .add()
         self.task_manager = taskMgr.add(self.controls_handler, "controls handler")
+        #adding movement handler to task manager
+        self.task_manager = taskMgr.add(self.ai_movement_handler, "ai movement handler")
 
         #dictionary that stores default state of keys
         self.controls_status = {"move_up": False, "move_down": False,
@@ -150,6 +153,44 @@ class Main(ShowBase):
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
+        return action.cont
+
+    def ai_movement_handler(self, action):
+        '''This is but nasty hack to make enemy follow character. Will break on
+        multiple. TODO: remake and move to its own module'''
+
+        #hack to remove handler from task manager if enemy has died
+        #without it, game will crash the very next second after kill
+        if not self.enemy:
+            return
+
+        #this... kinda works, but its ugly af
+        mov_speed = self.enemy['stats']['mov_spd']
+
+        player_position = self.player['object'].get_pos()
+        enemy_position = self.enemy['object'].get_pos()
+
+        vector_to_player = enemy_position - player_position
+        distance_to_player = vector_to_player.length()
+
+        #idk about the distance numbers.
+        #This will probably backfire on non-equal x and y of sprite size
+        if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
+            #p2 and e2 arent used, coz our layer is always entity layer anyway
+            p0, p1, p2 = player_position
+            e0, e1, e2 = enemy_position
+
+            if (p0 - e0) <= 0:
+                mov0 = e0 - mov_speed
+            else:
+                mov0 = e0 + mov_speed
+
+            if (p1 - e1) <= 0:
+                mov1 = e1 - mov_speed
+            else:
+                mov1 = e1 + mov_speed
+            self.enemy['object'].set_pos(mov0, mov1, ENTITY_LAYER)
+
         return action.cont
 
     def damage_target(self, target, amount = 0):
