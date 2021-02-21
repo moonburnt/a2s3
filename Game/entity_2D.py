@@ -165,7 +165,10 @@ def make_object(name, texture, size = None):
 
     entity = {}
     entity['name'] = name
-    entity['stats'] = entity_stats
+    #its .copy() coz otherwise we will link to dictionary itself
+    #and any change to stats of one enemy will affect other enemies
+    #but this way, everything should be fine
+    entity['stats'] = entity_stats.copy()
     entity['object'] = entity_object
     entity['collision'] = entity_collision
     entity['sprites'] = offsets

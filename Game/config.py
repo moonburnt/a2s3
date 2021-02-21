@@ -36,6 +36,8 @@ STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1},
          'enemy': {"hp": 100, "dmg": 10, 'mov_spd': 2}}
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)
+MAX_ENEMY_COUNT = 10
+ENEMY_SPAWN_TIME = 5
 
 #debug stuff
 SHOW_COLLISIONS = False

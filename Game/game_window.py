@@ -16,6 +16,8 @@ MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
 MAP_SIZE = config.MAP_SIZE
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
+ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
 
 class Main(ShowBase):
     def __init__(self):
@@ -42,11 +44,9 @@ class Main(ShowBase):
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         self.player['object'].set_pos(0, 0, ENTITY_LAYER)
 
-        log.debug("Initializing enemy")
-        self.enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'])
-        #this is a temporary position, except for layer.
-        #in real game, these will be spawned at random places
-        self.enemy['object'].set_pos(0, 30, ENTITY_LAYER)
+        log.debug("Initializing enemy spawner")
+        self.enemy_spawn_timer = ENEMY_SPAWN_TIME
+        self.enemies = []
 
         log.debug("Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
@@ -85,6 +85,7 @@ class Main(ShowBase):
         self.task_manager = taskMgr.add(self.controls_handler, "controls handler")
         #adding movement handler to task manager
         self.task_manager = taskMgr.add(self.ai_movement_handler, "ai movement handler")
+        self.task_manager = taskMgr.add(self.spawn_enemies, "enemy spawner")
 
         #dictionary that stores default state of keys
         self.controls_status = {"move_up": False, "move_down": False,
@@ -144,52 +145,83 @@ class Main(ShowBase):
                 entity_2D.change_sprite(self.player, 0)
                 self.player['current_sprite'] = 0
 
-        #this is placeholder, that will automatically deal damage to enemy
+        #this is placeholder, that will automatically deal damage to first enemy
         #todo: collision check, cooldown, etc etc etc
         if self.controls_status["attack"]:
             #temporary check to ensure that enemy is alive
-            if self.enemy:
-                self.damage_target(self.enemy, self.player['stats']['dmg'])
+            if self.enemies:
+                self.damage_target(self.enemies[0], self.player['stats']['dmg'])
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
         return action.cont
 
     def ai_movement_handler(self, action):
-        '''This is but nasty hack to make enemy follow character. Will break on
-        multiple. TODO: remake and move to its own module'''
+        '''This is but nasty hack to make enemies follow character. TODO: remake
+        and move to its own module'''
+        #TODO: maybe make it possible to chase not for just player?
+        #TODO: not all enemies need to behave this way. e.g, for example, we can
+        #only affect enemies that have their ['ai'] set to ['chaser']...
+        #or something among these lines, will see in future
 
-        #hack to remove handler from task manager if enemy has died
-        #without it, game will crash the very next second after kill
-        if not self.enemy:
-            return
+        #hack to ignore this handler if the last enemy has died. Without it, game
+        #will crash the very next second after last kill
+        if not self.enemies:
+            return action.cont
 
         #this... kinda works, but its ugly af
-        mov_speed = self.enemy['stats']['mov_spd']
+        for enemy in self.enemies:
+            mov_speed = enemy['stats']['mov_spd']
 
-        player_position = self.player['object'].get_pos()
-        enemy_position = self.enemy['object'].get_pos()
+            player_position = self.player['object'].get_pos()
+            enemy_position = enemy['object'].get_pos()
 
-        vector_to_player = enemy_position - player_position
-        distance_to_player = vector_to_player.length()
+            vector_to_player = enemy_position - player_position
+            distance_to_player = vector_to_player.length()
 
-        #idk about the distance numbers.
-        #This will probably backfire on non-equal x and y of sprite size
-        if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
-            #p2 and e2 arent used, coz our layer is always entity layer anyway
-            p0, p1, p2 = player_position
-            e0, e1, e2 = enemy_position
+            #idk about the distance numbers.
+            #This will probably backfire on non-equal x and y of sprite size
+            if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
+                #p2 and e2 arent used, coz our layer is always entity layer anyway
+                p0, p1, p2 = player_position
+                e0, e1, e2 = enemy_position
 
-            if (p0 - e0) <= 0:
-                mov0 = e0 - mov_speed
-            else:
-                mov0 = e0 + mov_speed
+                if (p0 - e0) <= 0:
+                    mov0 = e0 - mov_speed
+                else:
+                    mov0 = e0 + mov_speed
 
-            if (p1 - e1) <= 0:
-                mov1 = e1 - mov_speed
-            else:
-                mov1 = e1 + mov_speed
-            self.enemy['object'].set_pos(mov0, mov1, ENTITY_LAYER)
+                if (p1 - e1) <= 0:
+                    mov1 = e1 - mov_speed
+                else:
+                    mov1 = e1 + mov_speed
+                enemy['object'].set_pos(mov0, mov1, ENTITY_LAYER)
+
+        return action.cont
+
+    def spawn_enemies(self, action):
+        '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
+        ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
+        #this clock runs on background and updates each frame
+        #e.g 'dt' will always be 1
+        #and no, "from time import sleep" wont fit for this - game will freeze
+        #because in its core, task manager isnt like multithreading but async
+        dt = globalClock.get_dt()
+
+        #similar method can also be used for skill cooldowns, probably anims stuff
+        self.enemy_spawn_timer -= dt
+        if self.enemy_spawn_timer <= 0:
+            log.debug("Its time to check if we can spawn enemy")
+            self.enemy_spawn_timer = ENEMY_SPAWN_TIME
+            enemy_amount = len(self.enemies)+1
+            if enemy_amount <= MAX_ENEMY_COUNT:
+                log.debug("Initializing enemy")
+                enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'])
+                #this is a temporary position, except for layer.
+                #in real game, these will be spawned at random places
+                enemy['object'].set_pos(0, 30, ENTITY_LAYER)
+                self.enemies.append(enemy)
+                log.debug(f"There are currently {enemy_amount} enemies on screen")
 
         return action.cont
 
@@ -222,7 +254,11 @@ class Main(ShowBase):
         name = target['name']
         target['collision'].remove_node()
         target['object'].remove_node()
-        target.clear()
+        #target.clear()
+        #placeholder hack to remove this object from enemy list
+        #with actual combat system, I will probably get rid of this
+        #TODO
+        self.enemies.remove(target)
         log.debug(f"{name} is now dead")
 
         death_sound = f"{name}_death"
