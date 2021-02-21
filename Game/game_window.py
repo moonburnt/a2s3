@@ -163,43 +163,32 @@ class Main(ShowBase):
         if not self.enemies:
             return action.cont
 
-
-        log.debug("Changing enemy movement direction")
-        #this... kinda works, but its ugly af
-        #also there is an issue: due to enemy position being updated each frame,
-        #enemies are kinda shaky when it comes to moving in straight line
-        #and moving straight up cause their sprites to switch like crazy
-        #(inb4: no, setting separate thing for if px-ex==0 didnt do anything)
-        #TODO: attempt to fix this bug (maybe via dt? Like - update enemy movement
-        #and sprite not each frame, but each second. Or something like that
+        player_position = self.player['object'].get_pos()
         for enemy in self.enemies:
             mov_speed = enemy['stats']['mov_spd']
 
-            player_position = self.player['object'].get_pos()
             enemy_position = enemy['object'].get_pos()
-
-            vector_to_player = enemy_position - player_position
+            vector_to_player = player_position - enemy_position
             distance_to_player = vector_to_player.length()
+            #normalizing vector is the key to avoid "flickering" effect, as its
+            #basically ignores whatever minor difference in placement there are
+            #I dont know the guts, but I believe it just cuts float's tail?
+            vector_to_player.normalize()
 
             #idk about the distance numbers.
             #This will probably backfire on non-equal x and y of sprite size
             if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
-                #pz and ez arent used, coz our layer is always entity layer
-                px, py, pz = player_position
-                ex, ey, ez = enemy_position
+                new_pos = enemy_position + (vector_to_player*mov_speed)
+                enemy['object'].set_pos(new_pos)
 
-                if (px - ex) <= 0:
-                    mov_x = ex - mov_speed
+                #changing enemy's sprite
+                #it may be good idea to also track camera angle, if I will decide
+                #to implement camera controls, at some point or another. #TODO
+                pos_diff = enemy_position - new_pos
+                if pos_diff[0] > 0:
                     entity_2D.change_sprite(enemy, 0)
                 else:
-                    mov_x = ex + mov_speed
                     entity_2D.change_sprite(enemy, 1)
-
-                if (py - ey) <= 0:
-                    mov_y = ey - mov_speed
-                else:
-                    mov_y = ey + mov_speed
-                enemy['object'].set_pos(mov_x, mov_y, ENTITY_LAYER)
 
         return action.cont
 
