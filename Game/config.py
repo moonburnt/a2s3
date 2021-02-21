@@ -25,6 +25,7 @@ FLOOR_LAYER = 0
 WINDOW_SIZE = (1280, 720)
 #this is a float between 0 and 1, e.g 75 equals to "75%"
 MUSIC_VOLUME = 0.75
+SFX_VOLUME = 0.75
 #key is the name of action, value is the name of key in panda syntax
 CONTROLS = {"move_up": "arrow_up", "move_down": "arrow_down",
             "move_left": "arrow_left", "move_right": "arrow_right",

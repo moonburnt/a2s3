@@ -12,9 +12,7 @@ log = logging.getLogger(__name__)
 
 ENTITY_LAYER = config.ENTITY_LAYER
 WINDOW_SIZE = config.WINDOW_SIZE
-MUSIC_VOLUME = config.MUSIC_VOLUME
 CONTROLS = config.CONTROLS
-MAP_SIZE = config.MAP_SIZE
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
 ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
@@ -36,7 +34,8 @@ class Main(ShowBase):
         self.win.request_properties(window_settings)
 
         log.debug("Generating the map")
-        map_loader.flat_map_generator(self.assets['sprites']['floor'], size = MAP_SIZE)
+        map_loader.flat_map_generator(self.assets['sprites']['floor'],
+                                      size = config.MAP_SIZE)
 
         log.debug("Initializing player")
         self.player = entity_2D.make_object("player", self.assets['sprites']['character'])
@@ -73,10 +72,14 @@ class Main(ShowBase):
         self.camera.reparent_to(self.player['object'])
 
         log.debug(f"Setting up background music")
-        #menu_theme = loader.load_music(MENU_BGM)
+        #setting volume like that, so it should apply to all music tracks
+        music_mgr = base.musicManager
+        music_mgr.set_volume(config.MUSIC_VOLUME)
+        #same goes for sfx manager, which is a separate thing
+        sfx_mgr = base.sfxManagerList[0]
+        sfx_mgr.set_volume(config.SFX_VOLUME)
         menu_theme = self.assets['music']['menu_theme']
         menu_theme.set_loop(True)
-        menu_theme.set_volume(MUSIC_VOLUME)
         menu_theme.play()
 
         log.debug(f"Initializing controls handler")
