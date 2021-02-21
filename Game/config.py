@@ -22,7 +22,8 @@ DEFAULT_SPRITE_SIZE = (32, 32)
 ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
 FLOOR_LAYER = 0
 #whatever below are variables that could be changed by user... potentially
-WINDOW_SIZE = (1280, 720)
+DEFAULT_WINDOW_SIZE = (1280, 720)
+WINDOW_SIZE = DEFAULT_WINDOW_SIZE
 #this is a float between 0 and 1, e.g 75 equals to "75%"
 MUSIC_VOLUME = 0.75
 SFX_VOLUME = 0.75
@@ -42,3 +43,4 @@ ENEMY_SPAWN_TIME = 5
 
 #debug stuff
 SHOW_COLLISIONS = False
+FPS_METER = False

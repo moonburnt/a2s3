@@ -11,7 +11,6 @@ from Game import entity_2D, map_loader, config, assets_loader
 log = logging.getLogger(__name__)
 
 ENTITY_LAYER = config.ENTITY_LAYER
-WINDOW_SIZE = config.WINDOW_SIZE
 CONTROLS = config.CONTROLS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
@@ -29,9 +28,28 @@ class Main(ShowBase):
         self.assets = assets_loader.load_assets()
 
         log.debug("Resizing the window")
+        screen_info = base.pipe.getDisplayInformation()
+        #this is ugly, but it works, for now
+        #basically we are ensuring that custom window's resolution isnt bigger
+        #than screen size. And if yes - using default resolution instead
+
+        #idk why, but these require at least something to display max available window size
+        max_res = (screen_info.getDisplayModeWidth(0),
+                   screen_info.getDisplayModeHeight(0))
+
+        for cr, mr in zip(config.WINDOW_SIZE, max_res):
+            if cr > mr:
+                log.warning("Requested resolution is bigger than screen size, "
+                            "will use defaults instead")
+                resolution = config.DEFAULT_WINDOW_SIZE
+                break
+            else:
+                resolution = config.WINDOW_SIZE
+
         window_settings = WindowProperties()
-        window_settings.set_size(WINDOW_SIZE)
+        window_settings.set_size(resolution)
         self.win.request_properties(window_settings)
+        log.debug(f"Resolution has been set to {resolution}")
 
         log.debug("Generating the map")
         map_loader.flat_map_generator(self.assets['sprites']['floor'],
@@ -81,6 +99,9 @@ class Main(ShowBase):
         menu_theme = self.assets['music']['menu_theme']
         menu_theme.set_loop(True)
         menu_theme.play()
+
+        #enabling fps meter
+        base.setFrameRateMeter(config.FPS_METER)
 
         log.debug(f"Initializing controls handler")
         #taskMgr is function that runs on background each frame
