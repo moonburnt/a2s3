@@ -133,17 +133,11 @@ class Main(ShowBase):
         if self.controls_status["move_left"]:
             self.player['object'].setPos(self.player['object'].getPos() + (mov_speed, 0, 0))
             #todo: replace this with actual animation names instead of sprite numbers
-            #or/and probably move to other function, idk
-            #maybe make separate task manager thing that will do this for every object
-            if self.player['current_sprite'] != 1:
-                entity_2D.change_sprite(self.player, 1)
-                self.player['current_sprite'] = 1
+            entity_2D.change_sprite(self.player, 1)
 
         if self.controls_status["move_right"]:
             self.player['object'].setPos(self.player['object'].getPos() + (-mov_speed, 0, 0))
-            if self.player['current_sprite'] != 0:
-                entity_2D.change_sprite(self.player, 0)
-                self.player['current_sprite'] = 0
+            entity_2D.change_sprite(self.player, 0)
 
         #this is placeholder, that will automatically deal damage to first enemy
         #todo: collision check, cooldown, etc etc etc
@@ -169,7 +163,15 @@ class Main(ShowBase):
         if not self.enemies:
             return action.cont
 
+
+        log.debug("Changing enemy movement direction")
         #this... kinda works, but its ugly af
+        #also there is an issue: due to enemy position being updated each frame,
+        #enemies are kinda shaky when it comes to moving in straight line
+        #and moving straight up cause their sprites to switch like crazy
+        #(inb4: no, setting separate thing for if px-ex==0 didnt do anything)
+        #TODO: attempt to fix this bug (maybe via dt? Like - update enemy movement
+        #and sprite not each frame, but each second. Or something like that
         for enemy in self.enemies:
             mov_speed = enemy['stats']['mov_spd']
 
@@ -182,20 +184,22 @@ class Main(ShowBase):
             #idk about the distance numbers.
             #This will probably backfire on non-equal x and y of sprite size
             if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
-                #p2 and e2 arent used, coz our layer is always entity layer anyway
-                p0, p1, p2 = player_position
-                e0, e1, e2 = enemy_position
+                #pz and ez arent used, coz our layer is always entity layer
+                px, py, pz = player_position
+                ex, ey, ez = enemy_position
 
-                if (p0 - e0) <= 0:
-                    mov0 = e0 - mov_speed
+                if (px - ex) <= 0:
+                    mov_x = ex - mov_speed
+                    entity_2D.change_sprite(enemy, 0)
                 else:
-                    mov0 = e0 + mov_speed
+                    mov_x = ex + mov_speed
+                    entity_2D.change_sprite(enemy, 1)
 
-                if (p1 - e1) <= 0:
-                    mov1 = e1 - mov_speed
+                if (py - ey) <= 0:
+                    mov_y = ey - mov_speed
                 else:
-                    mov1 = e1 + mov_speed
-                enemy['object'].set_pos(mov0, mov1, ENTITY_LAYER)
+                    mov_y = ey + mov_speed
+                enemy['object'].set_pos(mov_x, mov_y, ENTITY_LAYER)
 
         return action.cont
 
@@ -203,7 +207,7 @@ class Main(ShowBase):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
         ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
         #this clock runs on background and updates each frame
-        #e.g 'dt' will always be 1
+        #e.g 'dt' will always be the amount of time passed since last frame
         #and no, "from time import sleep" wont fit for this - game will freeze
         #because in its core, task manager isnt like multithreading but async
         dt = globalClock.get_dt()
@@ -211,7 +215,7 @@ class Main(ShowBase):
         #similar method can also be used for skill cooldowns, probably anims stuff
         self.enemy_spawn_timer -= dt
         if self.enemy_spawn_timer <= 0:
-            log.debug("Its time to check if we can spawn enemy")
+            log.debug("Checking if we can spawn enemy")
             self.enemy_spawn_timer = ENEMY_SPAWN_TIME
             enemy_amount = len(self.enemies)+1
             if enemy_amount <= MAX_ENEMY_COUNT:
@@ -266,5 +270,5 @@ class Main(ShowBase):
         try:
             self.assets['sfx'][death_sound].play()
         except KeyError:
-            log.debug(f"{name} has no custom death sound, using fallback")
+            log.warning(f"{name} has no custom death sound, using fallback")
             self.assets['sfx']['default_death'].play()

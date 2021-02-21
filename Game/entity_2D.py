@@ -79,8 +79,11 @@ def change_sprite(entity, sprite):
     Change entity's sprite to be selected number'''
     #this isnt the best thing in the world, as it cant iterate tru sprites yet
     #TODO: add ability to play selected animation sets with specified speed
-    log.debug(f"Changing sprite of {entity['name']} to {sprite}")
-    entity['object'].set_tex_offset(TextureStage.getDefault(), *entity['sprites'][sprite])
+    if entity['current_sprite'] != sprite:
+        log.debug(f"Changing sprite of {entity['name']} to {sprite}")
+        entity['object'].set_tex_offset(TextureStage.getDefault(),
+                                        *entity['sprites'][sprite])
+        entity['current_sprite'] = sprite
 
 def make_object(name, texture, size = None):
     '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
