@@ -9,6 +9,7 @@ GAME_DIR = '.'
 SPRITE_DIR = join(GAME_DIR, 'Sprites')
 MUSIC_DIR = join(GAME_DIR, 'BGM')
 SFX_DIR = join(GAME_DIR, 'SFX')
+GAME_NAME = "There Will Be Game's Name"
 
 #default (x, y) of sprites, to dont specify these manually when not necessary.
 #also to make some things that rely on these variables to adjust their values
@@ -24,6 +25,7 @@ FLOOR_LAYER = 0
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
 WINDOW_SIZE = DEFAULT_WINDOW_SIZE
+FULLSCREEN = False
 #this is a float between 0 and 1, e.g 75 equals to "75%"
 MUSIC_VOLUME = 0.75
 SFX_VOLUME = 0.75

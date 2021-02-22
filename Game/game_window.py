@@ -11,7 +11,6 @@ from Game import entity_2D, map_loader, config, assets_loader
 log = logging.getLogger(__name__)
 
 ENTITY_LAYER = config.ENTITY_LAYER
-CONTROLS = config.CONTROLS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
 ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
@@ -27,7 +26,8 @@ class Main(ShowBase):
         log.debug("Loading assets")
         self.assets = assets_loader.load_assets()
 
-        log.debug("Resizing the window")
+        log.debug("Configuring game's window")
+        #setting up resolution
         screen_info = base.pipe.getDisplayInformation()
         #this is ugly, but it works, for now
         #basically we are ensuring that custom window's resolution isnt bigger
@@ -48,6 +48,14 @@ class Main(ShowBase):
 
         window_settings = WindowProperties()
         window_settings.set_size(resolution)
+
+        #ensuring that window cant be resized by dragging its borders around
+        window_settings.set_fixed_size(True)
+        #toggling fullscreen/windowed mode
+        window_settings.set_fullscreen(config.FULLSCREEN)
+        #setting window's title
+        window_settings.set_title(config.GAME_NAME)
+        #applying settings to our window
         self.win.request_properties(window_settings)
         log.debug(f"Resolution has been set to {resolution}")
 
@@ -120,18 +128,28 @@ class Main(ShowBase):
         #first is name-state of key (name is in english, but any layout is supported)
         #second is function that gets called if this button event has happend
         #optional third can be used to pass arguments to second function
-        self.accept(CONTROLS['move_up'], self.change_key_state, ["move_up", True])
+        self.accept(config.CONTROLS['move_up'],
+                    self.change_key_state, ["move_up", True])
         #"-up" prefix means key has been released
         #I know how ugly it looks, but for now it works
-        self.accept(f"{CONTROLS['move_up']}-up", self.change_key_state, ["move_up", False])
-        self.accept(CONTROLS['move_down'], self.change_key_state, ["move_down", True])
-        self.accept(f"{CONTROLS['move_down']}-up", self.change_key_state, ["move_down", False])
-        self.accept(CONTROLS['move_left'], self.change_key_state, ["move_left", True])
-        self.accept(f"{CONTROLS['move_left']}-up", self.change_key_state, ["move_left", False])
-        self.accept(CONTROLS['move_right'], self.change_key_state, ["move_right", True])
-        self.accept(f"{CONTROLS['move_right']}-up", self.change_key_state, ["move_right", False])
-        self.accept(CONTROLS['attack'], self.change_key_state, ["attack", True])
-        self.accept(f"{CONTROLS['attack']}-up", self.change_key_state, ["attack", False])
+        self.accept(f"{config.CONTROLS['move_up']}-up",
+                    self.change_key_state, ["move_up", False])
+        self.accept(config.CONTROLS['move_down'],
+                    self.change_key_state, ["move_down", True])
+        self.accept(f"{config.CONTROLS['move_down']}-up",
+                    self.change_key_state, ["move_down", False])
+        self.accept(config.CONTROLS['move_left'],
+                    self.change_key_state, ["move_left", True])
+        self.accept(f"{config.CONTROLS['move_left']}-up",
+                    self.change_key_state, ["move_left", False])
+        self.accept(config.CONTROLS['move_right'],
+                    self.change_key_state, ["move_right", True])
+        self.accept(f"{config.CONTROLS['move_right']}-up",
+                    self.change_key_state, ["move_right", False])
+        self.accept(config.CONTROLS['attack'],
+                    self.change_key_state, ["attack", True])
+        self.accept(f"{config.CONTROLS['attack']}-up",
+                    self.change_key_state, ["attack", False])
 
     def change_key_state(self, key_name, key_status):
         '''Receive str(key_name) and bool(key_status).
