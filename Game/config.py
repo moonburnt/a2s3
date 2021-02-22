@@ -1,4 +1,5 @@
 from os.path import join
+from panda3d.core import SamplerState
 import logging
 
 log = logging.getLogger(__name__)
@@ -11,6 +12,9 @@ MUSIC_DIR = join(GAME_DIR, 'BGM')
 SFX_DIR = join(GAME_DIR, 'SFX')
 GAME_NAME = "There Will Be Game's Name"
 
+#default sprite filtering mode. This is applied to all textures to ensure that
+#they wont look blurry or weird
+DEFAULT_SPRITE_FILTER = SamplerState.FT_nearest
 #default (x, y) of sprites, to dont specify these manually when not necessary.
 #also to make some things that rely on these variables to adjust their values
 #on fly in case they will be changed
@@ -30,9 +34,9 @@ FULLSCREEN = False
 MUSIC_VOLUME = 0.75
 SFX_VOLUME = 0.75
 #key is the name of action, value is the name of key in panda syntax
-CONTROLS = {"move_up": "arrow_up", "move_down": "arrow_down",
-            "move_left": "arrow_left", "move_right": "arrow_right",
-            "attack": "z"}
+CONTROLS = {"move_up": "w", "move_down": "s",
+            "move_left": "a", "move_right": "d",
+            "attack": "mouse1"}
 #placeholder stats to use
 #later I will build this from jsons or whatever configuration files I will choose
 STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1},

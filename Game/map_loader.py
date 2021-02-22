@@ -1,6 +1,6 @@
 import logging
-from panda3d.core import (CardMaker, SamplerState, TextureStage,
-                          CollisionPlane, Plane, CollisionNode)
+from panda3d.core import (CardMaker, TextureStage, CollisionPlane,
+                          Plane, CollisionNode)
 from math import ceil
 from Game import config
 
@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 #module where I specify everything related to generating and loading maps
 
 FLOOR_LAYER = config.FLOOR_LAYER
+DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
 def flat_map_generator(texture, size):
     '''Receive str(path to texture) and tuple with size values (x, y). Generate
@@ -19,8 +20,8 @@ def flat_map_generator(texture, size):
     map_size = (-size_x/2, size_x/2, -size_y/2, size_y/2)
 
     #removing the blur from our texture
-    texture.set_magfilter(SamplerState.FT_nearest)
-    texture.set_minfilter(SamplerState.FT_nearest)
+    texture.set_magfilter(DEFAULT_SPRITE_FILTER)
+    texture.set_minfilter(DEFAULT_SPRITE_FILTER)
     #initializing new cardmaker object
     #which is essentially our go-to way to create flat models
     floor = CardMaker('floor')

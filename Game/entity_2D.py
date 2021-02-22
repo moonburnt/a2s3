@@ -1,5 +1,5 @@
 import logging
-from panda3d.core import CardMaker, SamplerState, TextureStage, CollisionSphere, CollisionNode
+from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode
 from Game import config
 
 log = logging.getLogger(__name__)
@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 STATS = config.STATS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
 #maybe move this to some other module? idk
 #also it would be good idea to make spritesheets not on per-character, but on
@@ -99,8 +100,8 @@ def make_object(name, texture, size = None):
     log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
 
     #setting filtering method to dont blur our sprite
-    texture.set_magfilter(SamplerState.FT_nearest)
-    texture.set_minfilter(SamplerState.FT_nearest)
+    texture.set_magfilter(DEFAULT_SPRITE_FILTER)
+    texture.set_minfilter(DEFAULT_SPRITE_FILTER)
 
     sprite_data = cut_spritesheet(texture, size)
 

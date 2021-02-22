@@ -178,17 +178,17 @@ class Main(ShowBase):
 
         #In future, these speed values may be affected by some items
         if self.controls_status["move_up"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (0, -mov_speed, 0))
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (0, -mov_speed, 0))
         if self.controls_status["move_down"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (0, mov_speed, 0))
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (0, mov_speed, 0))
         if self.controls_status["move_left"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (mov_speed, 0, 0))
-            #todo: replace this with actual animation names instead of sprite numbers
-            entity_2D.change_sprite(self.player, 1)
-
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (mov_speed, 0, 0))
         if self.controls_status["move_right"]:
-            self.player['object'].setPos(self.player['object'].getPos() + (-mov_speed, 0, 0))
-            entity_2D.change_sprite(self.player, 0)
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (-mov_speed, 0, 0))
 
         #this is placeholder, that will automatically deal damage to first enemy
         #todo: collision check, cooldown, etc etc etc
@@ -196,6 +196,26 @@ class Main(ShowBase):
             #temporary check to ensure that enemy is alive
             if self.enemies:
                 self.damage_target(self.enemies[0], self.player['stats']['dmg'])
+
+        #change the way character face, based on mouse pointer position
+        #this may need some tweaking if I will decide to add gamepad support
+        #basically, the idea is the following: since camera is centered right
+        #above our character, our char is the center of screen. Meaning positive
+        #x will mean pointer is facing right and negative: pointer is facing left.
+        #And thus char should do the same. This is kind of hack and will also
+        #need tweaking if more sprites will be added. But for now it works
+        #hint: this can also be used together with move buttons. E.g mouse change
+        #the direction head/eyes face and keys change body. But that will depend
+        #on amount of animations I would obtain. For now, lets leave it like that
+        mouse_watcher = base.mouseWatcherNode
+        #ensuring that mouse pointer is part of game's window right now
+        if mouse_watcher.has_mouse():
+            mouse_x = mouse_watcher.get_mouse_x()
+            #todo: replace this with actual animation names instead of sprite numbers
+            if mouse_x > 0:
+                entity_2D.change_sprite(self.player, 0)
+            else:
+                entity_2D.change_sprite(self.player, 1)
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
