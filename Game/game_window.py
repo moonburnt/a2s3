@@ -5,7 +5,7 @@ import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (WindowProperties, CollisionTraverser,
                           CollisionHandlerPusher)
-
+from random import randint
 from Game import entity_2D, map_loader, config, assets_loader
 
 log = logging.getLogger(__name__)
@@ -62,6 +62,15 @@ class Main(ShowBase):
         log.debug("Generating the map")
         map_loader.flat_map_generator(self.assets['sprites']['floor'],
                                       size = config.MAP_SIZE)
+        #taking advantage of enemies not colliding with map borders and spawning
+        #them outside of the map's corners. Idk about the numbers and if they should
+        #be related to sprite size in anyway. Basically anything will do for now
+        #later we will add some "fog of war"-like effect above map's borders, so
+        #enemies spawning on these positions will seem more natural
+        self.enemy_spawnpoints = [((config.MAP_SIZE[0]/2)+32, (config.MAP_SIZE[1]/2)+32),
+                                  ((-config.MAP_SIZE[0]/2)-32, (-config.MAP_SIZE[1]/2)-32),
+                                  ((config.MAP_SIZE[0]/2)+32, (-config.MAP_SIZE[1]/2)-32),
+                                  ((-config.MAP_SIZE[0]/2)-32, (config.MAP_SIZE[1]/2)+32)]
 
         log.debug("Initializing player")
         self.player = entity_2D.make_object("player", self.assets['sprites']['character'])
@@ -252,9 +261,12 @@ class Main(ShowBase):
             if enemy_amount <= MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
                 enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'])
-                #this is a temporary position, except for layer.
-                #in real game, these will be spawned at random places
-                enemy['object'].set_pos(0, 30, ENTITY_LAYER)
+                #picking up random spawnpoint out of available
+                #there is -1 coz randint include the second number you pass to
+                #it, not like "in range". E.g without it we will get "out of bound"
+                spawnpoint = randint(0, len(self.enemy_spawnpoints)-1)
+                log.debug(f"Spawning enemy on spawnpoint {spawnpoint}")
+                enemy['object'].set_pos(*self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER)
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {enemy_amount} enemies on screen")
 
