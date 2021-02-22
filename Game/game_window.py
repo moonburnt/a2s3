@@ -155,6 +155,7 @@ class Main(ShowBase):
                     self.change_key_state, ["move_right", True])
         self.accept(f"{config.CONTROLS['move_right']}-up",
                     self.change_key_state, ["move_right", False])
+
         self.accept(config.CONTROLS['attack'],
                     self.change_key_state, ["attack", True])
         self.accept(f"{config.CONTROLS['attack']}-up",
@@ -167,10 +168,24 @@ class Main(ShowBase):
         log.debug(f"{key_name} has been set to {key_status}")
 
     def controls_handler(self, action):
-        '''Intended to be used as part of task manager routine.
-        Automatically receive action from task manager,
-        checks if buttons are pressed and log it. Then
-        return action back to task manager, so it keeps running in loop'''
+        '''
+        Intended to be used as part of task manager routine. Automatically receive
+        action from task manager, checks if buttons are pressed and log it. Then
+        return action back to task manager, so it keeps running in loop
+        '''
+        #manipulating cooldowns on player's skills. It may be good idea to move
+        #it to separate routine and check cooldowns of all entities on screen
+        dt = globalClock.get_dt()
+
+        #this seem to work reasonably decent. Not to jinx tho
+        skills = self.player['skills']
+        for skill in skills:
+            if skills[skill]['used']:
+                skills[skill]['cur_cd'] -= dt
+                if skills[skill]['cur_cd'] <= 0:
+                    log.debug(f"Player's {skills[skill]['name']} has been recharged")
+                    skills[skill]['used'] = False
+                    skills[skill]['cur_cd'] = skills[skill]['def_cd']
 
         #idk if I need to export this to variable or call directly
         #in case it will backfire - turn this var into direct dictionary calls
@@ -191,13 +206,14 @@ class Main(ShowBase):
                                         (-mov_speed, 0, 0))
 
         #this is placeholder, that will automatically deal damage to first enemy
-        #todo: collision check, cooldown, etc etc etc
-        if self.controls_status["attack"]:
-            #temporary check to ensure that enemy is alive
+        #todo: collision check, etc etc etc
+        if self.controls_status["attack"] and not skills['atk_0']['used']:
+            skills['atk_0']['used'] = True
+            #temporary check to ensure that we still have alive enemies
             if self.enemies:
                 self.damage_target(self.enemies[0], self.player['stats']['dmg'])
 
-        #change the way character face, based on mouse pointer position
+        #change the direction character face, based on mouse pointer position
         #this may need some tweaking if I will decide to add gamepad support
         #basically, the idea is the following: since camera is centered right
         #above our character, our char is the center of screen. Meaning positive

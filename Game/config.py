@@ -39,9 +39,16 @@ CONTROLS = {"move_up": "w", "move_down": "s",
             "attack": "mouse1"}
 #placeholder stats to use
 #later I will build this from jsons or whatever configuration files I will choose
-STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1},
-         'player': {"hp": 100, "dmg": 10, 'mov_spd': 3},
-         'enemy': {"hp": 100, "dmg": 10, 'mov_spd': 2}}
+STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1, 'skills': ['atk_0']},
+         'player': {"hp": 100, "dmg": 10, 'mov_spd': 3, 'skills': ['atk_0']},
+         'enemy': {"hp": 100, "dmg": 10, 'mov_spd': 2, 'skills': ['atk_0']}}
+
+#TODO: rename cd (cooldown) to something like atk_speed and make it work the opposite,
+#e.g the more the value - less time it gets to strike again. Also it may be a good
+#idea to keep different attack's anims and damage in related subdics, instead of
+#relying on global stats and other functions. But thats to solve in future
+#"used" is effectively an equal to "on cooldown"
+SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 2, 'cur_cd': 0, 'used': False}}
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)
 MAX_ENEMY_COUNT = 10

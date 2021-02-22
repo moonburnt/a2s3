@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 #module where I specify character and other 2d objects
 
 STATS = config.STATS
+SKILLS = config.SKILLS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
@@ -167,12 +168,20 @@ def make_object(name, texture, size = None):
         entity_stats = STATS['default']
     log.debug(f"Set {name}'s stats to be {entity_stats}")
 
+    #this is probably not the best way, but whatever - temporary solution
+    #also this will crash if there are no skills, but that shouldnt happen
+    entity_skills = {}
+    for item in entity_stats['skills']:
+        if item in SKILLS:
+            entity_skills[item] = SKILLS[item].copy()
+
     entity = {}
     entity['name'] = name
     #its .copy() coz otherwise we will link to dictionary itself
     #and any change to stats of one enemy will affect other enemies
     #but this way, everything should be fine
     entity['stats'] = entity_stats.copy()
+    entity['skills'] = entity_skills
     entity['object'] = entity_object
     entity['collision'] = entity_collision
     entity['sprites'] = offsets
