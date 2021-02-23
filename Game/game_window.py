@@ -232,10 +232,20 @@ class Main(ShowBase):
         #ensuring that mouse pointer is part of game's window right now
         if mouse_watcher.has_mouse():
             mouse_x = mouse_watcher.get_mouse_x()
+            #trigger idle anims if no action key is currently pressed. Probably
+            #not the best way to handle that (coz, for per-frame task, this check
+            #is kinda expensive. I should probably add char's idleness variable
+            #that fullfill the same goal. But thus far I didnt success at that
+            #thing, so I wont care about optimisation until it will be unavoidable
+            active_keys = [button for button in self.controls_status
+                           if self.controls_status[button] == True]
+
             if mouse_x > 0:
-                entity_2D.change_animation(self.player, 'move_right')
+                anim = 'move_right' if active_keys else 'idle_right'
             else:
-                entity_2D.change_animation(self.player, 'move_left')
+                anim = 'move_left' if active_keys else 'idle_left'
+
+            entity_2D.change_animation(self.player, anim)
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want

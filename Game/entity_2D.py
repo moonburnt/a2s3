@@ -196,7 +196,7 @@ def make_object(name, texture, size = None):
     entity['object'] = entity_object
     entity['collision'] = entity_collision
     entity['sprites'] = offsets
-    entity['current_animation'] = 'idle'
+    entity['current_animation'] = 'idle_right'
     entity['current_frame'] = default_sprite
     #attempt to bring animations. Dont need to copy, coz nothing will override these
     entity['animations'] = entity_anims
