@@ -49,6 +49,12 @@ STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1, 'skills': ['atk_0']},
 #relying on global stats and other functions. But thats to solve in future
 #"used" is effectively an equal to "on cooldown"
 SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 2, 'cur_cd': 0, 'used': False}}
+
+#animation frames for each action. Tuple[0] is the first frame, tuple[1] is the last
+#e.g, for static things, setting it to something like (0, 0) is ok
+ANIMS = {'player': {'idle': (0,0), 'move_right': (0,3), 'move_left': (4,7)},
+         'enemy': {'idle': (0,0), 'move_right': (0,0), 'move_left': (1,1)}}
+
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)
 MAX_ENEMY_COUNT = 10

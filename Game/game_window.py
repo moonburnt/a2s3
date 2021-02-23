@@ -4,7 +4,7 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (WindowProperties, CollisionTraverser,
-                          CollisionHandlerPusher)
+                          CollisionHandlerPusher, TextureStage)
 from random import randint
 from Game import entity_2D, map_loader, config, assets_loader
 
@@ -14,6 +14,7 @@ ENTITY_LAYER = config.ENTITY_LAYER
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
 ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
+ANIMATIONS_UPDATE_TIME = 0.1
 
 class Main(ShowBase):
     def __init__(self):
@@ -82,6 +83,9 @@ class Main(ShowBase):
         self.enemy_spawn_timer = ENEMY_SPAWN_TIME
         self.enemies = []
 
+        #variable working as "step" per which anims get updated
+        self.animations_update_time = ANIMATIONS_UPDATE_TIME
+
         log.debug("Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
         #seems like these are inherited from ShowBase the same way as render
@@ -127,6 +131,7 @@ class Main(ShowBase):
         #adding movement handler to task manager
         self.task_manager = taskMgr.add(self.ai_movement_handler, "ai movement handler")
         self.task_manager = taskMgr.add(self.spawn_enemies, "enemy spawner")
+        self.task_manager = taskMgr.add(self.animations_handler, "animations handler")
 
         #dictionary that stores default state of keys
         self.controls_status = {"move_up": False, "move_down": False,
@@ -227,14 +232,43 @@ class Main(ShowBase):
         #ensuring that mouse pointer is part of game's window right now
         if mouse_watcher.has_mouse():
             mouse_x = mouse_watcher.get_mouse_x()
-            #todo: replace this with actual animation names instead of sprite numbers
             if mouse_x > 0:
-                entity_2D.change_sprite(self.player, 0)
+                entity_2D.change_animation(self.player, 'move_right')
             else:
-                entity_2D.change_sprite(self.player, 1)
+                entity_2D.change_animation(self.player, 'move_left')
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
+        return action.cont
+
+    def animations_handler(self, action):
+        '''Meant to run as taskmanager routine. For each object on screen, update
+        its animation's frame each self.animation_update_time seconds'''
+        dt = globalClock.get_dt()
+
+        self.animations_update_time -= dt
+
+        #ensuring that whatever below only runs if enough time has passed
+        if self.animations_update_time > 0:
+            return action.cont
+
+        #log.debug("Updating anims")
+        #resetting anims timer, so countdown above will start again
+        self.animations_update_time = ANIMATIONS_UPDATE_TIME
+
+        #this is probably not the best way to iterate, but whatever
+        for entity in self.player, *self.enemies:
+            anim = entity['current_animation']
+            if entity['current_frame'] < entity['animations'][anim][1]:
+                entity['current_frame'] += 1
+            else:
+                entity['current_frame'] = entity['animations'][anim][0]
+
+            frame = entity['current_frame']
+            #I probably shouldnt keep this there but move to entity2d, but whatever
+            entity['object'].set_tex_offset(TextureStage.getDefault(),
+                                            *entity['sprites'][frame])
+
         return action.cont
 
     def ai_movement_handler(self, action):
@@ -273,9 +307,9 @@ class Main(ShowBase):
                 #to implement camera controls, at some point or another. #TODO
                 pos_diff = enemy_position - new_pos
                 if pos_diff[0] > 0:
-                    entity_2D.change_sprite(enemy, 0)
+                    entity_2D.change_animation(enemy, 'move_right')
                 else:
-                    entity_2D.change_sprite(enemy, 1)
+                    entity_2D.change_animation(enemy, 'move_left')
 
         return action.cont
 

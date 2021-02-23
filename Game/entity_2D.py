@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 STATS = config.STATS
 SKILLS = config.SKILLS
+ANIMS = config.ANIMS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
@@ -76,16 +77,22 @@ def cut_spritesheet(spritesheet, size):
 
     return sprites
 
-def change_sprite(entity, sprite):
-    '''Receive entity dictionary (from make_object function) and sprite number.
-    Change entity's sprite to be selected number'''
+def change_animation(entity, action):
+    '''Receive entity dictionary (from make_object function) and name of action.
+    Change entity's sprite to match that action'''
     #this isnt the best thing in the world, as it cant iterate tru sprites yet
     #TODO: add ability to play selected animation sets with specified speed
-    if entity['current_sprite'] != sprite:
-        log.debug(f"Changing sprite of {entity['name']} to {sprite}")
-        entity['object'].set_tex_offset(TextureStage.getDefault(),
-                                        *entity['sprites'][sprite])
-        entity['current_sprite'] = sprite
+    if entity['current_animation'] != action:
+        log.debug(f"Changing sprite of {entity['name']} to {action}")
+        #sprite = entity['animations'][action]
+        # entity['object'].set_tex_offset(TextureStage.getDefault(),
+                                        # *entity['sprites'][sprite])
+        #this doesnt work there and should be moved to taskmgr routine
+        # for sprite in range(*entity['animations'][action]):
+            # entity['object'].set_tex_offset(TextureStage.getDefault(),
+                                            # *entity['sprites'][sprite])
+        entity['current_frame'] = entity['animations'][action][0]
+        entity['current_animation'] = action
 
 def make_object(name, texture, size = None):
     '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
@@ -175,6 +182,10 @@ def make_object(name, texture, size = None):
         if item in SKILLS:
             entity_skills[item] = SKILLS[item].copy()
 
+    #this will explode if its not, but I dont have a default right now
+    if name in ANIMS:
+        entity_anims = ANIMS[name]
+
     entity = {}
     entity['name'] = name
     #its .copy() coz otherwise we will link to dictionary itself
@@ -185,7 +196,9 @@ def make_object(name, texture, size = None):
     entity['object'] = entity_object
     entity['collision'] = entity_collision
     entity['sprites'] = offsets
-    #this should be later remade to be "current animation" instead
-    entity['current_sprite'] = default_sprite
+    entity['current_animation'] = 'idle'
+    entity['current_frame'] = default_sprite
+    #attempt to bring animations. Dont need to copy, coz nothing will override these
+    entity['animations'] = entity_anims
 
     return entity
