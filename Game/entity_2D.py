@@ -1,5 +1,5 @@
 import logging
-from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode
+from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode, Texture
 from Game import config
 
 log = logging.getLogger(__name__)
@@ -60,12 +60,23 @@ def cut_spritesheet(spritesheet, size):
     #anything bigger than that
     for row in range(sprite_rows-1, -1, -1):
         log.debug(f"Processing row {row}")
+        #workaround to add negative values without breaking the order. This wont
+        #work if texture wrap mode isnt set to mirror. But otherwise it does
+        row_dict = []
+        mirrored_dict = []
         for column in range(0, sprite_columns):
             log.debug(f"Processing column {column}")
             horizontal_offset = column * horizontal_offset_step
             vertical_offset = row * vertical_offset_step
             log.debug(f"Got offsets: {horizontal_offset, vertical_offset}")
-            offsets.append((horizontal_offset, vertical_offset))
+            row_dict.append((horizontal_offset, vertical_offset))
+            #adding +1, coz of how texture wrap mode works
+            mirrored_dict.append((1+horizontal_offset, vertical_offset))
+        #reversing the order of items in mirrored dict, because otherwise it
+        #would count items from right side of mirrored image to left
+        mirrored_dict.reverse()
+        offsets.extend(row_dict)
+        offsets.extend(mirrored_dict)
     log.debug(f"Spritesheet contain following offsets: {offsets}")
 
     #maybe rename it into something more convenient?
@@ -79,18 +90,11 @@ def cut_spritesheet(spritesheet, size):
 
 def change_animation(entity, action):
     '''Receive entity dictionary (from make_object function) and name of action.
-    Change entity's sprite to match that action'''
+    Change entity's animation to match that action'''
     #this isnt the best thing in the world, as it cant iterate tru sprites yet
     #TODO: add ability to play selected animation sets with specified speed
     if entity['current_animation'] != action:
-        log.debug(f"Changing sprite of {entity['name']} to {action}")
-        #sprite = entity['animations'][action]
-        # entity['object'].set_tex_offset(TextureStage.getDefault(),
-                                        # *entity['sprites'][sprite])
-        #this doesnt work there and should be moved to taskmgr routine
-        # for sprite in range(*entity['animations'][action]):
-            # entity['object'].set_tex_offset(TextureStage.getDefault(),
-                                            # *entity['sprites'][sprite])
+        log.debug(f"Changing animation of {entity['name']} to {action}")
         entity['current_frame'] = entity['animations'][action][0]
         entity['current_animation'] = action
 
@@ -111,10 +115,16 @@ def make_object(name, texture, size = None):
     texture.set_magfilter(DEFAULT_SPRITE_FILTER)
     texture.set_minfilter(DEFAULT_SPRITE_FILTER)
 
+    #the magic that allows textures to be mirrored. With that thing being there,
+    #its possible to use values in range 1-2 to get versions of sprites that will
+    #face the opposite direction, removing the requirement to draw them with hands.
+    #Without thing thing being there, 0 and 1 will be threated as same coordinates,
+    #coz "out of box" texture wrap mode is "repeat"
+    texture.set_wrap_u(Texture.WM_mirror)
+    texture.set_wrap_v(Texture.WM_mirror)
     sprite_data = cut_spritesheet(texture, size)
 
     horizontal_scale, vertical_scale = sprite_data['offset_steps']
-    #vertical_scale = vertical_offset_step
     offsets = sprite_data['offsets']
 
     entity_frame = CardMaker(name)
@@ -131,15 +141,6 @@ def make_object(name, texture, size = None):
     #entity_object.set_tex_offset(TextureStage.getDefault(), 0.5, 0)
     #entity_object.set_tex_scale(TextureStage.getDefault(), 0.5, 1)
     entity_object.set_tex_scale(TextureStage.getDefault(), horizontal_scale, vertical_scale)
-
-    #there is an interesting behavior of set_tex_offset worth remembering: 0, 0
-    #and 1, 1 are equal things (and every other variation of 0 and 1. Meaning the
-    #following 3 lines will be threated identically
-    #entity_object.set_tex_offset(TextureStage.getDefault(), 1, 1)
-    #entity_object.set_tex_offset(TextureStage.getDefault(), 0, 0)
-    #entity_object.set_tex_offset(TextureStage.getDefault(), 0, 1)
-    #this can be altered by manually setting texture wrap mode, but by default
-    #thats what we get (iirc said mode is set to "repeat" out of box)
 
     #now, to use the stuff from cut_spritesheet function.
     #lets say, we need to use second sprite from sheet. Just do:
