@@ -238,13 +238,20 @@ class Main(ShowBase):
             #that fullfill the same goal. But thus far I didnt success at that
             #thing, so I wont care about optimisation until it will be unavoidable
             active_keys = [button for button in self.controls_status
-                           if self.controls_status[button] == True]
+                           if self.controls_status[button] == True and button != 'attack']
 
+            #this is getting worse with each iteration. I should really change this
+            #to some variable that track character's direction
             if mouse_x > 0:
-                anim = 'move_right' if active_keys else 'idle_right'
+                if self.controls_status['attack']:
+                    anim = 'attack_right'
+                else:
+                    anim = 'move_right' if active_keys else 'idle_right'
             else:
-                anim = 'move_left' if active_keys else 'idle_left'
-
+                if self.controls_status['attack']:
+                    anim = 'attack_left'
+                else:
+                    anim = 'move_left' if active_keys else 'idle_left'
             entity_2D.change_animation(self.player, anim)
 
         #it works a bit weird, but if we wont return .cont of task we received,
