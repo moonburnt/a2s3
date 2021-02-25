@@ -172,11 +172,11 @@ class Main(ShowBase):
         self.controls_status[key_name] = key_status
         log.debug(f"{key_name} has been set to {key_status}")
 
-    def controls_handler(self, action):
+    def controls_handler(self, event):
         '''
         Intended to be used as part of task manager routine. Automatically receive
-        action from task manager, checks if buttons are pressed and log it. Then
-        return action back to task manager, so it keeps running in loop
+        event from task manager, checks if buttons are pressed and log it. Then
+        return event back to task manager, so it keeps running in loop
         '''
         #manipulating cooldowns on player's skills. It may be good idea to move
         #it to separate routine and check cooldowns of all entities on screen
@@ -196,28 +196,6 @@ class Main(ShowBase):
         #in case it will backfire - turn this var into direct dictionary calls
         mov_speed = self.player['stats']['mov_spd']
 
-        #In future, these speed values may be affected by some items
-        if self.controls_status["move_up"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (0, -mov_speed, 0))
-        if self.controls_status["move_down"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (0, mov_speed, 0))
-        if self.controls_status["move_left"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (mov_speed, 0, 0))
-        if self.controls_status["move_right"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (-mov_speed, 0, 0))
-
-        #this is placeholder, that will automatically deal damage to first enemy
-        #todo: collision check, etc etc etc
-        if self.controls_status["attack"] and not skills['atk_0']['used']:
-            skills['atk_0']['used'] = True
-            #temporary check to ensure that we still have alive enemies
-            if self.enemies:
-                self.damage_target(self.enemies[0], self.player['stats']['dmg'])
-
         #change the direction character face, based on mouse pointer position
         #this may need some tweaking if I will decide to add gamepad support
         #basically, the idea is the following: since camera is centered right
@@ -228,35 +206,55 @@ class Main(ShowBase):
         #hint: this can also be used together with move buttons. E.g mouse change
         #the direction head/eyes face and keys change body. But that will depend
         #on amount of animations I would obtain. For now, lets leave it like that
+        direction = 'right'
         mouse_watcher = base.mouseWatcherNode
         #ensuring that mouse pointer is part of game's window right now
         if mouse_watcher.has_mouse():
             mouse_x = mouse_watcher.get_mouse_x()
-            #trigger idle anims if no action key is currently pressed. Probably
-            #not the best way to handle that (coz, for per-frame task, this check
-            #is kinda expensive. I should probably add char's idleness variable
-            #that fullfill the same goal. But thus far I didnt success at that
-            #thing, so I wont care about optimisation until it will be unavoidable
-            active_keys = [button for button in self.controls_status
-                           if self.controls_status[button] == True and button != 'attack']
-
-            #this is getting worse with each iteration. I should really change this
-            #to some variable that track character's direction
             if mouse_x > 0:
-                if self.controls_status['attack']:
-                    anim = 'attack_right'
-                else:
-                    anim = 'move_right' if active_keys else 'idle_right'
+                direction = 'right'
             else:
-                if self.controls_status['attack']:
-                    anim = 'attack_left'
-                else:
-                    anim = 'move_left' if active_keys else 'idle_left'
-            entity_2D.change_animation(self.player, anim)
+                direction = 'left'
+
+        #saving action to apply to our animation. Default is idle
+        action = 'idle'
+
+        #In future, these speed values may be affected by some items
+        if self.controls_status["move_up"]:
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (0, -mov_speed, 0))
+            action = "move"
+        if self.controls_status["move_down"]:
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (0, mov_speed, 0))
+            action = "move"
+        if self.controls_status["move_left"]:
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (mov_speed, 0, 0))
+            action = "move"
+        if self.controls_status["move_right"]:
+            self.player['object'].set_pos(self.player['object'].get_pos() +
+                                        (-mov_speed, 0, 0))
+            action = "move"
+
+        #this is placeholder, that will automatically deal damage to first enemy
+        #todo: collision check, etc etc etc
+        if self.controls_status["attack"] and not skills['atk_0']['used']:
+            skills['atk_0']['used'] = True
+            #temporary check to ensure that we still have alive enemies
+            if self.enemies:
+                self.damage_target(self.enemies[0], self.player['stats']['dmg'])
+
+        #this is kinda awkward coz its tied to cooldown and may look weird
+        #I may do something about that later... Like add "skill_cast_time" or idk
+        if skills['atk_0']['used']:
+            action = "attack"
+
+        entity_2D.change_animation(self.player, f"{action}_{direction}")
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
-        return action.cont
+        return event.cont
 
     def animations_handler(self, action):
         '''Meant to run as taskmanager routine. For each object on screen, update

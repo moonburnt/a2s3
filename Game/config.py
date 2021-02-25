@@ -48,7 +48,7 @@ STATS = {'default': {'hp': 50, 'dmg': 0, 'mov_spd': 1, 'skills': ['atk_0']},
 #idea to keep different attack's anims and damage in related subdics, instead of
 #relying on global stats and other functions. But thats to solve in future
 #"used" is effectively an equal to "on cooldown"
-SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 2, 'cur_cd': 0, 'used': False}}
+SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': False}}
 
 #animation frames for each action. Tuple[0] is the first frame, tuple[1] is the last
 #e.g, for static things, setting it to something like (0, 0) is ok
