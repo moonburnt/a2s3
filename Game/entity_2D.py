@@ -91,121 +91,114 @@ def cut_spritesheet(spritesheet, size):
 def change_animation(entity, action):
     '''Receive entity dictionary (from make_object function) and name of action.
     Change entity's animation to match that action'''
-    #this isnt the best thing in the world, as it cant iterate tru sprites yet
-    #TODO: add ability to play selected animation sets with specified speed
-    if entity['current_animation'] != action:
-        log.debug(f"Changing animation of {entity['name']} to {action}")
-        entity['current_frame'] = entity['animations'][action][0]
-        entity['current_animation'] = action
+    if entity.current_animation != action:
+        log.debug(f"Changing animation of {entity.name} to {action}")
+        entity.current_frame = entity.animations[action][0]
+        entity.current_animation = action
 
-def make_object(name, texture, size = None):
+class Entity2D:
     '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
-    Generate 2D object of selected size (if none - then based on image size).
-    Returns dictionary with entity's name, stats, object, and collision.
-    E.g dic['name']['stats']['object']['collision']'''
-    log.debug(f"Initializing {name} object")
+    Generate 2D object of selected size (if none - then based on image size).'''
+    def __init__(self, name, texture, size = None):
+        log.debug(f"Initializing {name} object")
 
-    if not size:
-        size = DEFAULT_SPRITE_SIZE
+        if not size:
+            size = DEFAULT_SPRITE_SIZE
 
-    size_x, size_y = size
-    log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
+        size_x, size_y = size
+        log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
 
-    #setting filtering method to dont blur our sprite
-    texture.set_magfilter(DEFAULT_SPRITE_FILTER)
-    texture.set_minfilter(DEFAULT_SPRITE_FILTER)
+        #setting filtering method to dont blur our sprite
+        texture.set_magfilter(DEFAULT_SPRITE_FILTER)
+        texture.set_minfilter(DEFAULT_SPRITE_FILTER)
 
-    #the magic that allows textures to be mirrored. With that thing being there,
-    #its possible to use values in range 1-2 to get versions of sprites that will
-    #face the opposite direction, removing the requirement to draw them with hands.
-    #Without thing thing being there, 0 and 1 will be threated as same coordinates,
-    #coz "out of box" texture wrap mode is "repeat"
-    texture.set_wrap_u(Texture.WM_mirror)
-    texture.set_wrap_v(Texture.WM_mirror)
-    sprite_data = cut_spritesheet(texture, size)
+        #the magic that allows textures to be mirrored. With that thing being
+        #there, its possible to use values in range 1-2 to get versions of sprites
+        #that will face the opposite direction, removing the requirement to draw
+        #them with hands. Without thing thing being there, 0 and 1 will be threated
+        #as same coordinates, coz "out of box" texture wrap mode is "repeat"
+        texture.set_wrap_u(Texture.WM_mirror)
+        texture.set_wrap_v(Texture.WM_mirror)
+        sprite_data = cut_spritesheet(texture, size)
 
-    horizontal_scale, vertical_scale = sprite_data['offset_steps']
-    offsets = sprite_data['offsets']
+        horizontal_scale, vertical_scale = sprite_data['offset_steps']
+        offsets = sprite_data['offsets']
 
-    entity_frame = CardMaker(name)
-    #setting frame's size. Say, for 32x32 sprite all of these need to be 16
-    entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
+        entity_frame = CardMaker(name)
+        #setting frame's size. Say, for 32x32 sprite all of these need to be 16
+        entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
-    entity_object = render.attach_new_node(entity_frame.generate())
-    entity_object.set_texture(texture)
+        entity_object = render.attach_new_node(entity_frame.generate())
+        entity_object.set_texture(texture)
 
-    #okay, this does the magic
-    #basically, to show the very first sprite of 2 in row, we set tex scale to half
-    #(coz half is our normal char's size). If we will need to use it with sprites
-    #other than first - then we also should adjust set_tex_offset accordingly
-    #entity_object.set_tex_offset(TextureStage.getDefault(), 0.5, 0)
-    #entity_object.set_tex_scale(TextureStage.getDefault(), 0.5, 1)
-    entity_object.set_tex_scale(TextureStage.getDefault(), horizontal_scale, vertical_scale)
+        #okay, this does the magic
+        #basically, to show the very first sprite of 2 in row, we set tex scale
+        #to half (coz half is our normal char's size). If we will need to use it
+        #with sprites other than first - then we also should adjust offset accordingly
+        #entity_object.set_tex_offset(TextureStage.getDefault(), 0.5, 0)
+        #entity_object.set_tex_scale(TextureStage.getDefault(), 0.5, 1)
+        entity_object.set_tex_scale(TextureStage.getDefault(),
+                                    horizontal_scale, vertical_scale)
 
-    #now, to use the stuff from cut_spritesheet function.
-    #lets say, we need to use second sprite from sheet. Just do:
-    #entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[1])
-    #but, by default, offset should be always set to 0. In case our object has
-    #just one sprite. Or something like that
-    default_sprite = 0
-    entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[default_sprite])
+        #now, to use the stuff from cut_spritesheet function.
+        #lets say, we need to use second sprite from sheet. Just do:
+        #entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[1])
+        #but, by default, offset should be always set to 0. In case our object
+        #has just one sprite. Or something like that
+        default_sprite = 0
+        entity_object.set_tex_offset(TextureStage.getDefault(),
+                                     *offsets[default_sprite])
 
-    #billboard is effect to ensure that object always face camera the same
-    #e.g this is the key to achieve that "2.5D style" I aim for
-    entity_object.set_billboard_point_eye()
-    #enable support for alpha channel. This is a float, e.g making it non-100%
-    #will require values between 0 and 1
-    entity_object.set_transparency(1)
+        #billboard is effect to ensure that object always face camera the same
+        #e.g this is the key to achieve that "2.5D style" I aim for
+        entity_object.set_billboard_point_eye()
+        #enable support for alpha channel. This is a float, e.g making it non-100%
+        #will require values between 0 and 1
+        entity_object.set_transparency(1)
 
-    #setting character's collisions
-    entity_collider = CollisionNode(name)
-    #TODO: move this to be under character's legs
-    #right now its centered on character's center
-    #coz its sphere and not oval - it doesnt matter if we use size_x or size_y
-    #but, for sake of convenience - we are going for size_y
-    entity_collider.add_solid(CollisionSphere(0, 0, 0, (size_y/2)))
-    entity_collision = entity_object.attach_new_node(entity_collider)
+        #setting character's collisions
+        entity_collider = CollisionNode(name)
+        #TODO: move this to be under character's legs
+        #right now its centered on character's center
+        #coz its sphere and not oval - it doesnt matter if we use size_x or size_y
+        #but, for sake of convenience - we are going for size_y
+        entity_collider.add_solid(CollisionSphere(0, 0, 0, (size_y/2)))
+        entity_collision = entity_object.attach_new_node(entity_collider)
 
-    #todo: maybe move ctrav stuff there
+        #todo: maybe move ctrav stuff there
 
-    #attempting to find stats of entity with name {name} in STATS
-    #if not found - will fallback to STATS['default']
-    if name in STATS:
-        entity_stats = STATS[name]
-    else:
-        entity_stats = STATS['default']
-    log.debug(f"Set {name}'s stats to be {entity_stats}")
+        #attempting to find stats of entity with name {name} in STATS
+        #if not found - will fallback to STATS['default']
+        if name in STATS:
+            entity_stats = STATS[name]
+        else:
+            entity_stats = STATS['default']
+        log.debug(f"Set {name}'s stats to be {entity_stats}")
 
-    #this is probably not the best way, but whatever - temporary solution
-    #also this will crash if there are no skills, but that shouldnt happen
-    entity_skills = {}
-    for item in entity_stats['skills']:
-        if item in SKILLS:
-            entity_skills[item] = SKILLS[item].copy()
+        #this is probably not the best way, but whatever - temporary solution
+        #also this will crash if there are no skills, but that shouldnt happen
+        entity_skills = {}
+        for item in entity_stats['skills']:
+            if item in SKILLS:
+                entity_skills[item] = SKILLS[item].copy()
 
-    #this will explode if its not, but I dont have a default right now
-    if name in ANIMS:
-        entity_anims = ANIMS[name]
+        #this will explode if its not, but I dont have a default right now
+        if name in ANIMS:
+            entity_anims = ANIMS[name]
 
-    entity = {}
-    entity['name'] = name
-    #its .copy() coz otherwise we will link to dictionary itself
-    #and any change to stats of one enemy will affect other enemies
-    #but this way, everything should be fine
-    entity['stats'] = entity_stats.copy()
-    entity['skills'] = entity_skills
-    entity['object'] = entity_object
-    entity['collision'] = entity_collision
-    entity['sprites'] = offsets
-    entity['current_animation'] = 'idle_right'
-    entity['current_frame'] = default_sprite
-    #attempt to bring animations. Dont need to copy, coz nothing will override these
-    entity['animations'] = entity_anims
+        self.name = name
+        #its .copy() coz otherwise we will link to dictionary itself, which will
+        #cause any change to stats of one enemy to affect every other enemy
+        self.stats = entity_stats.copy()
+        self.skills = entity_skills
+        self.object = entity_object
+        self.collision = entity_collision
+        self.sprites = offsets
+        self.current_animation = 'idle_right'
+        self.current_frame = default_sprite
+        self.animations = entity_anims
 
-    #these will be there to add tags to object node itself.
-    #for now they dont work, coz it seems like I need to rewrite the whole thing
-    #dammit.
-    #entity_object.set_python_tag("name", entity['name'])
-    #entity_object.set_python_tag("stats", entity['stats'])
-
-    return entity
+        #setting python tags, to make certain vars available from within object
+        #this way, it will be possible to use this on collision events
+        self.object.set_python_tag("name", self.name)
+        self.object.set_python_tag("stats", self.stats)

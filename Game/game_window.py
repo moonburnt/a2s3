@@ -74,10 +74,10 @@ class Main(ShowBase):
                                   ((-config.MAP_SIZE[0]/2)-32, (config.MAP_SIZE[1]/2)+32)]
 
         log.debug("Initializing player")
-        self.player = entity_2D.make_object("player", self.assets['sprites']['character'])
+        self.player = entity_2D.Entity2D("player", self.assets['sprites']['character'])
         #setting character's position to always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
-        self.player['object'].set_pos(0, 0, ENTITY_LAYER)
+        self.player.object.set_pos(0, 0, ENTITY_LAYER)
 
         log.debug("Initializing enemy spawner")
         self.enemy_spawn_timer = ENEMY_SPAWN_TIME
@@ -95,19 +95,26 @@ class Main(ShowBase):
 
         #this way we are basically naming the events we want to track, so these
         #will be possible to handle via self.accept and do the stuff accordingly
+        #"in" is what happens when one object start colliding with another
+        #"again" is if object continue to collide with another
+        #"out" is when objects stop colliding
         self.pusher.addInPattern('%fn-into-%in')
         self.pusher.addAgainPattern('%fn-again-%in')
-        self.pusher.addOutPattern('%fn-out-%in')
+        #we dont need this one there
+        #self.pusher.addOutPattern('%fn-out-%in')
 
-        #this is... a thing. I have no idea why, but passing things directly as
-        #arguments didnt work properly
-        #self.accept('player-into-enemy', self.damage_target, [self.player, 1])
-        #self.accept('enemy-into-player', self.damage_target, [self.player, 1])
-        self.accept('player-into-enemy', self.log_collision)
-        self.accept('enemy-into-player', self.log_collision)
+        #because in our current version we need to deal damage to player on collide
+        #regardless who started collided with whom - tracking all these events to
+        #run function that deals damage to player. I have no idea why, but passing
+        #things arguments to "damage target" function directly, like we did with
+        #controls, didnt work. So we are using kind of "proxy function" to do that
+        self.accept('player-into-enemy', self.damage_player)
+        self.accept('enemy-into-player', self.damage_player)
+        self.accept('player-again-enemy', self.damage_player)
+        self.accept('enemy-again-player', self.damage_player)
 
-        self.pusher.add_collider(self.player['collision'], self.player['object'])
-        self.cTrav.add_collider(self.player['collision'], self.pusher)
+        self.pusher.add_collider(self.player.collision, self.player.object)
+        self.cTrav.add_collider(self.player.collision, self.pusher)
         #showing all collisions on the scene (e.g visible to render)
         #this is better than manually doing collision.show() for each object
         if config.SHOW_COLLISIONS:
@@ -121,7 +128,7 @@ class Main(ShowBase):
         self.camera.set_pos(0, 700, 500)
         self.camera.look_at(0, 0, 0)
         #making camera always follow character
-        self.camera.reparent_to(self.player['object'])
+        self.camera.reparent_to(self.player.object)
 
         log.debug(f"Setting up background music")
         #setting volume like that, so it should apply to all music tracks
@@ -140,21 +147,24 @@ class Main(ShowBase):
         log.debug(f"Initializing controls handler")
         #taskMgr is function that runs on background each frame
         #and execute whatever functions are attached to it with .add()
-        self.task_manager = taskMgr.add(self.controls_handler, "controls handler")
+        self.task_manager = taskMgr.add(self.controls_handler,
+                                        "controls handler")
         #adding movement handler to task manager
-        self.task_manager = taskMgr.add(self.ai_movement_handler, "ai movement handler")
-        self.task_manager = taskMgr.add(self.spawn_enemies, "enemy spawner")
-        self.task_manager = taskMgr.add(self.animations_handler, "animations handler")
+        self.task_manager = taskMgr.add(self.ai_movement_handler,
+                                        "ai movement handler")
+        self.task_manager = taskMgr.add(self.spawn_enemies,
+                                        "enemy spawner")
+        self.task_manager = taskMgr.add(self.animations_handler,
+                                        "animations handler")
 
         #dictionary that stores default state of keys
         self.controls_status = {"move_up": False, "move_down": False,
                                 "move_left": False, "move_right": False, "attack": False}
 
-        #.accept() is method that track panda's events and perform certain
-        #functions once these occur
+        #.accept() is method that track panda's events and perform certain functions
+        #once these occur. "-up" prefix means key has been released
         self.accept(config.CONTROLS['move_up'],
                     self.change_key_state, ["move_up", True])
-        #"-up" prefix means key has been released
         self.accept(f"{config.CONTROLS['move_up']}-up",
                     self.change_key_state, ["move_up", False])
         self.accept(config.CONTROLS['move_down'],
@@ -186,12 +196,16 @@ class Main(ShowBase):
         event from task manager, checks if buttons are pressed and log it. Then
         return event back to task manager, so it keeps running in loop
         '''
+        #safety check to ensure that player isnt dead, otherwise it will crash
+        if not self.player.object:
+            return event.cont
+
         #manipulating cooldowns on player's skills. It may be good idea to move
         #it to separate routine and check cooldowns of all entities on screen
         dt = globalClock.get_dt()
 
         #this seem to work reasonably decent. Not to jinx tho
-        skills = self.player['skills']
+        skills = self.player.skills
         for skill in skills:
             if skills[skill]['used']:
                 skills[skill]['cur_cd'] -= dt
@@ -202,7 +216,7 @@ class Main(ShowBase):
 
         #idk if I need to export this to variable or call directly
         #in case it will backfire - turn this var into direct dictionary calls
-        mov_speed = self.player['stats']['mov_spd']
+        mov_speed = self.player.stats['mov_spd']
 
         #change the direction character face, based on mouse pointer position
         #this may need some tweaking if I will decide to add gamepad support
@@ -228,21 +242,18 @@ class Main(ShowBase):
         action = 'idle'
 
         #In future, these speed values may be affected by some items
+        player_object = self.player.object
         if self.controls_status["move_up"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (0, -mov_speed, 0))
+            player_object.set_pos(player_object.get_pos() + (0, -mov_speed, 0))
             action = "move"
         if self.controls_status["move_down"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (0, mov_speed, 0))
+            player_object.set_pos(player_object.get_pos() + (0, mov_speed, 0))
             action = "move"
         if self.controls_status["move_left"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (mov_speed, 0, 0))
+            player_object.set_pos(player_object.get_pos() + (mov_speed, 0, 0))
             action = "move"
         if self.controls_status["move_right"]:
-            self.player['object'].set_pos(self.player['object'].get_pos() +
-                                        (-mov_speed, 0, 0))
+            player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
         #this is placeholder, that will automatically deal damage to first enemy
@@ -251,7 +262,7 @@ class Main(ShowBase):
             skills['atk_0']['used'] = True
             #temporary check to ensure that we still have alive enemies
             if self.enemies:
-                self.damage_target(self.enemies[0], self.player['stats']['dmg'])
+                self.damage_target(self.enemies[0], self.player.stats['dmg'])
 
         #this is kinda awkward coz its tied to cooldown and may look weird
         #I may do something about that later... Like add "skill_cast_time" or idk
@@ -264,16 +275,21 @@ class Main(ShowBase):
         #then task will run just once and then stop, which we dont want
         return event.cont
 
-    def animations_handler(self, action):
+    def animations_handler(self, event):
         '''Meant to run as taskmanager routine. For each object on screen, update
         its animation's frame each self.animation_update_time seconds'''
+        #safety check to avoid crash if player is already dead. Maybe I shouldnt
+        #stop all anims and just remove player's object from list of things to update?
+        if not self.player.object:
+            return event.cont
+
         dt = globalClock.get_dt()
 
         self.animations_update_time -= dt
 
         #ensuring that whatever below only runs if enough time has passed
         if self.animations_update_time > 0:
-            return action.cont
+            return event.cont
 
         #log.debug("Updating anims")
         #resetting anims timer, so countdown above will start again
@@ -281,18 +297,18 @@ class Main(ShowBase):
 
         #this is probably not the best way to iterate, but whatever
         for entity in self.player, *self.enemies:
-            anim = entity['current_animation']
-            if entity['current_frame'] < entity['animations'][anim][1]:
-                entity['current_frame'] += 1
+            anim = entity.current_animation
+            if entity.current_frame < entity.animations[anim][1]:
+                entity.current_frame += 1
             else:
-                entity['current_frame'] = entity['animations'][anim][0]
+                entity.current_frame = entity.animations[anim][0]
 
-            frame = entity['current_frame']
+            frame = entity.current_frame
             #I probably shouldnt keep this there but move to entity2d, but whatever
-            entity['object'].set_tex_offset(TextureStage.getDefault(),
-                                            *entity['sprites'][frame])
+            entity.object.set_tex_offset(TextureStage.getDefault(),
+                                            *entity.sprites[frame])
 
-        return action.cont
+        return event.cont
 
     def ai_movement_handler(self, event):
         '''This is but nasty hack to make enemies follow character. TODO: remake
@@ -304,14 +320,14 @@ class Main(ShowBase):
 
         #hack to ignore this handler if the last enemy has died. Without it, game
         #will crash the very next second after last kill
-        if not self.enemies:
+        if not self.enemies or not self.player.object:
             return event.cont
 
-        player_position = self.player['object'].get_pos()
+        player_position = self.player.object.get_pos()
         for enemy in self.enemies:
-            mov_speed = enemy['stats']['mov_spd']
+            mov_speed = enemy.stats['mov_spd']
 
-            enemy_position = enemy['object'].get_pos()
+            enemy_position = enemy.object.get_pos()
             vector_to_player = player_position - enemy_position
             distance_to_player = vector_to_player.length()
             #normalizing vector is the key to avoid "flickering" effect, as its
@@ -337,7 +353,7 @@ class Main(ShowBase):
             #to player's hitbox
             if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
                 action = 'move'
-                enemy['object'].set_pos(new_pos)
+                enemy.object.set_pos(new_pos)
             else:
                 action = 'attack'
 
@@ -347,9 +363,13 @@ class Main(ShowBase):
 
         return event.cont
 
-    def spawn_enemies(self, action):
+    def spawn_enemies(self, event):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
         ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
+        #safety check to dont spawn more enemies if player is dead
+        if not self.player.object:
+            return event.cont
+
         #this clock runs on background and updates each frame
         #e.g 'dt' will always be the amount of time passed since last frame
         #and no, "from time import sleep" wont fit for this - game will freeze
@@ -364,32 +384,29 @@ class Main(ShowBase):
             enemy_amount = len(self.enemies)+1
             if enemy_amount <= MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
-                enemy = entity_2D.make_object("enemy", self.assets['sprites']['enemy'])
+                enemy = entity_2D.Entity2D("enemy", self.assets['sprites']['enemy'])
                 #picking up random spawnpoint out of available
                 #there is -1 coz randint include the second number you pass to
                 #it, not like "in range". E.g without it we will get "out of bound"
                 spawnpoint = randint(0, len(self.enemy_spawnpoints)-1)
                 log.debug(f"Spawning enemy on spawnpoint {spawnpoint}")
-                enemy['object'].set_pos(*self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER)
+                enemy.object.set_pos(*self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER)
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {enemy_amount} enemies on screen")
 
-        return action.cont
+        return event.cont
 
     def damage_target(self, target, amount = 0):
-        '''Receive dic(name of target). Optionally receive int(amount of damage).
-        If not specified - will use 0. Decrease target's stats['hp'] by damage.
-        Example usage:
-        damage_target(enemy, player['stats']['dmg'], where enemy is
-        enemy['name']['stats']['object']['collision'] and ['stats'] has ['hp']'''
+        '''Receive name of target. Optionally receive int(amount of damage).
+        If not specified - will use 0. Decrease target's stats['hp'] by damage'''
         #I probably dont need to return this, for as long as its used on self. objects
         #I cant assign variables there, coz it will break the thing
-        target['stats']['hp'] -= amount
-        log.debug(f"{target['name']} has received {amount} damage "
-                  f"and is now on {target['stats']['hp']} hp")
+        target.stats['hp'] -= amount
+        log.debug(f"{target.name} has received {amount} damage "
+                  f"and is now on {target.stats['hp']} hp")
 
         #idk if it should be there or on separate loop, but for now it will do
-        if target['stats']['hp'] <= 0:
+        if target.stats['hp'] <= 0:
             self.kill(target)
             return
 
@@ -398,18 +415,27 @@ class Main(ShowBase):
         self.assets['sfx']['damage'].play()
 
     def kill(self, target):
-        '''Receive dic(name of target). Valid target's dictionary should be like:
-        target['name']['stats']['collision]['object']. Remove collision and object
-        nodes, then remove target itself'''
+        '''Receive name of target. Then remove its nodes, object and target itself.
+        Log that target has been killed and play death sound'''
+        #doing whatever stuff related to killing the player, coz its quite different.
+        #maybe I should move player's death to another function, at some point?
+        if target == self.player:
+            position = self.player.object.get_pos()
+            self.camera.reparent_to(render)
+            self.cTrav.remove_collider(self.player.collision)
+            self.pusher.remove_collider(self.player.collision)
+            #we wont delete player variable itself tho, at least for now. Coz
+            #otherwise many other functions would collapse
         #saving name into variable to print into debug output after target's clear
-        name = target['name']
-        target['collision'].remove_node()
-        target['object'].remove_node()
-        #target.clear()
-        #placeholder hack to remove this object from enemy list
-        #with actual combat system, I will probably get rid of this
-        #TODO
-        self.enemies.remove(target)
+        name = target.name
+        #it may be good idea to dont remove the node on death, but play some death
+        #animation and then leave gibs on floor for a while. #TODO
+        target.collision.remove_node()
+        target.object.remove_node()
+        #ensuring that the object we are killing is part of enemy gang.
+        #If so - removing leftover data from enemies list
+        if target in self.enemies:
+            self.enemies.remove(target)
         log.debug(f"{name} is now dead")
 
         death_sound = f"{name}_death"
@@ -420,23 +446,28 @@ class Main(ShowBase):
             log.warning(f"{name} has no custom death sound, using fallback")
             self.assets['sfx']['default_death'].play()
 
-    def log_collision(self, entry):
-        '''Logging the collision event. Placeholder function, will be remade into
-        thingy that deal damage to player when he collide with enemies'''
+    def damage_player(self, entry):
+        '''Deals damage to player when it collides with some object that should
+        hurt. Intended to be used from self.accept event handler'''
         hitter = entry.get_from_node_path()
         target = entry.get_into_node_path()
 
-        #there is a funny thing here. I wanted to use these and python tags to
-        #determine for how much to damage player. But functions above return
-        #a bit different node paths, than required node paths. And without tags
-        #So... I guess, I will need to rewrite this whole thing into classes
-        #instead of dictionaries? Jeez, thats a lot of work...
-        #below is the example of why it doesnt work - first and second should be
-        #the same, but they arent.
-        #print(self.player['object'].get_python_tag("name"))
-        #print(self.player['object'])
-        #print(hitter)
-        #print(hitter.get_python_tag("name"))
-
-        #thus, because it didnt work for now, Im just logging the event itself
         log.debug(f"{hitter} collides with {target}")
+
+        #we are using "get_net_python_tag" over just "get_tag", coz this one will
+        #search for whole tree, instead of just selected node. And since the node
+        #we get via methods above is not the same as node we want - this is kind
+        #of what we should use
+        hit_name = hitter.get_net_python_tag("name")
+        tar_name = target.get_net_python_tag("name")
+
+        #bcuz we will damage player anyway - ensuring that object used as damage
+        #source is not the player but whatever else it collides with
+        if hit_name == "player":
+            dmg_source = target
+        else:
+            dmg_source = hitter
+
+        ds = dmg_source.get_net_python_tag("stats")
+        dmg = ds['dmg']
+        self.damage_target(self.player, dmg)
