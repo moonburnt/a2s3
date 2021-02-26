@@ -53,7 +53,7 @@ SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': 
 #animation frames for each action. Tuple[0] is the first frame, tuple[1] is the last
 #e.g, for static things, setting it to something like (0, 0) is ok
 ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11), 'move_left': (12,15), 'attack_right': (16,19), 'attack_left': (20, 23)},
-         'enemy': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3), 'move_left': (4,7)}}
+         'enemy': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3), 'move_left': (4,7), 'attack_right': (8,11), 'attack_left': (12,15)}}
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)

@@ -202,4 +202,10 @@ def make_object(name, texture, size = None):
     #attempt to bring animations. Dont need to copy, coz nothing will override these
     entity['animations'] = entity_anims
 
+    #these will be there to add tags to object node itself.
+    #for now they dont work, coz it seems like I need to rewrite the whole thing
+    #dammit.
+    #entity_object.set_python_tag("name", entity['name'])
+    #entity_object.set_python_tag("stats", entity['stats'])
+
     return entity

@@ -89,12 +89,25 @@ class Main(ShowBase):
         log.debug("Initializing collision processors")
         #I dont exactly understand the syntax, but other variable names failed
         #seems like these are inherited from ShowBase the same way as render
-        #also "base" isnt typo, but thing of similar matter
         self.cTrav = CollisionTraverser()
         self.pusher = CollisionHandlerPusher()
         self.pusher.set_horizontal(False)
-        base.pusher.add_collider(self.player['collision'], self.player['object'])
-        base.cTrav.add_collider(self.player['collision'], self.pusher)
+
+        #this way we are basically naming the events we want to track, so these
+        #will be possible to handle via self.accept and do the stuff accordingly
+        self.pusher.addInPattern('%fn-into-%in')
+        self.pusher.addAgainPattern('%fn-again-%in')
+        self.pusher.addOutPattern('%fn-out-%in')
+
+        #this is... a thing. I have no idea why, but passing things directly as
+        #arguments didnt work properly
+        #self.accept('player-into-enemy', self.damage_target, [self.player, 1])
+        #self.accept('enemy-into-player', self.damage_target, [self.player, 1])
+        self.accept('player-into-enemy', self.log_collision)
+        self.accept('enemy-into-player', self.log_collision)
+
+        self.pusher.add_collider(self.player['collision'], self.player['object'])
+        self.cTrav.add_collider(self.player['collision'], self.pusher)
         #showing all collisions on the scene (e.g visible to render)
         #this is better than manually doing collision.show() for each object
         if config.SHOW_COLLISIONS:
@@ -137,15 +150,11 @@ class Main(ShowBase):
         self.controls_status = {"move_up": False, "move_down": False,
                                 "move_left": False, "move_right": False, "attack": False}
 
-        #.accept() is method that receive input from buttons and perform stuff
-        #its format is the following:
-        #first is name-state of key (name is in english, but any layout is supported)
-        #second is function that gets called if this button event has happend
-        #optional third can be used to pass arguments to second function
+        #.accept() is method that track panda's events and perform certain
+        #functions once these occur
         self.accept(config.CONTROLS['move_up'],
                     self.change_key_state, ["move_up", True])
         #"-up" prefix means key has been released
-        #I know how ugly it looks, but for now it works
         self.accept(f"{config.CONTROLS['move_up']}-up",
                     self.change_key_state, ["move_up", False])
         self.accept(config.CONTROLS['move_down'],
@@ -160,7 +169,6 @@ class Main(ShowBase):
                     self.change_key_state, ["move_right", True])
         self.accept(f"{config.CONTROLS['move_right']}-up",
                     self.change_key_state, ["move_right", False])
-
         self.accept(config.CONTROLS['attack'],
                     self.change_key_state, ["attack", True])
         self.accept(f"{config.CONTROLS['attack']}-up",
@@ -286,7 +294,7 @@ class Main(ShowBase):
 
         return action.cont
 
-    def ai_movement_handler(self, action):
+    def ai_movement_handler(self, event):
         '''This is but nasty hack to make enemies follow character. TODO: remake
         and move to its own module'''
         #TODO: maybe make it possible to chase not for just player?
@@ -297,7 +305,7 @@ class Main(ShowBase):
         #hack to ignore this handler if the last enemy has died. Without it, game
         #will crash the very next second after last kill
         if not self.enemies:
-            return action.cont
+            return event.cont
 
         player_position = self.player['object'].get_pos()
         for enemy in self.enemies:
@@ -311,22 +319,33 @@ class Main(ShowBase):
             #I dont know the guts, but I believe it just cuts float's tail?
             vector_to_player.normalize()
 
-            #idk about the distance numbers.
-            #This will probably backfire on non-equal x and y of sprite size
+            new_pos = enemy_position + (vector_to_player*mov_speed)
+            pos_diff = enemy_position - new_pos
+
+            action = 'idle'
+            direction = 'right'
+
+            #it may be good idea to also track camera angle, if I will decide
+            #to implement camera controls, at some point or another
+            if pos_diff[0] > 0:
+                direction = 'right'
+            else:
+                direction = 'left'
+
+            #this thing basically makes enemy move till it hit player, than play
+            #attack animation. May backfire if player's sprite size is not equal
+            #to player's hitbox
             if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
-                new_pos = enemy_position + (vector_to_player*mov_speed)
+                action = 'move'
                 enemy['object'].set_pos(new_pos)
+            else:
+                action = 'attack'
 
-                #changing enemy's sprite
-                #it may be good idea to also track camera angle, if I will decide
-                #to implement camera controls, at some point or another. #TODO
-                pos_diff = enemy_position - new_pos
-                if pos_diff[0] > 0:
-                    entity_2D.change_animation(enemy, 'move_right')
-                else:
-                    entity_2D.change_animation(enemy, 'move_left')
+            #it may be wiser to move the thing there, but maybe later
+            #enemy['object'].set_pos(new_pos)
+            entity_2D.change_animation(enemy, f'{action}_{direction}')
 
-        return action.cont
+        return event.cont
 
     def spawn_enemies(self, action):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
@@ -400,3 +419,24 @@ class Main(ShowBase):
         except KeyError:
             log.warning(f"{name} has no custom death sound, using fallback")
             self.assets['sfx']['default_death'].play()
+
+    def log_collision(self, entry):
+        '''Logging the collision event. Placeholder function, will be remade into
+        thingy that deal damage to player when he collide with enemies'''
+        hitter = entry.get_from_node_path()
+        target = entry.get_into_node_path()
+
+        #there is a funny thing here. I wanted to use these and python tags to
+        #determine for how much to damage player. But functions above return
+        #a bit different node paths, than required node paths. And without tags
+        #So... I guess, I will need to rewrite this whole thing into classes
+        #instead of dictionaries? Jeez, thats a lot of work...
+        #below is the example of why it doesnt work - first and second should be
+        #the same, but they arent.
+        #print(self.player['object'].get_python_tag("name"))
+        #print(self.player['object'])
+        #print(hitter)
+        #print(hitter.get_python_tag("name"))
+
+        #thus, because it didnt work for now, Im just logging the event itself
+        log.debug(f"{hitter} collides with {target}")
