@@ -54,5 +54,6 @@ def flat_map_generator(texture, size):
         wall_node = CollisionNode("wall")
         #it looks like without adding node to pusher (we dont need that there),
         #masks wont work. Thus for now I wont use them, as defaults seem to work
+        #wall_node.set_collide_mask(BitMask32(config.WALLS_COLLISION_MASK))
         wall_node.add_solid(CollisionPlane(Plane(*sizes)))
         wall = render.attach_new_node(wall_node)

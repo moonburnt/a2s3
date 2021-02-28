@@ -55,6 +55,12 @@ PLAYER_PROJECTILE_COLLISION_MASK = 0X05
 #I may adjust these or add more (say, powerups, coz they should collide with player
 #and walls, but not enemies or projectiles) in future, but for now thats it
 
+#this is... quite hacky thing, but it should work?
+#basically we making game_window.py load assets, then override this value, to
+#make them accessible from within every other module. And no, I couldnt load
+#these directly due to circular imports. May do something about that later
+ASSETS = None
+
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
 WINDOW_SIZE = DEFAULT_WINDOW_SIZE

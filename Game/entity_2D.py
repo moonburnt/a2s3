@@ -12,7 +12,6 @@ ANIMS = config.ANIMS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
-#WALLS_COLLISION_MASK = config.WALLS_COLLISION_MASK
 ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
 #ENEMY_PROJECTILE_COLLISION_MASK = config.ENEMY_PROJECTILE_COLLISION_MASK
 PLAYER_COLLISION_MASK = config.PLAYER_COLLISION_MASK
@@ -26,6 +25,8 @@ def cut_spritesheet(spritesheet, size):
     on sprite size and size of spritesheet, make list of offsets for each sprite
     on the sheet, which can later be used to select, some particular sprite to use.
     Then returns said list to function that requested it'''
+
+    #todo: move this thing to assets loader
 
     #for now, this has 2 limitations:
     # 1. Spritesheet HAS TO DIVIDE TO PROVIDED SPRITE SIZE WITHOUT REMAINDER. If
@@ -103,13 +104,21 @@ def change_animation(entity, action):
         entity.current_animation = action
 
 class Entity2D:
-    '''Receive str(name), str(path to texture). Optionally receive tuple size(x, y).
-    Generate 2D object of selected size (if none - then based on image size).'''
-    def __init__(self, name, texture, size = None):
+    '''
+    Receive str(name), str(path to spritesheet). Optionally receive tuple size(x, y).
+    Generate 2D object of selected size (if none - then based on image size).
+    '''
+    def __init__(self, name, spritesheet = None, size = None, collision_mask = None, position = None):
         log.debug(f"Initializing {name} object")
 
         if not size:
             size = DEFAULT_SPRITE_SIZE
+
+        if not spritesheet:
+            #I cant link assets above, coz their default value is None
+            texture = config.ASSETS['sprites'][name]
+        else:
+            texture = config.ASSETS['sprites'][spritesheet]
 
         size_x, size_y = size
         log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
@@ -162,20 +171,17 @@ class Entity2D:
         #will require values between 0 and 1
         entity_object.set_transparency(1)
 
-        #.collision.setFromCollideMask(BitMask32.bit(0))
-        #self.player.collision.setIntoCollideMask(BitMask32.bit(1))
+        #if no position has been received - wont set it up
+        if position:
+            entity_object.set_pos(*position)
 
         #setting character's collisions
         entity_collider = CollisionNode(name)
 
-        #temp workaround. #TODO: split this thing into 4 subclasses:
-        #for player, enemy, player's projectiles and enemy's projectiles
-        if name == "player":
-            collision_mask = PLAYER_COLLISION_MASK
-        else:
-            collision_mask = ENEMY_COLLISION_MASK
-        entity_collider.set_from_collide_mask(BitMask32(collision_mask))
-        entity_collider.set_into_collide_mask(BitMask32(collision_mask))
+        #if no collision mask has been received - using defaults
+        if collision_mask:
+            entity_collider.set_from_collide_mask(BitMask32(collision_mask))
+            entity_collider.set_into_collide_mask(BitMask32(collision_mask))
 
         #TODO: move this to be under character's legs
         #right now its centered on character's center
@@ -186,6 +192,35 @@ class Entity2D:
 
         #todo: maybe move ctrav stuff there
 
+        #this will explode if its not, but I dont have a default right now
+        if name in ANIMS:
+            entity_anims = ANIMS[name]
+
+        self.name = name
+        self.object = entity_object
+        self.collision = entity_collision
+        self.sprites = offsets
+        #setting this to None may cause crashes on few rare cases, but going
+        #for "idle_right" wont work for projectiles... I kinda should move it
+        #to subclasses, I guess?
+        #self.current_animation = None
+        #this will always be 0, so regardless of consistency I will live it be
+        self.current_frame = default_sprite
+        self.animations = entity_anims
+
+class Creature(Entity2D):
+    '''Subclass of Entity2D, dedicated to generation of player and enemies'''
+    def __init__(self, name, spritesheet = None, size = None, position = None):
+        #temp workaround. #TODO: split this thing into 4 subclasses:
+        #for player, enemy, player's projectiles and enemy's projectiles
+        if name == "player":
+            collision_mask = PLAYER_COLLISION_MASK
+        else:
+            collision_mask = ENEMY_COLLISION_MASK
+
+        #Initializing all the stuff from parent class'es init to be done
+        super().__init__(name, spritesheet, size,
+                         collision_mask = collision_mask, position = position)
         #attempting to find stats of entity with name {name} in STATS
         #if not found - will fallback to STATS['default']
         if name in STATS:
@@ -201,23 +236,21 @@ class Entity2D:
             if item in SKILLS:
                 entity_skills[item] = SKILLS[item].copy()
 
-        #this will explode if its not, but I dont have a default right now
-        if name in ANIMS:
-            entity_anims = ANIMS[name]
-
-        self.name = name
+        self.current_animation = 'idle_right'
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
         self.stats = entity_stats.copy()
         self.skills = entity_skills
-        self.object = entity_object
-        self.collision = entity_collision
-        self.sprites = offsets
-        self.current_animation = 'idle_right'
-        self.current_frame = default_sprite
-        self.animations = entity_anims
 
         #setting python tags, to make certain vars available from within object
         #this way, it will be possible to use this on collision events
         self.object.set_python_tag("name", self.name)
         self.object.set_python_tag("stats", self.stats)
+
+class Projectile(Entity2D):
+    '''Subclass of Entity2D, dedicated to creation of collideable effects'''
+    def __init__(self, name, spritesheet = None, size = None, position = None, damage = 0):
+        super().__init__(name, spritesheet, size, collision_mask = collision_mask,
+                                                  position = position)
+
+        self.damage = damage

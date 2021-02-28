@@ -3,8 +3,8 @@
 
 import logging
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import (WindowProperties, CollisionTraverser,
-                          CollisionHandlerPusher, TextureStage)
+from panda3d.core import (WindowProperties, TextureStage,
+                          CollisionTraverser, CollisionHandlerPusher)
 from random import randint
 from Game import entity_2D, map_loader, config, assets_loader
 
@@ -25,7 +25,8 @@ class Main(ShowBase):
         self.disable_mouse()
 
         log.debug("Loading assets")
-        self.assets = assets_loader.load_assets()
+        config.ASSETS = assets_loader.load_assets()
+        self.assets = config.ASSETS
 
         log.debug("Configuring game's window")
         #setting up resolution
@@ -74,10 +75,9 @@ class Main(ShowBase):
                                   ((-config.MAP_SIZE[0]/2)-32, (config.MAP_SIZE[1]/2)+32)]
 
         log.debug("Initializing player")
-        self.player = entity_2D.Entity2D("player", self.assets['sprites']['character'])
-        #setting character's position to always render on ENTITY_LAYER
+        #character's position should always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
-        self.player.object.set_pos(0, 0, ENTITY_LAYER)
+        self.player = entity_2D.Creature("player", position = (0, 0, ENTITY_LAYER))
 
         log.debug("Initializing enemy spawner")
         self.enemy_spawn_timer = ENEMY_SPAWN_TIME
@@ -384,13 +384,21 @@ class Main(ShowBase):
             enemy_amount = len(self.enemies)+1
             if enemy_amount <= MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
-                enemy = entity_2D.Entity2D("enemy", self.assets['sprites']['enemy'])
                 #picking up random spawnpoint out of available
                 #there is -1 coz randint include the second number you pass to
                 #it, not like "in range". E.g without it we will get "out of bound"
                 spawnpoint = randint(0, len(self.enemy_spawnpoints)-1)
                 log.debug(f"Spawning enemy on spawnpoint {spawnpoint}")
-                enemy.object.set_pos(*self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER)
+                spawn_position = *self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER
+                enemy = entity_2D.Creature("enemy", position = spawn_position)
+
+                #attaching enemy to collision handler, so it will be possible to
+                #hit it. I really need to move this to class'es init... #TODO
+                #also currently these collide with walls. Idk how to fix it yet,
+                #without the need to add walls to pusher
+                self.pusher.add_collider(enemy.collision, enemy.object)
+                self.cTrav.add_collider(enemy.collision, self.pusher)
+
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {enemy_amount} enemies on screen")
 
@@ -422,8 +430,6 @@ class Main(ShowBase):
         if target == self.player:
             position = self.player.object.get_pos()
             self.camera.reparent_to(render)
-            self.cTrav.remove_collider(self.player.collision)
-            self.pusher.remove_collider(self.player.collision)
             #we wont delete player variable itself tho, at least for now. Coz
             #otherwise many other functions would collapse
         #saving name into variable to print into debug output after target's clear
