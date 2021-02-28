@@ -45,23 +45,14 @@ def flat_map_generator(texture, size):
     floor_object.set_pos(0, 0, FLOOR_LAYER)
 
     log.debug("Adding invisible walls to collide with on map's borders")
-    #I can probably put this on cycle, but whatever
-    wall_node = CollisionNode("wall")
-    wall_node.add_solid(CollisionPlane(Plane((map_size[0], 0, 0),
-                                             (map_size[1], 0, 0))))
-    wall = render.attach_new_node(wall_node)
+    wall_coordinates = [((map_size[0], 0, 0), (map_size[1], 0, 0)),
+                        ((-map_size[0], 0, 0), (-map_size[1], 0, 0)),
+                        ((0, map_size[2], 0), (0, map_size[3], 0)),
+                        ((0, -map_size[2], 0), (0, -map_size[3], 0))]
 
-    wall_node = CollisionNode("wall")
-    wall_node.add_solid(CollisionPlane(Plane((-map_size[0], 0, 0),
-                                             (-map_size[1], 0, 0))))
-    wall = render.attach_new_node(wall_node)
-
-    wall_node = CollisionNode("wall")
-    wall_node.add_solid(CollisionPlane(Plane((0, map_size[2], 0),
-                                             (0, map_size[3], 0))))
-    wall = render.attach_new_node(wall_node)
-
-    wall_node = CollisionNode("wall")
-    wall_node.add_solid(CollisionPlane(Plane((0, -map_size[2], 0),
-                                             (0, -map_size[3], 0))))
-    wall = render.attach_new_node(wall_node)
+    for sizes in wall_coordinates:
+        wall_node = CollisionNode("wall")
+        #it looks like without adding node to pusher (we dont need that there),
+        #masks wont work. Thus for now I wont use them, as defaults seem to work
+        wall_node.add_solid(CollisionPlane(Plane(*sizes)))
+        wall = render.attach_new_node(wall_node)

@@ -26,6 +26,35 @@ DEFAULT_SPRITE_SIZE = (32, 32)
 #heights, but for now it will do. And floor layer is always zero. Because yes
 ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
 FLOOR_LAYER = 0
+# So, bitmasks. These are tricky, but they make only selected objects collide.
+# We have 5 1's and 0's per bitmask. Each 1 means thing will collide with other
+#thing that has 1 on the very same place. It seems like we can use multiple masks
+#per item, but Im not going for that thing yet. So below we are kinda trying to
+#fit our current items into grand scheme of things. The requirements are following:
+#- Walls. Collide with player and all projectiles, doesnt collide with enemy
+#- Enemy. Collides with player and player's projectiles, doesnt collide with the rest
+#- Player. Collide with walls, enemy and enemy projectiles. Doesnt collide with
+#its own projectiles (coz at times they may spawn on top of player itself)
+#- Player's projectiles. Collide with enemy, *maybe* collide with walls. Wont
+#collide with player, cuz of reasons said above.
+#And, well, floor doesnt need any collisions, but thats what we have by default.
+#
+# With all things said, I've ended up with following raw values:
+#WALLS_COLLISION_MASK = 11100
+#ENEMY_COLLISION_MASK = 00011
+#ENEMY_PROJECTILE_COLLISION_MASK = 00110
+#PLAYER_COLLISION_MASK = 00110
+#PLAYER_PROJECTILE_COLLISION_MASK = 00101
+#
+# Which effectively transform into these numbers:
+WALLS_COLLISION_MASK = 0X28
+ENEMY_COLLISION_MASK = 0X03
+ENEMY_PROJECTILE_COLLISION_MASK = 0X06
+PLAYER_COLLISION_MASK = 0X06
+PLAYER_PROJECTILE_COLLISION_MASK = 0X05
+#I may adjust these or add more (say, powerups, coz they should collide with player
+#and walls, but not enemies or projectiles) in future, but for now thats it
+
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
 WINDOW_SIZE = DEFAULT_WINDOW_SIZE

@@ -1,5 +1,5 @@
 import logging
-from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode, Texture
+from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode, Texture, BitMask32
 from Game import config
 
 log = logging.getLogger(__name__)
@@ -11,6 +11,12 @@ SKILLS = config.SKILLS
 ANIMS = config.ANIMS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
+
+#WALLS_COLLISION_MASK = config.WALLS_COLLISION_MASK
+ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
+#ENEMY_PROJECTILE_COLLISION_MASK = config.ENEMY_PROJECTILE_COLLISION_MASK
+PLAYER_COLLISION_MASK = config.PLAYER_COLLISION_MASK
+#PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
 
 #maybe move this to some other module? idk
 #also it would be good idea to make spritesheets not on per-character, but on
@@ -156,8 +162,21 @@ class Entity2D:
         #will require values between 0 and 1
         entity_object.set_transparency(1)
 
+        #.collision.setFromCollideMask(BitMask32.bit(0))
+        #self.player.collision.setIntoCollideMask(BitMask32.bit(1))
+
         #setting character's collisions
         entity_collider = CollisionNode(name)
+
+        #temp workaround. #TODO: split this thing into 4 subclasses:
+        #for player, enemy, player's projectiles and enemy's projectiles
+        if name == "player":
+            collision_mask = PLAYER_COLLISION_MASK
+        else:
+            collision_mask = ENEMY_COLLISION_MASK
+        entity_collider.set_from_collide_mask(BitMask32(collision_mask))
+        entity_collider.set_into_collide_mask(BitMask32(collision_mask))
+
         #TODO: move this to be under character's legs
         #right now its centered on character's center
         #coz its sphere and not oval - it doesnt matter if we use size_x or size_y
