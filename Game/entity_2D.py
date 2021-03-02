@@ -11,6 +11,7 @@ SKILLS = config.SKILLS
 ANIMS = config.ANIMS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
+DEFAULT_ANIMATIONS_SPEED = 0.1
 
 ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
 #ENEMY_PROJECTILE_COLLISION_MASK = config.ENEMY_PROJECTILE_COLLISION_MASK
@@ -95,21 +96,17 @@ def cut_spritesheet(spritesheet, size):
 
     return sprites
 
-def change_animation(entity, action):
-    '''Receive entity dictionary (from make_object function) and name of action.
-    Change entity's animation to match that action'''
-    if entity.current_animation != action:
-        log.debug(f"Changing animation of {entity.name} to {action}")
-        entity.current_frame = entity.animations[action][0]
-        entity.current_animation = action
-
 class Entity2D:
     '''
     Receive str(name), str(path to spritesheet). Optionally receive tuple size(x, y).
     Generate 2D object of selected size (if none - then based on image size).
     '''
-    def __init__(self, name, spritesheet = None, size = None, collision_mask = None, position = None):
+    def __init__(self, name, spritesheet = None, size = None, collision_mask = None,
+                 position = None, animations_speed = DEFAULT_ANIMATIONS_SPEED):
         log.debug(f"Initializing {name} object")
+
+        self.animations_timer = animations_speed
+        self.animations_speed = animations_speed
 
         if not size:
             size = DEFAULT_SPRITE_SIZE
@@ -199,9 +196,9 @@ class Entity2D:
         self.collision = entity_collision
         self.sprites = offsets
         #setting this to None may cause crashes on few rare cases, but going
-        #for "idle_right" wont work for projectiles... I kinda should move it
-        #to subclasses, I guess?
-        #self.current_animation = None
+        #for "idle_right" wont work for projectiles... So I technically add it
+        #there for anims updater, but its meant to be overwritten at 100% cases
+        self.current_animation = None
         #this will always be 0, so regardless of consistency I will live it be
         self.current_frame = default_sprite
         self.animations = entity_anims
@@ -217,6 +214,47 @@ class Entity2D:
 
         #debug function to show collisions all time
         #self.collision.show()
+
+        #do_method_later wont work there, coz its indeed based on frames
+        base.task_mgr.add(self.update_anims, "update entity's animations")
+
+    def update_anims(self, event):
+        '''Meant to run as taskmanager routine. Update entity's animation's frame
+        each self.animations_speed seconds'''
+        #safety check to dont do anything if custom anim isnt set or entity is
+        #already dead. #Will maybe remove death statement later (coz gibs), idk
+        if self.dead or not self.current_animation:
+            return event.cont
+
+        #ensuring that whatever below only runs if enough time has passed
+        dt = globalClock.get_dt()
+        self.animations_timer -= dt
+        if self.animations_timer > 0:
+            return event.cont
+
+        #log.debug("Updating anims")
+        #resetting anims timer, so countdown above will start again
+        self.animations_timer = self.animations_speed
+
+        #anim = self.current_animation
+        if self.current_frame < self.animations[self.current_animation][1]:
+            self.current_frame += 1
+        else:
+            self.current_frame = self.animations[self.current_animation][0]
+
+        #frame = self.current_frame
+        self.object.set_tex_offset(TextureStage.getDefault(),
+                                   *self.sprites[self.current_frame])
+
+        return event.cont
+
+    def change_animation(self, action):
+        '''Receive the name of new action. If current entity's animation is not
+        it - then change entity's animation to match that action'''
+        if self.current_animation != action:
+            log.debug(f"Changing animation of {self.name} to {action}")
+            self.current_frame = self.animations[action][0]
+            self.current_animation = action
 
     def die(self):
         self.collision.remove_node()
@@ -234,14 +272,8 @@ class Entity2D:
 
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
-    def __init__(self, name, spritesheet = None, size = None, position = None):
-        #temp workaround. #TODO: split this thing into 4 subclasses:
-        #for player, enemy, player's projectiles and enemy's projectiles
-        if name == "player":
-            collision_mask = PLAYER_COLLISION_MASK
-        else:
-            collision_mask = ENEMY_COLLISION_MASK
-
+    def __init__(self, name, spritesheet = None, size = None,
+                      collision_mask = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
         super().__init__(name, spritesheet, size,
                          collision_mask = collision_mask, position = position)
@@ -289,13 +321,6 @@ class Creature(Entity2D):
         config.ASSETS['sfx']['damage'].play()
 
     def die(self):
-        #doing whatever stuff related to killing the player, coz its quite different.
-        #maybe I should move player's death to another function, at some point?
-        if self.name == "player":
-            position = self.object.get_pos()
-            #reparenting camera, to avoid crash on removal of player's node.
-            #This may be unnecessary if we will implement gibs handler
-            base.camera.reparent_to(render)
         death_sound = f"{self.name}_death"
         #playing different sounds, depending if target has its own death sound or not
         try:
@@ -306,15 +331,184 @@ class Creature(Entity2D):
 
         super().die()
 
+class Player(Creature):
+    '''Subclass of Creature, dedicated to creation of player'''
+    def __init__(self, name, spritesheet = None, size = None, position = None):
+        collision_mask = PLAYER_COLLISION_MASK
+        super().__init__(name, spritesheet, size,
+                         collision_mask = collision_mask, position = position)
+
+        base.task_mgr.add(self.controls_handler, "controls handler")
+
+    def controls_handler(self, event):
+        '''
+        Intended to be used as part of task manager routine. Automatically receive
+        event from task manager, checks if buttons are pressed and log it. Then
+        return event back to task manager, so it keeps running in loop
+        '''
+        #safety check to ensure that player isnt dead, otherwise it will crash
+        if self.dead:
+            return event.cont
+
+        #manipulating cooldowns on player's skills. It may be good idea to move
+        #it to separate routine and check cooldowns of all entities on screen
+        dt = globalClock.get_dt()
+
+        #this seem to work reasonably decent. Not to jinx tho
+        skills = self.skills
+        for skill in skills:
+            if skills[skill]['used']:
+                skills[skill]['cur_cd'] -= dt
+                if skills[skill]['cur_cd'] <= 0:
+                    log.debug(f"Player's {skills[skill]['name']} has been recharged")
+                    skills[skill]['used'] = False
+                    skills[skill]['cur_cd'] = skills[skill]['def_cd']
+
+        #idk if I need to export this to variable or call directly
+        #in case it will backfire - turn this var into direct dictionary calls
+        mov_speed = self.stats['mov_spd']
+
+        #change the direction character face, based on mouse pointer position
+        #this may need some tweaking if I will decide to add gamepad support
+        #basically, the idea is the following: since camera is centered right
+        #above our character, our char is the center of screen. Meaning positive
+        #x will mean pointer is facing right and negative: pointer is facing left.
+        #And thus char should do the same. This is kind of hack and will also
+        #need tweaking if more sprites will be added. But for now it works
+        #hint: this can also be used together with move buttons. E.g mouse change
+        #the direction head/eyes face and keys change body. But that will depend
+        #on amount of animations I would obtain. For now, lets leave it like that
+        direction = 'right'
+        mouse_watcher = base.mouseWatcherNode
+        #ensuring that mouse pointer is part of game's window right now
+        if mouse_watcher.has_mouse():
+            mouse_x = mouse_watcher.get_mouse_x()
+            if mouse_x > 0:
+                direction = 'right'
+            else:
+                direction = 'left'
+
+        #saving action to apply to our animation. Default is idle
+        action = 'idle'
+
+        #In future, these speed values may be affected by some items
+        player_object = self.object
+        if base.controls_status["move_up"]:
+            player_object.set_pos(player_object.get_pos() + (0, -mov_speed, 0))
+            action = "move"
+        if base.controls_status["move_down"]:
+            player_object.set_pos(player_object.get_pos() + (0, mov_speed, 0))
+            action = "move"
+        if base.controls_status["move_left"]:
+            player_object.set_pos(player_object.get_pos() + (mov_speed, 0, 0))
+            action = "move"
+        if base.controls_status["move_right"]:
+            player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
+            action = "move"
+
+        #this is placeholder - its janky, it doesnt rotate the sprite and spawns
+        #right above the player. #TODO
+        if base.controls_status["attack"] and not skills['atk_0']['used']:
+            skills['atk_0']['used'] = True
+            attack = Projectile("attack",
+                                          position = player_object.get_pos(),
+                                          damage = self.stats['dmg'])
+
+            #this will rotate object on 2D plane. #TODO: calculate rotation, based
+            #on mouse pointer position
+            #attack.object.set_r(180)
+            #for now we dont have any function to cleanup old projectiles from
+            #this list. Which may backfire in future
+            base.projectiles.append(attack)
+
+        #this is kinda awkward coz its tied to cooldown and may look weird. I
+        #may do something about that later... Like add "skill_cast_time" or idk
+        if skills['atk_0']['used']:
+            action = "attack"
+
+        self.change_animation(f"{action}_{direction}")
+
+        #it works a bit weird, but if we wont return .cont of task we received,
+        #then task will run just once and then stop, which we dont want
+        return event.cont
+
+    def die(self):
+        position = self.object.get_pos()
+        #reparenting camera, to avoid crash on removal of player's node.
+        #This may be unnecessary if we will implement gibs handler
+        base.camera.reparent_to(render)
+        super().die()
+
+class Enemy(Creature):
+    '''Subclass of Creature, dedicated to creation of enemies'''
+    def __init__(self, name, spritesheet = None, size = None, position = None):
+        collision_mask = ENEMY_COLLISION_MASK
+        super().__init__(name, spritesheet, size,
+                     collision_mask = collision_mask, position = position)
+
+        base.task_mgr.add(self.ai_movement_handler, "controls handler")
+
+    def ai_movement_handler(self, event):
+        '''This is but nasty hack to make enemies follow character. TODO: remake
+        and move to its own module'''
+        #TODO: maybe make it possible to chase not for just player?
+        #TODO: not all enemies need to behave this way. e.g, for example, we can
+        #only affect enemies that have their ['ai'] set to ['chaser']...
+        #or something among these lines, will see in future
+
+        #disable this handler if the enemy or player are dead. Without it, game
+        #will crash the very next second after one of these events occur
+        if self.dead or base.player.dead:
+            return
+
+        player_position = base.player.object.get_pos()
+        mov_speed = self.stats['mov_spd']
+
+        enemy_position = self.object.get_pos()
+        vector_to_player = player_position - enemy_position
+        distance_to_player = vector_to_player.length()
+        #normalizing vector is the key to avoid "flickering" effect, as its
+        #basically ignores whatever minor difference in placement there are
+        #I dont know how it works, lol
+        vector_to_player.normalize()
+
+        new_pos = enemy_position + (vector_to_player*mov_speed)
+        pos_diff = enemy_position - new_pos
+
+        action = 'idle'
+        direction = 'right'
+
+        #it may be good idea to also track camera angle, if I will decide
+        #to implement camera controls, at some point or another
+        if pos_diff[0] > 0:
+            direction = 'right'
+        else:
+            direction = 'left'
+
+        #this thing basically makes enemy move till it hit player, than play
+        #attack animation. May backfire if player's sprite size is not equal
+        #to player's hitbox
+        if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
+            action = 'move'
+            self.object.set_pos(new_pos)
+        else:
+            action = 'attack'
+
+        #it may be wiser to move the thing there, but maybe later
+        #self.object.set_pos(new_pos)
+        self.change_animation(f'{action}_{direction}')
+
+        return event.cont
+
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name, spritesheet = None, size = None, position = None, damage = 0):
         #for now we are only adding these to player, so no need for other masks
+        #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
         super().__init__(name, spritesheet, size, collision_mask = collision_mask,
                                                   position = position)
 
-        #self.object.set_python_tag("name", self.name)
         self.damage = damage
         self.object.set_python_tag("damage", self.damage)
         self.current_animation = 'default'
@@ -325,7 +519,7 @@ class Projectile(Entity2D):
         #schedulging projectile to die in self.lifetime seconds after spawn
         #I've heard this is not the best way to do that, coz do_method_later does
         #things based on frames and not real time. But for now it will do
-        base.taskMgr.do_method_later(self.lifetime, self.die, "remove projectile")
+        base.task_mgr.do_method_later(self.lifetime, self.die, "remove projectile")
 
     def die(self, event):
         super().die()
