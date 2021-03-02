@@ -1,5 +1,5 @@
 from os.path import join
-from panda3d.core import SamplerState
+from panda3d.core import SamplerState, CollisionTraverser, CollisionHandlerPusher
 import logging
 
 log = logging.getLogger(__name__)
@@ -39,19 +39,19 @@ FLOOR_LAYER = 0
 #collide with player, cuz of reasons said above.
 #And, well, floor doesnt need any collisions, but thats what we have by default.
 #
-# With all things said, I've ended up with following raw values:
-#WALLS_COLLISION_MASK = 11100
-#ENEMY_COLLISION_MASK = 00011
-#ENEMY_PROJECTILE_COLLISION_MASK = 00110
-#PLAYER_COLLISION_MASK = 00110
-#PLAYER_PROJECTILE_COLLISION_MASK = 00101
+#With all things said, I've ended up with following raw values:
+# WALLS_COLLISION_MASK = 11100
+# ENEMY_COLLISION_MASK = 00011
+# ENEMY_PROJECTILE_COLLISION_MASK = 00100
+# PLAYER_COLLISION_MASK = 00110
+# PLAYER_PROJECTILE_COLLISION_MASK = 01001
 #
 # Which effectively transform into these numbers:
 WALLS_COLLISION_MASK = 0X28
 ENEMY_COLLISION_MASK = 0X03
-ENEMY_PROJECTILE_COLLISION_MASK = 0X06
+ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 PLAYER_COLLISION_MASK = 0X06
-PLAYER_PROJECTILE_COLLISION_MASK = 0X05
+PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 #I may adjust these or add more (say, powerups, coz they should collide with player
 #and walls, but not enemies or projectiles) in future, but for now thats it
 
@@ -60,6 +60,11 @@ PLAYER_PROJECTILE_COLLISION_MASK = 0X05
 #make them accessible from within every other module. And no, I couldnt load
 #these directly due to circular imports. May do something about that later
 ASSETS = None
+
+#initializing these there, to be accessible from all modules. Basically allow us
+#to move ctrav/pusher stuff to entity_2D
+CTRAV = CollisionTraverser()
+PUSHER = CollisionHandlerPusher()
 
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
@@ -87,8 +92,10 @@ SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': 
 
 #animation frames for each action. Tuple[0] is the first frame, tuple[1] is the last
 #e.g, for static things, setting it to something like (0, 0) is ok
+#todo: maybe move attack anim somewhere else, idk
 ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11), 'move_left': (12,15), 'attack_right': (16,19), 'attack_left': (20, 23)},
-         'enemy': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3), 'move_left': (4,7), 'attack_right': (8,11), 'attack_left': (12,15)}}
+         'enemy': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3), 'move_left': (4,7), 'attack_right': (8,11), 'attack_left': (12,15)},
+         'attack': {'default': (0, 1)}}
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)

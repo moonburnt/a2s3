@@ -15,7 +15,7 @@ DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
 #ENEMY_PROJECTILE_COLLISION_MASK = config.ENEMY_PROJECTILE_COLLISION_MASK
 PLAYER_COLLISION_MASK = config.PLAYER_COLLISION_MASK
-#PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
+PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
 
 #maybe move this to some other module? idk
 #also it would be good idea to make spritesheets not on per-character, but on
@@ -190,8 +190,6 @@ class Entity2D:
         entity_collider.add_solid(CollisionSphere(0, 0, 0, (size_y/2)))
         entity_collision = entity_object.attach_new_node(entity_collider)
 
-        #todo: maybe move ctrav stuff there
-
         #this will explode if its not, but I dont have a default right now
         if name in ANIMS:
             entity_anims = ANIMS[name]
@@ -207,6 +205,32 @@ class Entity2D:
         #this will always be 0, so regardless of consistency I will live it be
         self.current_frame = default_sprite
         self.animations = entity_anims
+        #death status, that may be usefull during cleanup
+        self.dead = False
+
+        #attaching python tags to object node, so these will be accessible during
+        #collision events and similar stuff
+        self.object.set_python_tag("name", self.name)
+
+        #I thought to put ctrav there, but for whatever reason it glitched projectile
+        #to fly into left wall. So I moved it to Creature subclass
+
+        #debug function to show collisions all time
+        #self.collision.show()
+
+    def die(self):
+        self.collision.remove_node()
+        #idk if cleaning up tags will make sense if node will be removed anyway
+        #left it there for future reference
+        # python_tags = self.object.get_python_tags().copy()
+        # for item in python_tags:
+            # self.object.clear_python_tag(item)
+        # del python_tags
+        #it may be good idea for creatures to dont remove the node on death, but
+        #play some death animation and then leave gibs on floor for a while. #TODO
+        self.object.remove_node()
+        self.dead = True
+        log.debug(f"{self.name} is now dead")
 
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
@@ -242,15 +266,67 @@ class Creature(Entity2D):
         self.stats = entity_stats.copy()
         self.skills = entity_skills
 
-        #setting python tags, to make certain vars available from within object
-        #this way, it will be possible to use this on collision events
-        self.object.set_python_tag("name", self.name)
         self.object.set_python_tag("stats", self.stats)
+        self.object.set_python_tag("get_damage", self.get_damage)
+
+        #attaching our object's collisions to pusher and traverser
+        #TODO: this way enemies will collide with walls too. Idk how to solve it
+        #yet, without attaching walls to pusher (which will break them)
+        config.PUSHER.add_collider(self.collision, self.object)
+        config.CTRAV.add_collider(self.collision, config.PUSHER)
+
+    def get_damage(self, amount = 0):
+        self.stats['hp'] -= amount
+        log.debug(f"{self.name} has received {amount} damage "
+                  f"and is now on {self.stats['hp']} hp")
+
+        if self.stats['hp'] <= 0:
+            self.die()
+            return
+
+        #this is placeholder. May need to track target's name in future to play
+        #different damage sounds
+        config.ASSETS['sfx']['damage'].play()
+
+    def die(self):
+        #doing whatever stuff related to killing the player, coz its quite different.
+        #maybe I should move player's death to another function, at some point?
+        if self.name == "player":
+            position = self.object.get_pos()
+            #reparenting camera, to avoid crash on removal of player's node.
+            #This may be unnecessary if we will implement gibs handler
+            base.camera.reparent_to(render)
+        death_sound = f"{self.name}_death"
+        #playing different sounds, depending if target has its own death sound or not
+        try:
+            config.ASSETS['sfx'][death_sound].play()
+        except KeyError:
+            log.warning(f"{self.name} has no custom death sound, using fallback")
+            self.assets['sfx']['default_death'].play()
+
+        super().die()
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name, spritesheet = None, size = None, position = None, damage = 0):
+        #for now we are only adding these to player, so no need for other masks
+        collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
         super().__init__(name, spritesheet, size, collision_mask = collision_mask,
                                                   position = position)
 
+        #self.object.set_python_tag("name", self.name)
         self.damage = damage
+        self.object.set_python_tag("damage", self.damage)
+        self.current_animation = 'default'
+        #todo: make this configurable from dictionary, idk
+        self.lifetime = 0.1
+        self.dead = False
+
+        #schedulging projectile to die in self.lifetime seconds after spawn
+        #I've heard this is not the best way to do that, coz do_method_later does
+        #things based on frames and not real time. But for now it will do
+        base.taskMgr.do_method_later(self.lifetime, self.die, "remove projectile")
+
+    def die(self, event):
+        super().die()
+        return
