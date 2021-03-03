@@ -1,5 +1,6 @@
 import logging
-from panda3d.core import CardMaker, TextureStage, CollisionSphere, CollisionNode, Texture, BitMask32
+from panda3d.core import (CardMaker, TextureStage, CollisionSphere, CollisionNode,
+                          Texture, BitMask32, Point3, Plane, Vec2)
 from Game import config
 
 log = logging.getLogger(__name__)
@@ -236,13 +237,11 @@ class Entity2D:
         #resetting anims timer, so countdown above will start again
         self.animations_timer = self.animations_speed
 
-        #anim = self.current_animation
         if self.current_frame < self.animations[self.current_animation][1]:
             self.current_frame += 1
         else:
             self.current_frame = self.animations[self.current_animation][0]
 
-        #frame = self.current_frame
         self.object.set_tex_offset(TextureStage.getDefault(),
                                    *self.sprites[self.current_frame])
 
@@ -339,6 +338,11 @@ class Player(Creature):
                          collision_mask = collision_mask, position = position)
 
         base.task_mgr.add(self.controls_handler, "controls handler")
+        #the thing to track mouse position relatively to map. See attack handling
+        #It probably could be better to move this thing to map func/class instead?
+        #TODO
+        self.ground_plane = Plane((0,0,1), (0,0,0))
+
 
     def controls_handler(self, event):
         '''
@@ -406,19 +410,45 @@ class Player(Creature):
             player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
-        #this is placeholder - its janky, it doesnt rotate the sprite and spawns
-        #right above the player. #TODO
+        #this is placeholder - its janky and spawns right above the player. #TODO
         if base.controls_status["attack"] and not skills['atk_0']['used']:
             skills['atk_0']['used'] = True
-            attack = Projectile("attack",
-                                          position = player_object.get_pos(),
-                                          damage = self.stats['dmg'])
 
-            #this will rotate object on 2D plane. #TODO: calculate rotation, based
-            #on mouse pointer position
-            #attack.object.set_r(180)
-            #for now we dont have any function to cleanup old projectiles from
-            #this list. Which may backfire in future
+            #long story short, what happens there: we are getting mouse pointer's
+            #position, then trying to translate it to the ground via plane.
+            #this could probably be done faster and better, but for now it works
+            mouse_pos = mouse_watcher.get_mouse()
+
+            mouse_pos_3d = Point3()
+            near = Point3()
+            far = Point3()
+
+            base.camLens.extrude(mouse_pos, near, far)
+            self.ground_plane.intersects_line(mouse_pos_3d,
+                                         render.get_relative_point(base.camera, near),
+                                         render.get_relative_point(base.camera, far))
+
+            hit_vector = mouse_pos_3d - player_object.get_pos()
+            hit_vector.normalize()
+
+            hit_vector_x, hit_vector_y = hit_vector.get_xy()
+            #y has to be flipped if billboard_effect is active. Otherwise x has
+            #to be flipped. Idk why its this way, probs coz first cam's num is 0
+            hit_vector_2D = hit_vector_x, -hit_vector_y
+
+            y_vec = Vec2(0, 1)
+            angle = y_vec.signed_angle_deg(hit_vector_2D)
+
+            pos_diff = DEFAULT_SPRITE_SIZE[0]/2
+            #this is a bit awkward with billboard effect, coz slashing below
+            #make projectile go into the ground. I should do something about it
+            #TODO
+            proj_pos = player_object.get_pos() + hit_vector*pos_diff
+            attack = Projectile("attack", position = proj_pos,
+                                damage = self.stats['dmg'])
+
+            #rotating projectile around 2d axis to match the shooting angle
+            attack.object.set_r(angle)
             base.projectiles.append(attack)
 
         #this is kinda awkward coz its tied to cooldown and may look weird. I
@@ -515,6 +545,16 @@ class Projectile(Entity2D):
         #todo: make this configurable from dictionary, idk
         self.lifetime = 0.1
         self.dead = False
+
+        #this can change size of projectile to 200%. But for now its bugged -
+        #lower half is stuck beyond floor. I guess I need to disable billboard
+        #effect for projectiles, in order to make it work? And instead use look_at
+        #But there is a problem - simply looking at player's position render this
+        #thing invisible. And looking at render makes it only visible at center
+        #of screen. I need to do something about it in future #TODO
+        #self.object.set_scale(2, 2, 2)
+        #self.object.look_at(render)
+        #print(self.object.get_scale())
 
         #schedulging projectile to die in self.lifetime seconds after spawn
         #I've heard this is not the best way to do that, coz do_method_later does
