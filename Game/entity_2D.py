@@ -99,18 +99,17 @@ def cut_spritesheet(spritesheet, size):
 
 class Entity2D:
     '''
-    Receive str(name), str(path to spritesheet). Optionally receive tuple size(x, y).
-    Generate 2D object of selected size (if none - then based on image size).
+    Main class, dedicated to creation of collideable 2D objects.
     '''
-    def __init__(self, name, spritesheet = None, size = None, collision_mask = None,
+    def __init__(self, name, spritesheet = None, sprite_size = None, collision_mask = None,
                  position = None, animations_speed = DEFAULT_ANIMATIONS_SPEED):
         log.debug(f"Initializing {name} object")
 
         self.animations_timer = animations_speed
         self.animations_speed = animations_speed
 
-        if not size:
-            size = DEFAULT_SPRITE_SIZE
+        if not sprite_size:
+            sprite_size = DEFAULT_SPRITE_SIZE
 
         if not spritesheet:
             #I cant link assets above, coz their default value is None
@@ -118,7 +117,7 @@ class Entity2D:
         else:
             texture = config.ASSETS['sprites'][spritesheet]
 
-        size_x, size_y = size
+        size_x, size_y = sprite_size
         log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
 
         #setting filtering method to dont blur our sprite
@@ -132,7 +131,7 @@ class Entity2D:
         #as same coordinates, coz "out of box" texture wrap mode is "repeat"
         texture.set_wrap_u(Texture.WM_mirror)
         texture.set_wrap_v(Texture.WM_mirror)
-        sprite_data = cut_spritesheet(texture, size)
+        sprite_data = cut_spritesheet(texture, sprite_size)
 
         horizontal_scale, vertical_scale = sprite_data['offset_steps']
         offsets = sprite_data['offsets']
@@ -164,7 +163,7 @@ class Entity2D:
 
         #billboard is effect to ensure that object always face camera the same
         #e.g this is the key to achieve that "2.5D style" I aim for
-        entity_object.set_billboard_point_eye()
+        #entity_object.set_billboard_point_eye()
         #enable support for alpha channel. This is a float, e.g making it non-100%
         #will require values between 0 and 1
         entity_object.set_transparency(1)
@@ -271,10 +270,10 @@ class Entity2D:
 
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
-    def __init__(self, name, spritesheet = None, size = None,
+    def __init__(self, name, spritesheet = None, sprite_size = None,
                       collision_mask = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name, spritesheet, size,
+        super().__init__(name, spritesheet, sprite_size,
                          collision_mask = collision_mask, position = position)
         #attempting to find stats of entity with name {name} in STATS
         #if not found - will fallback to STATS['default']
@@ -306,6 +305,8 @@ class Creature(Entity2D):
         config.PUSHER.add_collider(self.collision, self.object)
         config.CTRAV.add_collider(self.collision, config.PUSHER)
 
+        self.object.set_billboard_point_eye()
+
     def get_damage(self, amount = 0):
         self.stats['hp'] -= amount
         log.debug(f"{self.name} has received {amount} damage "
@@ -332,9 +333,9 @@ class Creature(Entity2D):
 
 class Player(Creature):
     '''Subclass of Creature, dedicated to creation of player'''
-    def __init__(self, name, spritesheet = None, size = None, position = None):
+    def __init__(self, name, spritesheet = None, sprite_size = None, position = None):
         collision_mask = PLAYER_COLLISION_MASK
-        super().__init__(name, spritesheet, size,
+        super().__init__(name, spritesheet, sprite_size,
                          collision_mask = collision_mask, position = position)
 
         base.task_mgr.add(self.controls_handler, "controls handler")
@@ -434,7 +435,8 @@ class Player(Creature):
             hit_vector_x, hit_vector_y = hit_vector.get_xy()
             #y has to be flipped if billboard_effect is active. Otherwise x has
             #to be flipped. Idk why its this way, probs coz first cam's num is 0
-            hit_vector_2D = hit_vector_x, -hit_vector_y
+            #hit_vector_2D = hit_vector_x, -hit_vector_y
+            hit_vector_2D = -hit_vector_x, hit_vector_y
 
             y_vec = Vec2(0, 1)
             angle = y_vec.signed_angle_deg(hit_vector_2D)
@@ -444,7 +446,11 @@ class Player(Creature):
             #make projectile go into the ground. I should do something about it
             #TODO
             proj_pos = player_object.get_pos() + hit_vector*pos_diff
-            attack = Projectile("attack", position = proj_pos,
+            attack = Projectile("attack",
+                                position = proj_pos,
+                                #position = player_object.get_pos(),
+                                direction = proj_pos,
+                                #object_size = (1.2, 1.2, 1.2),
                                 damage = self.stats['dmg'])
 
             #rotating projectile around 2d axis to match the shooting angle
@@ -471,9 +477,9 @@ class Player(Creature):
 
 class Enemy(Creature):
     '''Subclass of Creature, dedicated to creation of enemies'''
-    def __init__(self, name, spritesheet = None, size = None, position = None):
+    def __init__(self, name, spritesheet = None, sprite_size = None, position = None):
         collision_mask = ENEMY_COLLISION_MASK
-        super().__init__(name, spritesheet, size,
+        super().__init__(name, spritesheet, sprite_size,
                      collision_mask = collision_mask, position = position)
 
         base.task_mgr.add(self.ai_movement_handler, "controls handler")
@@ -532,12 +538,13 @@ class Enemy(Creature):
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name, spritesheet = None, size = None, position = None, damage = 0):
+    def __init__(self, name, direction, spritesheet = None, sprite_size = None,
+                 object_size = None, position = None, damage = 0):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        super().__init__(name, spritesheet, size, collision_mask = collision_mask,
-                                                  position = position)
+        super().__init__(name, spritesheet, sprite_size,
+                         collision_mask = collision_mask, position = position)
 
         self.damage = damage
         self.object.set_python_tag("damage", self.damage)
@@ -546,13 +553,14 @@ class Projectile(Entity2D):
         self.lifetime = 0.1
         self.dead = False
 
-        #this can change size of projectile to 200%. But for now its bugged -
-        #lower half is stuck beyond floor. I guess I need to disable billboard
-        #effect for projectiles, in order to make it work? And instead use look_at
-        #But there is a problem - simply looking at player's position render this
-        #thing invisible. And looking at render makes it only visible at center
-        #of screen. I need to do something about it in future #TODO
-        #self.object.set_scale(2, 2, 2)
+        #Idk about numbers. These work if caster is player, but what s about enemies?
+        #one, two, _ = base.player.object.get_pos()
+        one, two, _ = direction
+        self.object.look_at(one, two, 1)
+
+        if object_size:
+            self.object.set_scale(object_size)
+
         #self.object.look_at(render)
         #print(self.object.get_scale())
 
