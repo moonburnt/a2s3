@@ -61,6 +61,9 @@ class Main(ShowBase):
         self.win.request_properties(window_settings)
         log.debug(f"Resolution has been set to {resolution}")
 
+        #change background color to black
+        self.win.set_clear_color((0,0,0,1))
+
         log.debug("Generating the map")
         map_loader.flat_map_generator(self.assets['sprites']['floor'],
                                       size = config.MAP_SIZE)

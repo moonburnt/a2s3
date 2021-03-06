@@ -296,7 +296,8 @@ class Creature(Entity2D):
             if item in SKILLS:
                 entity_skills[item] = SKILLS[item].copy()
 
-        self.current_animation = 'idle_right'
+        self.direction = 'right'
+        self.current_animation = f'idle_{self.direction}'
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
         self.stats = entity_stats.copy()
@@ -304,7 +305,6 @@ class Creature(Entity2D):
 
         #list with timed status effects. When any of these reach 0 - they get ignored
         self.status_effects = {}
-        #thats where I took a break#TOOOOOOOOOODOOOOOOOOOOOOOOO
 
         self.object.set_python_tag("stats", self.stats)
         self.object.set_python_tag("get_damage", self.get_damage)
@@ -370,6 +370,8 @@ class Creature(Entity2D):
         #different damage sounds
         config.ASSETS['sfx']['damage'].play()
 
+        self.change_animation(f"hurt_{self.direction}")
+
     def die(self):
         death_sound = f"{self.name}_death"
         #playing different sounds, depending if target has its own death sound or not
@@ -395,7 +397,6 @@ class Player(Creature):
         #It probably could be better to move this thing to map func/class instead?
         #TODO
         self.ground_plane = Plane((0,0,1), (0,0,0))
-
 
     def controls_handler(self, event):
         '''
@@ -438,15 +439,14 @@ class Player(Creature):
         #hint: this can also be used together with move buttons. E.g mouse change
         #the direction head/eyes face and keys change body. But that will depend
         #on amount of animations I would obtain. For now, lets leave it like that
-        direction = 'right'
         mouse_watcher = base.mouseWatcherNode
         #ensuring that mouse pointer is part of game's window right now
         if mouse_watcher.has_mouse():
             mouse_x = mouse_watcher.get_mouse_x()
             if mouse_x > 0:
-                direction = 'right'
+                self.direction = 'right'
             else:
-                direction = 'left'
+                self.direction = 'left'
 
         #saving action to apply to our animation. Default is idle
         action = 'idle'
@@ -523,7 +523,7 @@ class Player(Creature):
         if skills['atk_0']['used']:
             action = "attack"
 
-        self.change_animation(f"{action}_{direction}")
+        self.change_animation(f"{action}_{self.direction}")
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want
@@ -589,14 +589,13 @@ class Enemy(Creature):
         pos_diff = enemy_position - new_pos
 
         action = 'idle'
-        direction = 'right'
 
         #it may be good idea to also track camera angle, if I will decide
         #to implement camera controls, at some point or another
         if pos_diff[0] > 0:
-            direction = 'right'
+            self.direction = 'right'
         else:
-            direction = 'left'
+            self.direction = 'left'
 
         #this thing basically makes enemy move till it hit player, than play
         #attack animation. May backfire if player's sprite size is not equal
@@ -609,7 +608,7 @@ class Enemy(Creature):
 
         #it may be wiser to move the thing there, but maybe later
         self.object.set_pos(new_pos)
-        self.change_animation(f'{action}_{direction}')
+        self.change_animation(f'{action}_{self.direction}')
 
         return event.cont
 
