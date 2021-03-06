@@ -5,6 +5,7 @@ import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
 from random import randint
+from time import time
 from Game import entity_2D, map_loader, config, assets_loader
 
 log = logging.getLogger(__name__)
@@ -13,6 +14,7 @@ ENTITY_LAYER = config.ENTITY_LAYER
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
 ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
 DEAD_CLEANUP_TIME = 5
+COLLISION_CHECK_PAUSE = 0.2
 
 class Main(ShowBase):
     def __init__(self):
@@ -75,7 +77,10 @@ class Main(ShowBase):
         log.debug("Initializing player")
         #character's position should always render on ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
-        self.player = entity_2D.Player("player", position = (0, 0, ENTITY_LAYER))
+        #hitbox is adjusted to match our current sprites. In case of change - will
+        #need to tweak it manually
+        self.player = entity_2D.Player("player", position = (0, 0, ENTITY_LAYER),
+                                       hitbox_size = 6)
 
         log.debug("Initializing enemy spawner")
         self.enemy_spawn_timer = ENEMY_SPAWN_TIME
@@ -86,10 +91,19 @@ class Main(ShowBase):
         #and this is amount of time, per which dead objects get removed from these
         self.cleanup_timer = DEAD_CLEANUP_TIME
 
+        #workaround for collisions bug, see damage proxy functions
+        self.current_time = 0
+
+        #variable for enemy spawner to make debugging process easier. Basically,
+        #its meant to increase with each new enemy and never reset until game over.
+        #this can also be potentially used for some highscore stats
+        self.enemy_id = 0
+
         log.debug("Initializing collision processors")
         self.cTrav = config.CTRAV
         self.pusher = config.PUSHER
-        self.pusher.set_horizontal(False)
+        #avoiding the issue with entities falling under the floor on some collisions
+        self.pusher.set_horizontal(True)
 
         #this way we are basically naming the events we want to track, so these
         #will be possible to handle via self.accept and do the stuff accordingly
@@ -212,7 +226,11 @@ class Main(ShowBase):
                 spawnpoint = randint(0, len(self.enemy_spawnpoints)-1)
                 log.debug(f"Spawning enemy on spawnpoint {spawnpoint}")
                 spawn_position = *self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER
-                enemy = entity_2D.Enemy("enemy", position = spawn_position)
+                enemy = entity_2D.Enemy("enemy", position = spawn_position,
+                                        hitbox_size = 12)
+                enemy.id = self.enemy_id
+                enemy.object.set_python_tag("id", enemy.id)
+                self.enemy_id += 1
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {enemy_amount} enemies on screen")
 
@@ -245,6 +263,19 @@ class Main(ShowBase):
     def damage_player(self, entry):
         '''Deals damage to player when it collides with some object that should
         hurt. Intended to be used from self.accept event handler'''
+        #this is a nasty workaround for issue caused by multiple collisions
+        #occuring at single frame, so damage check function cant keep up with it.
+        #basically, we allow new collisions on scene only occur each 0.2 seconds
+        #since the last one. Its bad (coz it makes it possible to only damage one
+        #enemy at time) and will backfire with many entities on screen. But for
+        #now it seems to get the job done. Later I should either remake it into
+        #something like "per-entity value" (instead of "per-scene"), or abandon
+        #collision pusher completely and use something like collisionqueue instead
+        x = time()
+        if x - self.current_time < COLLISION_CHECK_PAUSE:
+            return
+
+        self.current_time = x
         hit = entry.get_from_node_path()
         tar = entry.get_into_node_path()
 
@@ -281,6 +312,11 @@ class Main(ShowBase):
         #nasty placeholder to make enemy receive damage from collision with player's
         #projectile. Will need to rework it and merge with "damage_player" into
         #something like "damage_target" or idk
+        x = time()
+        if x - self.current_time < COLLISION_CHECK_PAUSE:
+            return
+
+        self.current_time = x
         hit = entry.get_from_node_path()
         tar = entry.get_into_node_path()
 
@@ -302,4 +338,8 @@ class Main(ShowBase):
 
         dmg = dmg_source.get_net_python_tag("damage")
         dmgfunc = target.get_net_python_tag("get_damage")
+
+        target_name = target.get_net_python_tag('name')
+        target_id = target.get_net_python_tag('id')
+        log.debug(f"Attempting to deal damage to {target_name} ({target_id})")
         dmgfunc(dmg)

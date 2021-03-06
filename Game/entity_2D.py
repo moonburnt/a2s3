@@ -101,10 +101,13 @@ class Entity2D:
     '''
     Main class, dedicated to creation of collideable 2D objects.
     '''
-    def __init__(self, name, spritesheet = None, sprite_size = None, collision_mask = None,
-                 position = None, animations_speed = DEFAULT_ANIMATIONS_SPEED):
+    def __init__(self, name, spritesheet = None, sprite_size = None,
+                 hitbox_size = None, collision_mask = None, position = None,
+                 animations_speed = None):
         log.debug(f"Initializing {name} object")
 
+        if not animations_speed:
+            animations_speed = DEFAULT_ANIMATIONS_SPEED
         self.animations_timer = animations_speed
         self.animations_speed = animations_speed
 
@@ -161,9 +164,6 @@ class Entity2D:
         entity_object.set_tex_offset(TextureStage.getDefault(),
                                      *offsets[default_sprite])
 
-        #billboard is effect to ensure that object always face camera the same
-        #e.g this is the key to achieve that "2.5D style" I aim for
-        #entity_object.set_billboard_point_eye()
         #enable support for alpha channel. This is a float, e.g making it non-100%
         #will require values between 0 and 1
         entity_object.set_transparency(1)
@@ -182,9 +182,14 @@ class Entity2D:
 
         #TODO: move this to be under character's legs
         #right now its centered on character's center
-        #coz its sphere and not oval - it doesnt matter if we use size_x or size_y
-        #but, for sake of convenience - we are going for size_y
-        entity_collider.add_solid(CollisionSphere(0, 0, 0, (size_y/2)))
+        if hitbox_size:
+            self.hitbox_size = hitbox_size
+        else:
+            #coz its sphere and not oval - it doesnt matter if we use x or y
+            #but, for sake of convenience - we are going for size_y
+            self.hitbox_size = (size_y/2)
+
+        entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
         entity_collision = entity_object.attach_new_node(entity_collider)
 
         #this will explode if its not, but I dont have a default right now
@@ -271,10 +276,11 @@ class Entity2D:
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name, spritesheet = None, sprite_size = None,
-                      collision_mask = None, position = None):
+                 hitbox_size = None, collision_mask = None, position = None,
+                 animations_speed = None):
         #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name, spritesheet, sprite_size,
-                         collision_mask = collision_mask, position = position)
+        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+                         collision_mask, position, animations_speed)
         #attempting to find stats of entity with name {name} in STATS
         #if not found - will fallback to STATS['default']
         if name in STATS:
@@ -296,6 +302,10 @@ class Creature(Entity2D):
         self.stats = entity_stats.copy()
         self.skills = entity_skills
 
+        #list with timed status effects. When any of these reach 0 - they get ignored
+        self.status_effects = {}
+        #thats where I took a break#TOOOOOOOOOODOOOOOOOOOOOOOOO
+
         self.object.set_python_tag("stats", self.stats)
         self.object.set_python_tag("get_damage", self.get_damage)
 
@@ -305,9 +315,38 @@ class Creature(Entity2D):
         config.PUSHER.add_collider(self.collision, self.object)
         config.CTRAV.add_collider(self.collision, config.PUSHER)
 
+        #billboard is effect to ensure that object always face camera the same
+        #e.g this is the key to achieve that "2.5D style" I aim for
         self.object.set_billboard_point_eye()
 
-    def get_damage(self, amount = 0):
+        base.task_mgr.add(self.status_effects_handler, "status effects handler")
+
+    def status_effects_handler(self, event):
+        '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
+        status effects. When it reaches 0 - remove status effect'''
+        if not self.status_effects:
+            return event.cont
+
+        #removing the task from being called again if target is already dead
+        if self.dead:
+            return
+
+        dt = globalClock.get_dt()
+        #copying to avoid causing issues by changing dic size during for loop
+        se = self.status_effects.copy()
+        for effect in se:
+            self.status_effects[effect] -= dt
+            if self.status_effects[effect] <= 0:
+                del self.status_effects[effect]
+                log.debug(f"{effect} effect has expired on {self.name}")
+
+        return event.cont
+
+    def get_damage(self, amount = None):
+        '''Whatever stuff procs when target is about to get hurt'''
+        if not amount:
+            amount = 0
+
         self.stats['hp'] -= amount
         log.debug(f"{self.name} has received {amount} damage "
                   f"and is now on {self.stats['hp']} hp")
@@ -315,6 +354,17 @@ class Creature(Entity2D):
         if self.stats['hp'] <= 0:
             self.die()
             return
+
+        #not getting any damage in case we are invulnerable
+        if 'immortal' in self.status_effects:
+            return
+
+        #attempt to stun target for 0.5 seconds on taking damage. #TODO: make
+        #configurable from skill's stats
+        try:
+            self.status_effects['stun'] += 0.5
+        except KeyError:
+            self.status_effects['stun'] = 0.5
 
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
@@ -333,10 +383,12 @@ class Creature(Entity2D):
 
 class Player(Creature):
     '''Subclass of Creature, dedicated to creation of player'''
-    def __init__(self, name, spritesheet = None, sprite_size = None, position = None):
+    def __init__(self, name, spritesheet = None, sprite_size = None,
+                 hitbox_size = None, collision_mask = None, position = None,
+                 animations_speed = None):
         collision_mask = PLAYER_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size,
-                         collision_mask = collision_mask, position = position)
+        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+                         collision_mask, position, animations_speed)
 
         base.task_mgr.add(self.controls_handler, "controls handler")
         #the thing to track mouse position relatively to map. See attack handling
@@ -368,6 +420,9 @@ class Player(Creature):
                     log.debug(f"Player's {skills[skill]['name']} has been recharged")
                     skills[skill]['used'] = False
                     skills[skill]['cur_cd'] = skills[skill]['def_cd']
+
+        if 'stun' in self.status_effects:
+            return event.cont
 
         #idk if I need to export this to variable or call directly
         #in case it will backfire - turn this var into direct dictionary calls
@@ -414,6 +469,12 @@ class Player(Creature):
         #this is placeholder - its janky and spawns right above the player. #TODO
         if base.controls_status["attack"] and not skills['atk_0']['used']:
             skills['atk_0']['used'] = True
+
+            #make player impossible to move on cast. It make controls a bit janky,
+            #but remove that issue when player moving to some direction can catch
+            #its own projectile. I may reconsider the way it works in future
+            #self.status_effects['stun'] = skills['atk_0']['def_cd']/4
+            self.status_effects['stun'] = 0.1
 
             #long story short, what happens there: we are getting mouse pointer's
             #position, then trying to translate it to the ground via plane.
@@ -468,6 +529,13 @@ class Player(Creature):
         #then task will run just once and then stop, which we dont want
         return event.cont
 
+    def get_damage(self, amount = None):
+        #giving player invinsibility frames on received damage
+        #these shouldnt stack... I think? May backfire in future, idk
+        super().get_damage(amount)
+        #this is a bit longer than stun lengh, to let player escape
+        self.status_effects['immortal'] = 0.7
+
     def die(self):
         position = self.object.get_pos()
         #reparenting camera, to avoid crash on removal of player's node.
@@ -477,12 +545,18 @@ class Player(Creature):
 
 class Enemy(Creature):
     '''Subclass of Creature, dedicated to creation of enemies'''
-    def __init__(self, name, spritesheet = None, sprite_size = None, position = None):
+    def __init__(self, name, spritesheet = None, sprite_size = None,
+                 hitbox_size = None, collision_mask = None, position = None,
+                 animations_speed = None):
         collision_mask = ENEMY_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size,
-                     collision_mask = collision_mask, position = position)
+        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+                         collision_mask, position, animations_speed)
 
         base.task_mgr.add(self.ai_movement_handler, "controls handler")
+
+        #id variable that will be set from game_window. Placed it there to avoid
+        #possible crashes and to remind that its a thing that exists
+        self.id = None
 
     def ai_movement_handler(self, event):
         '''This is but nasty hack to make enemies follow character. TODO: remake
@@ -496,6 +570,9 @@ class Enemy(Creature):
         #will crash the very next second after one of these events occur
         if self.dead or base.player.dead:
             return
+
+        if 'stun' in self.status_effects:
+            return event.cont
 
         player_position = base.player.object.get_pos()
         mov_speed = self.stats['mov_spd']
@@ -524,27 +601,28 @@ class Enemy(Creature):
         #this thing basically makes enemy move till it hit player, than play
         #attack animation. May backfire if player's sprite size is not equal
         #to player's hitbox
-        if distance_to_player > DEFAULT_SPRITE_SIZE[0]:
+        if distance_to_player > DEFAULT_SPRITE_SIZE[0]*2:
             action = 'move'
-            self.object.set_pos(new_pos)
+            #self.object.set_pos(new_pos)
         else:
             action = 'attack'
 
         #it may be wiser to move the thing there, but maybe later
-        #self.object.set_pos(new_pos)
+        self.object.set_pos(new_pos)
         self.change_animation(f'{action}_{direction}')
 
         return event.cont
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name, direction, spritesheet = None, sprite_size = None,
-                 object_size = None, position = None, damage = 0):
+    def __init__(self, name, direction, damage = 0, object_size = None,
+                 spritesheet = None, sprite_size = None, hitbox_size = None,
+                 collision_mask = None, position = None, animations_speed = None):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size,
-                         collision_mask = collision_mask, position = position)
+        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+                         collision_mask, position, animations_speed)
 
         self.damage = damage
         self.object.set_python_tag("damage", self.damage)
