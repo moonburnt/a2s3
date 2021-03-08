@@ -321,6 +321,11 @@ class Creature(Entity2D):
 
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
+        #used to avoid issue with getting multiple damage func calls per frame
+        #see game_window's damage functions
+        self.last_collision_time = 0
+        self.object.set_python_tag("last_collision_time", self.last_collision_time)
+
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
         status effects. When it reaches 0 - remove status effect'''
@@ -602,11 +607,9 @@ class Enemy(Creature):
         #to player's hitbox
         if distance_to_player > DEFAULT_SPRITE_SIZE[0]*2:
             action = 'move'
-            #self.object.set_pos(new_pos)
         else:
             action = 'attack'
 
-        #it may be wiser to move the thing there, but maybe later
         self.object.set_pos(new_pos)
         self.change_animation(f'{action}_{self.direction}')
 
@@ -631,15 +634,11 @@ class Projectile(Entity2D):
         self.dead = False
 
         #Idk about numbers. These work if caster is player, but what s about enemies?
-        #one, two, _ = base.player.object.get_pos()
         one, two, _ = direction
         self.object.look_at(one, two, 1)
 
         if object_size:
             self.object.set_scale(object_size)
-
-        #self.object.look_at(render)
-        #print(self.object.get_scale())
 
         #schedulging projectile to die in self.lifetime seconds after spawn
         #I've heard this is not the best way to do that, coz do_method_later does

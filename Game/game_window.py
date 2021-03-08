@@ -14,6 +14,8 @@ ENTITY_LAYER = config.ENTITY_LAYER
 MAX_ENEMY_COUNT = config.MAX_ENEMY_COUNT
 ENEMY_SPAWN_TIME = config.ENEMY_SPAWN_TIME
 DEAD_CLEANUP_TIME = 5
+#pause between calls to per-node's damage function. Making it anyhow lower will
+#reintroduce the bug with multiple damage calls occuring during single frame
 COLLISION_CHECK_PAUSE = 0.2
 
 class Main(ShowBase):
@@ -93,9 +95,6 @@ class Main(ShowBase):
         self.projectiles = []
         #and this is amount of time, per which dead objects get removed from these
         self.cleanup_timer = DEAD_CLEANUP_TIME
-
-        #workaround for collisions bug, see damage proxy functions
-        self.current_time = 0
 
         #variable for enemy spawner to make debugging process easier. Basically,
         #its meant to increase with each new enemy and never reset until game over.
@@ -266,23 +265,10 @@ class Main(ShowBase):
     def damage_player(self, entry):
         '''Deals damage to player when it collides with some object that should
         hurt. Intended to be used from self.accept event handler'''
-        #this is a nasty workaround for issue caused by multiple collisions
-        #occuring at single frame, so damage check function cant keep up with it.
-        #basically, we allow new collisions on scene only occur each 0.2 seconds
-        #since the last one. Its bad (coz it makes it possible to only damage one
-        #enemy at time) and will backfire with many entities on screen. But for
-        #now it seems to get the job done. Later I should either remake it into
-        #something like "per-entity value" (instead of "per-scene"), or abandon
-        #collision pusher completely and use something like collisionqueue instead
-        x = time()
-        if x - self.current_time < COLLISION_CHECK_PAUSE:
-            return
-
-        self.current_time = x
         hit = entry.get_from_node_path()
         tar = entry.get_into_node_path()
 
-        log.debug(f"{hit} collides with {tar}")
+        #log.debug(f"{hit} collides with {tar}")
 
         #we are using "get_net_python_tag" over just "get_tag", coz this one will
         #search for whole tree, instead of just selected node. And since the node
@@ -306,6 +292,18 @@ class Main(ShowBase):
             dmg_source = tar
             target = hit
 
+        #this is a workaround for issue caused by multiple collisions occuring
+        #at single frame, so damage check function cant keep up with it. Basically,
+        #we allow new target's collisions to only trigger damage function each
+        #0.2 seconds. It may be good idea to abandon this thing in future in favor
+        #of something like collisionhandlerqueue, but for now it works
+        tct = target.get_net_python_tag("last_collision_time")
+        x = time()
+        if x - tct < COLLISION_CHECK_PAUSE:
+            return
+
+        target.set_python_tag("last_collision_time", x)
+
         ds = dmg_source.get_net_python_tag("stats")
         dmg = ds['dmg']
         dmgfunc = target.get_net_python_tag("get_damage")
@@ -315,15 +313,10 @@ class Main(ShowBase):
         #nasty placeholder to make enemy receive damage from collision with player's
         #projectile. Will need to rework it and merge with "damage_player" into
         #something like "damage_target" or idk
-        x = time()
-        if x - self.current_time < COLLISION_CHECK_PAUSE:
-            return
-
-        self.current_time = x
         hit = entry.get_from_node_path()
         tar = entry.get_into_node_path()
 
-        log.debug(f"{hit} collides with {tar}")
+        #log.debug(f"{hit} collides with {tar}")
 
         hit_name = hit.get_net_python_tag("name")
         tar_name = tar.get_net_python_tag("name")
@@ -338,6 +331,13 @@ class Main(ShowBase):
         else:
             dmg_source = tar
             target = hit
+
+        tct = target.get_net_python_tag("last_collision_time")
+        x = time()
+        if x - tct < COLLISION_CHECK_PAUSE:
+            return
+
+        target.set_python_tag("last_collision_time", x)
 
         dmg = dmg_source.get_net_python_tag("damage")
         dmgfunc = target.get_net_python_tag("get_damage")
