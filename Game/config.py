@@ -7,9 +7,10 @@ log = logging.getLogger(__name__)
 #module where I specify default config settings to reffer to from other modules
 
 GAME_DIR = '.'
-SPRITE_DIR = join(GAME_DIR, 'Sprites')
-MUSIC_DIR = join(GAME_DIR, 'BGM')
-SFX_DIR = join(GAME_DIR, 'SFX')
+ASSETS_DIR = join(GAME_DIR, 'Assets')
+SPRITE_DIR = join(ASSETS_DIR, 'Sprites')
+MUSIC_DIR = join(ASSETS_DIR, 'BGM')
+SFX_DIR = join(ASSETS_DIR, 'SFX')
 GAME_NAME = "A2S3"
 
 #default sprite filtering mode. This is applied to all textures to ensure that
