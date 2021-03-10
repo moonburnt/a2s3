@@ -4,6 +4,7 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
+from direct.gui.OnscreenText import OnscreenText
 from random import randint
 from time import time
 from Game import entity_2D, map_loader, config, assets_loader
@@ -161,6 +162,17 @@ class Main(ShowBase):
 
         #enabling fps meter
         base.setFrameRateMeter(config.FPS_METER)
+
+        log.debug(f"Initializing UI")
+        #create white-colored text with player's hp above player's head
+        #TODO: move it to top left, add some image on background
+        self.player_hp_ui = OnscreenText(text = f"{self.player.stats['hp']}",
+                                         pos = (0, 0.01),
+                                         scale = 0.05,
+                                         fg = (1,1,1,1),
+                                         #bg = (0,1,1,1),
+                                         #frame = (0,1,1,1),
+                                         mayChange = True)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute

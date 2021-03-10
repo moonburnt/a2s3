@@ -352,16 +352,16 @@ class Creature(Entity2D):
         if not amount:
             amount = 0
 
+        #not getting any damage in case we are invulnerable
+        if 'immortal' in self.status_effects:
+            return
+
         self.stats['hp'] -= amount
         log.debug(f"{self.name} has received {amount} damage "
                   f"and is now on {self.stats['hp']} hp")
 
         if self.stats['hp'] <= 0:
             self.die()
-            return
-
-        #not getting any damage in case we are invulnerable
-        if 'immortal' in self.status_effects:
             return
 
         #attempt to stun target for 0.5 seconds on taking damage. #TODO: make
@@ -538,8 +538,12 @@ class Player(Creature):
         #giving player invinsibility frames on received damage
         #these shouldnt stack... I think? May backfire in future, idk
         super().get_damage(amount)
-        #this is a bit longer than stun lengh, to let player escape
-        self.status_effects['immortal'] = 0.7
+        #this check is there to avoid stacking up immortality
+        if not 'immortal' in self.status_effects:
+            #this is a bit longer than stun lengh, to let player escape
+            self.status_effects['immortal'] = 0.7
+        #updating the value on player's hp gui
+        base.player_hp_ui.setText(f"{self.stats['hp']}")
 
     def die(self):
         position = self.object.get_pos()
