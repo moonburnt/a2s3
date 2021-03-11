@@ -19,6 +19,9 @@ ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
 PLAYER_COLLISION_MASK = config.PLAYER_COLLISION_MASK
 PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
 
+HIT_SCORE = 10
+KILL_SCORE = 15
+
 #maybe move this to some other module? idk
 #also it would be good idea to make spritesheets not on per-character, but on
 #per-image base. But this would require some standard sprite size to be set
@@ -618,6 +621,17 @@ class Enemy(Creature):
         self.change_animation(f'{action}_{self.direction}')
 
         return event.cont
+
+    def get_damage(self, amount = None):
+        super().get_damage(amount)
+        #increasing score, based on HIT_SCORE value
+        base.update_score(HIT_SCORE)
+
+    def die(self):
+        super().die()
+        #for now this increase score based on HIT_SCORE+KILL_SCORE.
+        #I dont think its a trouble, but may tweak at some point
+        base.update_score(KILL_SCORE)
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''

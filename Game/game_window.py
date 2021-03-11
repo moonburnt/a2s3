@@ -160,10 +160,9 @@ class Main(ShowBase):
         menu_theme.set_loop(True)
         menu_theme.play()
 
-        #enabling fps meter
-        base.setFrameRateMeter(config.FPS_METER)
-
         log.debug(f"Initializing UI")
+        #turning on fps meter, in case its enabled in settings
+        base.setFrameRateMeter(config.FPS_METER)
         #create white-colored text with player's hp above player's head
         #TODO: move it to top left, add some image on background
         self.player_hp_ui = OnscreenText(text = f"{self.player.stats['hp']}",
@@ -173,6 +172,13 @@ class Main(ShowBase):
                                          #bg = (0,1,1,1),
                                          #frame = (0,1,1,1),
                                          mayChange = True)
+
+        self.score = 0
+        self.score_ui = OnscreenText(text = f"Score: {self.score}",
+                                     pos = (-1.5, 0.9),
+                                     scale = 0.05,
+                                     fg = (1,1,1,1),
+                                     mayChange = True)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
@@ -358,3 +364,8 @@ class Main(ShowBase):
         target_id = target.get_net_python_tag('id')
         log.debug(f"Attempting to deal damage to {target_name} ({target_id})")
         dmgfunc(dmg)
+
+    def update_score(self, amount):
+        '''Update score value and displayed score amount by provided int number'''
+        self.score += amount
+        self.score_ui.setText(f"Score: {self.score}")
