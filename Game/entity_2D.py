@@ -635,6 +635,8 @@ class Enemy(Creature):
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
         base.update_score(KILL_SCORE)
+        #reduce enemy counter
+        base.update_enemy_counter(-1)
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''

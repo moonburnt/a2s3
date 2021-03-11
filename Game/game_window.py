@@ -205,6 +205,16 @@ class Main(ShowBase):
                                                 fg = (1,1,1,1),
                                                 mayChange = True)
 
+        #its variable and not len of enemy list, coz it doesnt clean up right away
+        self.enemy_amount = 0
+        #this one should be displayed on right... I think?
+        self.enemy_amount_ui = OnscreenText(text = f"Enemies Left: {self.enemy_amount}",
+                                            pos = (1.7, 0.85),
+                                            align = TextNode.ARight,
+                                            scale = 0.05,
+                                            fg = (1,1,1,1),
+                                            mayChange = True)
+
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
         #whatever functions are attached to it
@@ -262,8 +272,7 @@ class Main(ShowBase):
         if self.enemy_spawn_timer <= 0:
             log.debug("Checking if we can spawn enemy")
             self.enemy_spawn_timer = ENEMY_SPAWN_TIME
-            enemy_amount = len(self.enemies)+1
-            if enemy_amount <= MAX_ENEMY_COUNT:
+            if self.enemy_amount < MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
                 #picking up random spawnpoint out of available
                 #there is -1 coz randint include the second number you pass to
@@ -276,8 +285,9 @@ class Main(ShowBase):
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
                 self.enemy_id += 1
+                self.update_enemy_counter(1)
                 self.enemies.append(enemy)
-                log.debug(f"There are currently {enemy_amount} enemies on screen")
+                log.debug(f"There are currently {self.enemy_amount} enemies on screen")
 
         return event.cont
 
@@ -420,3 +430,9 @@ class Main(ShowBase):
         self.multiplier_increase_counter = 0
         self.score_multiplier_ui.setText(f"Multiplier: {self.score_multiplier}")
         log.debug(f"Reset score multiplier to {self.score_multiplier}")
+
+    def update_enemy_counter(self, amount):
+        '''Update self.enemy_amount by int amount. By default its +'''
+        self.enemy_amount += amount
+        self.enemy_amount_ui.setText(f"Enemies Left: {self.enemy_amount}")
+        log.debug(f"Enemy amount has been set to {self.enemy_amount}")
