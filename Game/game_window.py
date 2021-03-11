@@ -4,7 +4,7 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
-from direct.gui.OnscreenText import OnscreenText
+from direct.gui.OnscreenText import OnscreenText, TextNode
 from random import randint
 from time import time
 from Game import entity_2D, map_loader, config, assets_loader
@@ -18,6 +18,10 @@ DEAD_CLEANUP_TIME = 5
 #pause between calls to per-node's damage function. Making it anyhow lower will
 #reintroduce the bug with multiple damage calls occuring during single frame
 COLLISION_CHECK_PAUSE = 0.2
+DEFAULT_SCORE_VALUE = 0
+DEFAULT_SCORE_MULTIPLIER = 1
+MAX_SCORE_MULTIPLIER = 5 #maybe just make it MULTIPLIER_INCREASE_STEP*10 ?
+MULTIPLIER_INCREASE_STEP = 0.5
 
 class Main(ShowBase):
     def __init__(self):
@@ -169,16 +173,37 @@ class Main(ShowBase):
                                          pos = (0, 0.01),
                                          scale = 0.05,
                                          fg = (1,1,1,1),
-                                         #bg = (0,1,1,1),
-                                         #frame = (0,1,1,1),
                                          mayChange = True)
 
+        #score is, well, a thing that increase each time you hit/kill enemy.
+        #in future there may be ability to spend it on some powerups, but for
+        #now its only there for future leaderboards
         self.score = 0
         self.score_ui = OnscreenText(text = f"Score: {self.score}",
-                                     pos = (-1.5, 0.9),
+                                     pos = (-1.7, 0.9),
+                                     #alignment side may look non-obvious, depending
+                                     #on position and text it applies to
+                                     align = TextNode.ALeft,
                                      scale = 0.05,
                                      fg = (1,1,1,1),
                                      mayChange = True)
+
+        #score multiplier is a thing, that, well, increase amount of score gained
+        #for each action. For now, the idea is following: for each 10 hits to enemy
+        #without taking damage, you increase it by MULTIPLIER_INCREASE_STEP. Getting
+        #damage resets it to default value (which is 1). It may be good idea to
+        #make it instead increase if player is using different skills in order
+        #to kill enemies (and not repeating autoattack). But for now thats about it
+        self.score_multiplier = 1
+        #as said above - when below reaches 9 (coz count from 0), multiplier increase
+        self.multiplier_increase_counter = 0
+        #visually it should be below score itself... I think?
+        self.score_multiplier_ui = OnscreenText(text = f"Multiplier: {self.score_multiplier}",
+                                                pos = (-1.7, 0.85),
+                                                align = TextNode.ALeft,
+                                                scale = 0.05,
+                                                fg = (1,1,1,1),
+                                                mayChange = True)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
@@ -366,6 +391,32 @@ class Main(ShowBase):
         dmgfunc(dmg)
 
     def update_score(self, amount):
-        '''Update score value and displayed score amount by provided int number'''
-        self.score += amount
+        '''Update score variable and displayed score amount by int(amount * self.score_multiplier)'''
+        increase = amount*self.score_multiplier
+        self.score += int(increase)
         self.score_ui.setText(f"Score: {self.score}")
+        log.debug(f"Increased score to {self.score}")
+
+    def increase_score_multiplier(self):
+        '''If self.score_multiplier is less than MAX_SCORE_MULTIPLIER - increase
+        self.multiplier_increase_counter by 1. If it reaches 9 - increase
+        self.score_multiplier by MULTIPLIER_INCREASE_STEP'''
+        if self.score_multiplier >= MAX_SCORE_MULTIPLIER:
+            log.debug("Already have max score multiplier, wont increase")
+            return
+
+        self.multiplier_increase_counter += 1
+        if self.multiplier_increase_counter < 10:
+            return
+
+        self.multiplier_increase_counter = 0
+        self.score_multiplier += MULTIPLIER_INCREASE_STEP
+        self.score_multiplier_ui.setText(f"Multiplier: {self.score_multiplier}")
+        log.debug(f"Increased score multiplier to {self.score_multiplier}")
+
+    def reset_score_multiplier(self):
+        '''Reset score multiplayer to defaults'''
+        self.score_multiplier = DEFAULT_SCORE_MULTIPLIER
+        self.multiplier_increase_counter = 0
+        self.score_multiplier_ui.setText(f"Multiplier: {self.score_multiplier}")
+        log.debug(f"Reset score multiplier to {self.score_multiplier}")

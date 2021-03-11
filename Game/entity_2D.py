@@ -547,6 +547,7 @@ class Player(Creature):
             self.status_effects['immortal'] = 0.7
         #updating the value on player's hp gui
         base.player_hp_ui.setText(f"{self.stats['hp']}")
+        base.reset_score_multiplier()
 
     def die(self):
         position = self.object.get_pos()
@@ -624,7 +625,9 @@ class Enemy(Creature):
 
     def get_damage(self, amount = None):
         super().get_damage(amount)
-        #increasing score, based on HIT_SCORE value
+        #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
+        #increase it based on amount of damage received. But thats #TODO in future
+        base.increase_score_multiplier()
         base.update_score(HIT_SCORE)
 
     def die(self):
