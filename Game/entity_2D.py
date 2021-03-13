@@ -461,21 +461,21 @@ class Player(Creature):
 
         #In future, these speed values may be affected by some items
         player_object = self.object
-        if base.controls_status["move_up"]:
+        if base.level.controls_status["move_up"]:
             player_object.set_pos(player_object.get_pos() + (0, -mov_speed, 0))
             action = "move"
-        if base.controls_status["move_down"]:
+        if base.level.controls_status["move_down"]:
             player_object.set_pos(player_object.get_pos() + (0, mov_speed, 0))
             action = "move"
-        if base.controls_status["move_left"]:
+        if base.level.controls_status["move_left"]:
             player_object.set_pos(player_object.get_pos() + (mov_speed, 0, 0))
             action = "move"
-        if base.controls_status["move_right"]:
+        if base.level.controls_status["move_right"]:
             player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
         #this is placeholder - its janky and spawns right above the player. #TODO
-        if base.controls_status["attack"] and not skills['atk_0']['used']:
+        if base.level.controls_status["attack"] and not skills['atk_0']['used']:
             skills['atk_0']['used'] = True
 
             #make player impossible to move on cast. It make controls a bit janky,
@@ -524,7 +524,7 @@ class Player(Creature):
 
             #rotating projectile around 2d axis to match the shooting angle
             attack.object.set_r(angle)
-            base.projectiles.append(attack)
+            base.level.projectiles.append(attack)
 
         #this is kinda awkward coz its tied to cooldown and may look weird. I
         #may do something about that later... Like add "skill_cast_time" or idk
@@ -546,8 +546,8 @@ class Player(Creature):
             #this is a bit longer than stun lengh, to let player escape
             self.status_effects['immortal'] = 0.7
         #updating the value on player's hp gui
-        base.player_hp_ui.setText(f"{self.stats['hp']}")
-        base.reset_score_multiplier()
+        base.level.player_hp_ui.setText(f"{self.stats['hp']}")
+        base.level.reset_score_multiplier()
 
     def die(self):
         position = self.object.get_pos()
@@ -581,13 +581,13 @@ class Enemy(Creature):
 
         #disable this handler if the enemy or player are dead. Without it, game
         #will crash the very next second after one of these events occur
-        if self.dead or base.player.dead:
+        if self.dead or base.level.player.dead:
             return
 
         if 'stun' in self.status_effects:
             return event.cont
 
-        player_position = base.player.object.get_pos()
+        player_position = base.level.player.object.get_pos()
         mov_speed = self.stats['mov_spd']
 
         enemy_position = self.object.get_pos()
@@ -627,16 +627,16 @@ class Enemy(Creature):
         super().get_damage(amount)
         #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
         #increase it based on amount of damage received. But thats #TODO in future
-        base.increase_score_multiplier()
-        base.update_score(HIT_SCORE)
+        base.level.increase_score_multiplier()
+        base.level.update_score(HIT_SCORE)
 
     def die(self):
         super().die()
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
-        base.update_score(KILL_SCORE)
+        base.level.update_score(KILL_SCORE)
         #reduce enemy counter
-        base.update_enemy_counter(-1)
+        base.level.update_enemy_counter(-1)
 
 class Projectile(Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''

@@ -4,7 +4,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
-#module where I specify default config settings to reffer to from other modules
+#module where I specify shared settings to reffer to from multiple modules at once
+#TODO: rename this to something like "shared" or idk
 
 GAME_DIR = '.'
 ASSETS_DIR = join(GAME_DIR, 'Assets')
@@ -104,8 +105,6 @@ ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)
-MAX_ENEMY_COUNT = 10
-ENEMY_SPAWN_TIME = 10
 
 #debug stuff
 SHOW_COLLISIONS = False

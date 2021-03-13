@@ -74,6 +74,6 @@ if args.window_y and (args.window_y > Game.config.DEFAULT_WINDOW_SIZE[1]):
     win_x = Game.config.WINDOW_SIZE[0]
     Game.config.WINDOW_SIZE = (win_x, args.window_y)
 
-play = Game.game_window.Main()
+play = Game.game_window.GameWindow()
 log.info("Running the game")
 play.run()
