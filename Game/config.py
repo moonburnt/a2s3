@@ -1,5 +1,5 @@
 from os.path import join
-from panda3d.core import SamplerState, CollisionTraverser, CollisionHandlerPusher
+from panda3d.core import SamplerState
 import logging
 
 log = logging.getLogger(__name__)
@@ -62,11 +62,6 @@ PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 #make them accessible from within every other module. And no, I couldnt load
 #these directly due to circular imports. May do something about that later
 ASSETS = None
-
-#initializing these there, to be accessible from all modules. Basically allow us
-#to move ctrav/pusher stuff to entity_2D
-CTRAV = CollisionTraverser()
-PUSHER = CollisionHandlerPusher()
 
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)

@@ -315,8 +315,10 @@ class Creature(Entity2D):
         #attaching our object's collisions to pusher and traverser
         #TODO: this way enemies will collide with walls too. Idk how to solve it
         #yet, without attaching walls to pusher (which will break them)
-        config.PUSHER.add_collider(self.collision, self.object)
-        config.CTRAV.add_collider(self.collision, config.PUSHER)
+        #config.PUSHER.add_collider(self.collision, self.object)
+        #config.CTRAV.add_collider(self.collision, config.PUSHER)
+        base.pusher.add_collider(self.collision, self.object)
+        base.cTrav.add_collider(self.collision, base.pusher)
 
         #billboard is effect to ensure that object always face camera the same
         #e.g this is the key to achieve that "2.5D style" I aim for

@@ -1,7 +1,7 @@
 #module dedicated to manage per-level stuff
 
 import logging
-from direct.gui.OnscreenText import OnscreenText, TextNode
+from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, CollisionHandlerPusher
 from time import time
 from Game import entity_2D, map_loader, config
 
@@ -31,6 +31,18 @@ ENEMY_SPAWN_TIME = 2
 
 class LoadLevel:
     def __init__(self):
+        #doing it there before everything else to avoid issues during generation
+        #of walls and entity objects
+        log.debug("Initializing collision processors")
+        base.cTrav = CollisionTraverser()
+        base.pusher = CollisionHandlerPusher()
+        #avoiding the issue with entities falling under the floor on some collisions
+        base.pusher.set_horizontal(True)
+        #showing all occuring collisions. This is debatably better than manually
+        #enabling collision.show() for each entity entry
+        if config.SHOW_COLLISIONS:
+            base.cTrav.show_collisions(render)
+
         log.debug("Generating the map")
         self.map = map_loader.FlatMap(base.assets['sprites']['floor'], size = config.MAP_SIZE)
 
@@ -59,12 +71,7 @@ class LoadLevel:
         #this can also be potentially used for some highscore stats
         self.enemy_id = 0
 
-        log.debug("Initializing collision processors")
-        base.cTrav = config.CTRAV
-        base.pusher = config.PUSHER
-        #avoiding the issue with entities falling under the floor on some collisions
-        base.pusher.set_horizontal(True)
-
+        log.debug("Setting up collision event patterns")
         #this way we are basically naming the events we want to track, so these
         #will be possible to handle via base.accept and do the stuff accordingly
         #"in" is what happens when one object start colliding with another
@@ -74,11 +81,6 @@ class LoadLevel:
         base.pusher.addAgainPattern('%fn-again-%in')
         #we dont need this one there
         #base.pusher.addOutPattern('%fn-out-%in')
-
-        #showing all collisions on the scene (e.g visible to render)
-        #this is better than manually doing collision.show() for each object
-        if config.SHOW_COLLISIONS:
-            base.cTrav.show_collisions(render)
 
         #because in our current version we need to deal damage to player on collide
         #regardless who started collided with whom - tracking all these events to
@@ -96,6 +98,7 @@ class LoadLevel:
         base.accept('attack-again-enemy', self.damage_enemy)
         base.accept('enemy-again-attack', self.damage_enemy)
 
+        log.debug("Setting up camera")
         #this will set camera to be right above card.
         #changing first value will rotate the floor
         #changing second - change the angle from which we see floor
@@ -106,20 +109,7 @@ class LoadLevel:
         #making camera always follow character
         base.camera.reparent_to(self.player.object)
 
-        log.debug(f"Setting up background music")
-        #setting volume like that, so it should apply to all music tracks
-        music_mgr = base.musicManager
-        music_mgr.set_volume(config.MUSIC_VOLUME)
-        #same goes for sfx manager, which is a separate thing
-        sfx_mgr = base.sfxManagerList[0]
-        sfx_mgr.set_volume(config.SFX_VOLUME)
-        menu_theme = base.assets['music']['menu_theme']
-        menu_theme.set_loop(True)
-        menu_theme.play()
-
-        log.debug(f"Initializing UI")
-        #turning on fps meter, in case its enabled in settings
-        base.setFrameRateMeter(config.FPS_METER)
+        log.debug("Initializing player HUD")
         #create white-colored text with player's hp above player's head
         #TODO: move it to top left, add some image on background
         self.player_hp_ui = OnscreenText(text = f"{self.player.stats['hp']}",
@@ -228,7 +218,7 @@ class LoadLevel:
             if self.enemy_amount < MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
                 #determining the distance to player from each spawnpoint and
-                #spawning enemies on the farest. Depending on map type, it may be
+                #spawning enemies on the furthest. Depending on map type, it may be
                 #not best behavior. But for now it will do, as it solves the issue
                 #with enemies spawning on top of player if player is sitting at
                 #map's very corner. #TODO: add more "pick spawnpoint" variations
@@ -244,7 +234,7 @@ class LoadLevel:
                 #sort spawns by the very first number in tuple (which is lengh)
                 spawns.sort()
 
-                #picking up the spawn from last list's entry (e.g the farest from player)
+                #picking up the spawn from last list's entry (e.g the furthest from player)
                 spawn_position = spawns[-1][1]
                 log.debug(f"Spawning enemy on {spawn_position}")
                 enemy = entity_2D.Enemy("enemy", position = spawn_position,

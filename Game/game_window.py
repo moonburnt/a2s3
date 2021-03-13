@@ -53,9 +53,24 @@ class GameWindow(ShowBase):
         self.win.request_properties(window_settings)
         log.debug(f"Resolution has been set to {resolution}")
 
+        log.debug("Setting up the sound")
+        #setting volume like that, so it should apply to all music tracks
+        music_mgr = base.musicManager
+        music_mgr.set_volume(config.MUSIC_VOLUME)
+        #same goes for sfx manager, which is a separate thing
+        sfx_mgr = base.sfxManagerList[0]
+        sfx_mgr.set_volume(config.SFX_VOLUME)
+        menu_theme = base.assets['music']['menu_theme']
+        menu_theme.set_loop(True)
+        menu_theme.play()
+
+        #turning on fps meter, in case its enabled in settings
+        base.setFrameRateMeter(config.FPS_METER)
+
         #change background color to black. #TODO: move this to map generation,
         #make it possible to set to other values, aswell as pictures
         self.win.set_clear_color((0,0,0,1))
 
+        log.debug(f"Loading up the level")
         #todo: add all the configurable stuff there as init options, like map size and such
         self.level = level_loader.LoadLevel()
