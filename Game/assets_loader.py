@@ -1,6 +1,7 @@
 #module where I specify functions related to loading game assets into memory
 from os import listdir
 from os.path import isfile, isdir, basename, join, splitext
+from panda3d.core import SamplerState
 from Game import config
 import logging
 
@@ -19,6 +20,12 @@ class AssetsLoader:
         self.music = self.load_assets(MUSIC_DIR, "music")
         self.sfx = self.load_assets(SFX_DIR, "sfx")
         self.sprite = self.load_assets(SPRITE_DIR, "sprite")
+
+        #this is a workaround to remove blur from textures.
+        #TODO: apply filter on sprite load, without this loop afterwards
+        for item in self.sprite:
+            self.sprite[item].set_magfilter(SamplerState.FT_nearest)
+            self.sprite[item].set_minfilter(SamplerState.FT_nearest)
 
     def get_files(self, pathtodir):
         '''

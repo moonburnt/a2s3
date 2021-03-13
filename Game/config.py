@@ -7,10 +7,6 @@ log = logging.getLogger(__name__)
 #TODO: rename this to something like "shared" or idk
 GAME_NAME = "A2S3"
 
-#default sprite filtering mode. This is applied to all textures to ensure that
-#they wont look blurry or weird
-#TODO: maybe move this to assets loader and apply right away?
-DEFAULT_SPRITE_FILTER = SamplerState.FT_nearest
 #default (x, y) of sprites, to dont specify these manually when not necessary.
 #also to make some things that rely on these variables to adjust their values
 #on fly in case they will be changed

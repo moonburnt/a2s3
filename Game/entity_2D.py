@@ -11,7 +11,6 @@ STATS = config.STATS
 SKILLS = config.SKILLS
 ANIMS = config.ANIMS
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
-DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 DEFAULT_ANIMATIONS_SPEED = 0.1
 
 ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
@@ -125,10 +124,6 @@ class Entity2D:
 
         size_x, size_y = sprite_size
         log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
-
-        #setting filtering method to dont blur our sprite
-        texture.set_magfilter(DEFAULT_SPRITE_FILTER)
-        texture.set_minfilter(DEFAULT_SPRITE_FILTER)
 
         #the magic that allows textures to be mirrored. With that thing being
         #there, its possible to use values in range 1-2 to get versions of sprites

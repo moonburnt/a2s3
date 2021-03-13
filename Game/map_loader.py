@@ -10,7 +10,6 @@ log = logging.getLogger(__name__)
 
 FLOOR_LAYER = config.FLOOR_LAYER
 ENTITY_LAYER = config.ENTITY_LAYER
-DEFAULT_SPRITE_FILTER = config.DEFAULT_SPRITE_FILTER
 
 class FlatMap:
     def __init__(self, texture, size):
@@ -45,9 +44,6 @@ class FlatMap:
         #todo: add fallback values in case size hasnt been specified
         log.debug(f"Generating the floor")
 
-        #removing the blur from our texture
-        self.texture.set_magfilter(DEFAULT_SPRITE_FILTER)
-        self.texture.set_minfilter(DEFAULT_SPRITE_FILTER)
         #initializing new cardmaker object
         #which is essentially our go-to way to create flat models
         floor = CardMaker('floor')
