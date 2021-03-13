@@ -1,4 +1,3 @@
-from os.path import join
 from panda3d.core import SamplerState
 import logging
 
@@ -6,16 +5,11 @@ log = logging.getLogger(__name__)
 
 #module where I specify shared settings to reffer to from multiple modules at once
 #TODO: rename this to something like "shared" or idk
-
-GAME_DIR = '.'
-ASSETS_DIR = join(GAME_DIR, 'Assets')
-SPRITE_DIR = join(ASSETS_DIR, 'Sprites')
-MUSIC_DIR = join(ASSETS_DIR, 'BGM')
-SFX_DIR = join(ASSETS_DIR, 'SFX')
 GAME_NAME = "A2S3"
 
 #default sprite filtering mode. This is applied to all textures to ensure that
 #they wont look blurry or weird
+#TODO: maybe move this to assets loader and apply right away?
 DEFAULT_SPRITE_FILTER = SamplerState.FT_nearest
 #default (x, y) of sprites, to dont specify these manually when not necessary.
 #also to make some things that rely on these variables to adjust their values
@@ -56,12 +50,6 @@ PLAYER_COLLISION_MASK = 0X06
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 #I may adjust these or add more (say, powerups, coz they should collide with player
 #and walls, but not enemies or projectiles) in future, but for now thats it
-
-#this is... quite hacky thing, but it should work?
-#basically we making game_window.py load assets, then override this value, to
-#make them accessible from within every other module. And no, I couldnt load
-#these directly due to circular imports. May do something about that later
-ASSETS = None
 
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)

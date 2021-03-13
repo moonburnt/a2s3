@@ -119,9 +119,9 @@ class Entity2D:
 
         if not spritesheet:
             #I cant link assets above, coz their default value is None
-            texture = config.ASSETS['sprites'][name]
+            texture = base.assets.sprite[name]
         else:
-            texture = config.ASSETS['sprites'][spritesheet]
+            texture = base.assets.sprite[spritesheet]
 
         size_x, size_y = sprite_size
         log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
@@ -378,7 +378,7 @@ class Creature(Entity2D):
 
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
-        config.ASSETS['sfx']['damage'].play()
+        base.assets.sfx['damage'].play()
 
         self.change_animation(f"hurt_{self.direction}")
 
@@ -386,10 +386,10 @@ class Creature(Entity2D):
         death_sound = f"{self.name}_death"
         #playing different sounds, depending if target has its own death sound or not
         try:
-            config.ASSETS['sfx'][death_sound].play()
+            base.assets.sfx[death_sound].play()
         except KeyError:
             log.warning(f"{self.name} has no custom death sound, using fallback")
-            self.assets['sfx']['default_death'].play()
+            base.assets.sfx['default_death'].play()
 
         super().die()
 

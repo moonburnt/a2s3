@@ -44,7 +44,7 @@ class LoadLevel:
             base.cTrav.show_collisions(render)
 
         log.debug("Generating the map")
-        self.map = map_loader.FlatMap(base.assets['sprites']['floor'], size = config.MAP_SIZE)
+        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = config.MAP_SIZE)
 
         log.debug("Initializing player")
         #character's position should always render on ENTITY_LAYER

@@ -17,8 +17,7 @@ class GameWindow(ShowBase):
         self.disable_mouse()
 
         log.debug("Loading assets")
-        config.ASSETS = assets_loader.load_assets()
-        self.assets = config.ASSETS
+        self.assets = assets_loader.AssetsLoader()
 
         log.debug("Configuring game's window")
         #setting up resolution
@@ -60,7 +59,7 @@ class GameWindow(ShowBase):
         #same goes for sfx manager, which is a separate thing
         sfx_mgr = base.sfxManagerList[0]
         sfx_mgr.set_volume(config.SFX_VOLUME)
-        menu_theme = base.assets['music']['menu_theme']
+        menu_theme = self.assets.music['menu_theme']
         menu_theme.set_loop(True)
         menu_theme.play()
 
