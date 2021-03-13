@@ -5,7 +5,6 @@ import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
 from direct.gui.OnscreenText import OnscreenText, TextNode
-from random import randint
 from time import time
 from Game import entity_2D, map_loader, config, assets_loader
 
@@ -274,12 +273,26 @@ class Main(ShowBase):
             self.enemy_spawn_timer = ENEMY_SPAWN_TIME
             if self.enemy_amount < MAX_ENEMY_COUNT:
                 log.debug("Initializing enemy")
-                #picking up random spawnpoint out of available
-                #there is -1 coz randint include the second number you pass to
-                #it, not like "in range". E.g without it we will get "out of bound"
-                spawnpoint = randint(0, len(self.enemy_spawnpoints)-1)
-                log.debug(f"Spawning enemy on spawnpoint {spawnpoint}")
-                spawn_position = *self.enemy_spawnpoints[spawnpoint], ENTITY_LAYER
+                #determining the distance to player from each spawnpoint and
+                #spawning enemies on the farest. Depending on map type, it may be
+                #not best behavior. But for now it will do, as it solves the issue
+                #with enemies spawning on top of player if player is sitting at
+                #map's very corner. #TODO: add more "pick spawnpoint" variations
+                player_position = self.player.object.get_pos()
+
+                spawns = []
+                for spawnpoint in self.enemy_spawnpoints:
+                    spawn = *spawnpoint, ENTITY_LAYER
+                    vec_to_player = player_position - spawn
+                    vec_length = vec_to_player.length()
+                    spawns.append((vec_length, spawn))
+
+                #sort spawns by the very first number in tuple (which is lengh)
+                spawns.sort()
+
+                #picking up the spawn from last list's entry (e.g the farest from player)
+                spawn_position = spawns[-1][1]
+                log.debug(f"Spawning enemy on {spawn_position}")
                 enemy = entity_2D.Enemy("enemy", position = spawn_position,
                                         hitbox_size = 12)
                 enemy.id = self.enemy_id
