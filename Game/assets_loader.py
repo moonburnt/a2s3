@@ -15,17 +15,16 @@ SFX_DIR = join(ASSETS_DIR, 'SFX')
 
 class AssetsLoader:
     def __init__(self):
-        #this will load all the default assets into memory. It may be good idea
-        #to allow loading of custom assets on top of these in future, for modding
-        self.music = self.load_assets(MUSIC_DIR, "music")
-        self.sfx = self.load_assets(SFX_DIR, "sfx")
-        self.sprite = self.load_assets(SPRITE_DIR, "sprite")
+        #this will load all the default assets into memory. With reworked loader,
+        #it should conceptually be possible to load custom stuff on top of these
+        #in future. E.g for modding and such purposes
+        self.music = {}
+        self.sfx = {}
+        self.sprite = {}
 
-        #this is a workaround to remove blur from textures.
-        #TODO: apply filter on sprite load, without this loop afterwards
-        for item in self.sprite:
-            self.sprite[item].set_magfilter(SamplerState.FT_nearest)
-            self.sprite[item].set_minfilter(SamplerState.FT_nearest)
+        self.load_music(MUSIC_DIR)
+        self.load_sfx(SFX_DIR)
+        self.load_sprite(SPRITE_DIR)
 
     def get_files(self, pathtodir):
         '''
@@ -52,28 +51,54 @@ class AssetsLoader:
         log.debug(f"Got following files in total: {files}")
         return files
 
-    def load_assets(self, pathtodir, media_type):
-        '''
-        Receives str(path to dir with files) and type of media in this directory
-        (the allowed types are "music", "sfx" and "sprite". Loads all files
-        inside dir into memory by using related loader function. Then returns
-        dictionary looking like {{'filename_without_extension': file object}}
-        '''
-
+    def load_music(self, pathtodir):
+        '''Receive str(path to directory with music). Tries to load up all files
+        from specified directory and all subdirs as music files and, then, update
+        self.music dictionary with them. In case there are multiple entries with
+        very same names - older ones will get overwritten'''
         files = self.get_files(pathtodir)
-
-        if media_type == "music":
-            funcname = loader.load_music
-        elif media_type == "sfx":
-            funcname = loader.load_sfx
-        #I should probably raise type error or something on else instead, idk
-        else:
-            funcname = loader.load_texture
 
         data = {}
         for item in files:
             name_of_file = basename(item)
             name_without_extension = splitext(name_of_file)[0]
-            data[name_without_extension] = funcname(item)
+            data[name_without_extension] = loader.load_music(item)
 
-        return data
+        log.debug("Updating music storage")
+        self.music = self.music | data
+
+    def load_sfx(self, pathtodir):
+        '''Receive str(path to directory with sfx). Tries to load up all files
+        from specified directory and all subdirs as sfx files and, then, update
+        self.sfx dictionary with them. In case there are multiple entries with
+        very same names - older ones will get overwritten'''
+        files = self.get_files(pathtodir)
+
+        data = {}
+        for item in files:
+            name_of_file = basename(item)
+            name_without_extension = splitext(name_of_file)[0]
+            data[name_without_extension] = loader.load_sfx(item)
+
+        log.debug("Updating sfx storage")
+        self.sfx = self.sfx | data
+
+    def load_sprite(self, pathtodir):
+        '''Receive str(path to directory with sprites). Tries to load up all files
+        from specified directory and all subdirs as sprite files and, then, update
+        self.sprite dictionary with them. Also apply sampler state filter to all
+        sprites, so they wont look blurry in-game. In case there are multiple
+        entries with very same names - older ones will get overwritten'''
+        files = self.get_files(pathtodir)
+
+        data = {}
+        for item in files:
+            name_of_file = basename(item)
+            name_without_extension = splitext(name_of_file)[0]
+            sprite = loader.load_texture(item)
+            sprite.set_magfilter(SamplerState.FT_nearest)
+            sprite.set_minfilter(SamplerState.FT_nearest)
+            data[name_without_extension] = sprite
+
+        log.debug("Updating sprite storage")
+        self.sprite = self.sprite | data
