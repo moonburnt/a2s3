@@ -2,6 +2,7 @@
 
 import logging
 from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, CollisionHandlerPusher
+from panda3d.core import NodePath
 from time import time
 from Game import entity_2D, map_loader, config
 
@@ -110,12 +111,20 @@ class LoadLevel:
         base.camera.reparent_to(self.player.object)
 
         log.debug("Initializing player HUD")
+        #with that thing being there, we are able to toggle player_hud with one
+        #command together, without need to manually call for each node
+        #TODO: move hud to separate module, maybe class
+        self.player_hud = NodePath("player_hud")
+        self.player_hud.reparent_to(base.aspect2d)
+        self.player_hud.show()
+
         #create white-colored text with player's hp above player's head
         #TODO: move it to top left, add some image on background
         self.player_hp_ui = OnscreenText(text = f"{self.player.stats['hp']}",
                                          pos = (0, 0.01),
                                          scale = 0.05,
                                          fg = (1,1,1,1),
+                                         parent = self.player_hud,
                                          mayChange = True)
 
         #score is, well, a thing that increase each time you hit/kill enemy.
@@ -129,6 +138,7 @@ class LoadLevel:
                                      align = TextNode.ALeft,
                                      scale = 0.05,
                                      fg = (1,1,1,1),
+                                     parent = self.player_hud,
                                      mayChange = True)
 
         #score multiplier is a thing, that, well, increase amount of score gained
@@ -146,6 +156,7 @@ class LoadLevel:
                                                 align = TextNode.ALeft,
                                                 scale = 0.05,
                                                 fg = (1,1,1,1),
+                                                parent = self.player_hud,
                                                 mayChange = True)
 
         #its variable and not len of enemy list, coz it doesnt clean up right away
@@ -156,6 +167,7 @@ class LoadLevel:
                                             align = TextNode.ARight,
                                             scale = 0.05,
                                             fg = (1,1,1,1),
+                                            parent = self.player_hud,
                                             mayChange = True)
 
         log.debug(f"Initializing controls handler")

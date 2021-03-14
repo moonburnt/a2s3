@@ -547,6 +547,9 @@ class Player(Creature):
         base.level.reset_score_multiplier()
 
     def die(self):
+        #disable hud on death. This is not the most optimal thing, since it stays
+        #there on background, just in hidden form. But for now it will do
+        base.level.player_hud.hide()
         position = self.object.get_pos()
         #reparenting camera, to avoid crash on removal of player's node.
         #This may be unnecessary if we will implement gibs handler
