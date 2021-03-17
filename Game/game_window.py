@@ -3,8 +3,10 @@
 
 import logging
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import WindowProperties
+from panda3d.core import WindowProperties, NodePath
 from Game import config, assets_loader, level_loader
+from direct.gui.DirectGui import DirectButton
+from direct.gui.OnscreenImage import OnscreenImage
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +72,57 @@ class GameWindow(ShowBase):
         #make it possible to set to other values, aswell as pictures
         self.win.set_clear_color((0,0,0,1))
 
-        log.debug(f"Loading up the level")
+        self.main_menu = NodePath("main menu")
+        self.main_menu.reparent_to(base.aspect2d)
+        #self.main_menu.reparent_to(render2d)
+        #self.main_menu.reparent_to(base.pixel2d)
+        #self.main_menu.reparent_to(pixel2d)
+        self.main_menu.show()
+
+        #basically, the thing is - directgui can automatically assign multiple
+        #textures to different button's events, if they are passed as list or
+        #tuple in correct order. And thats what we are doing there
+        self.button_textures = (self.assets.sprite['button'],
+                                self.assets.sprite['button_active'],
+                                self.assets.sprite['button_selected'])
+
+        #this one will be attached to pixel2d, coz its an image and needs to be
+        #pixel-perfect. Scale is set to the scale of the very image, and position
+        #counts from top left corner of window.
+        self.game_logo = OnscreenImage(image = self.assets.sprite['logo'],
+                                  scale = (122, 1, 53),
+                                  pos = (200, 1, -100),
+                                  parent = pixel2d)
+
+        #not assigning "self" stuff, coz Im not referring to these from elsewhere
+        start_button = DirectButton(text = "Play",
+                                    command = self.start_game,
+                                    pos = (0, 0, 0.1),
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-1.5, 1.5, -0.5, 1),
+                                    parent = self.main_menu)
+
+        exit_button = DirectButton(text = "Exit",
+                                   command = self.exit_game,
+                                   pos = (0, 0, -0.1),
+                                   scale = 0.1,
+                                   frameTexture = self.button_textures,
+                                   frameSize = (-1.5, 1.5, -0.5, 1),
+                                   parent = self.main_menu)
+
+    def start_game(self):
+        '''Hide main menu frame and load up the level'''
+        log.debug("Loading up the level")
+        self.game_logo.hide()
+        self.main_menu.hide()
+
         #todo: add all the configurable stuff there as init options, like map size and such
         self.level = level_loader.LoadLevel()
+
+    def exit_game(self):
+        '''Run whatever cleanup tasks and exit the game'''
+        #TODO: maybe save up some stuff and remove unused garbage from memory?
+        log.info("Exiting the game... Bye :(")
+        #this doesnt have the snek case version
+        base.userExit()
