@@ -556,6 +556,10 @@ class Player(Creature):
         base.camera.reparent_to(render)
         super().die()
 
+        #kinda nasty way to update the score part of death screen
+        base.level.high_score.setText(f"Your score is {base.level.score}")
+        base.level.death_screen.show()
+
 class Enemy(Creature):
     '''Subclass of Creature, dedicated to creation of enemies'''
     def __init__(self, name, spritesheet = None, sprite_size = None,

@@ -5,6 +5,7 @@ from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, 
 from panda3d.core import NodePath
 from time import time
 from Game import entity_2D, map_loader, config
+from direct.gui.DirectGui import DirectButton, DirectLabel
 
 log = logging.getLogger(__name__)
 
@@ -169,6 +170,30 @@ class LoadLevel:
                                             fg = (1,1,1,1),
                                             parent = self.player_hud,
                                             mayChange = True)
+
+        #And this will be "game over" screen, shown on player's death
+        #I REALLY need to move these somewhere else, at this point...
+        self.death_screen = NodePath("death_screen")
+        self.death_screen.reparent_to(base.aspect2d)
+        self.death_screen.hide()
+
+        self.high_score = DirectLabel(text = f"Your score is {self.score}",
+                                      pos = (0, 0, 0.1),
+                                      scale = 0.1,
+                                      frameTexture = base.assets.sprite['button_active'],
+                                      frameSize = (-4.5, 4.5, -0.5, 1),
+                                      parent = self.death_screen)
+
+        #there is still no restart button tho :(
+
+        self.exit_button = DirectButton(text = "Exit",
+                                        command = base.exit_game,
+                                        pos = (0, 0, -0.1),
+                                        scale = 0.1,
+                                        frameTexture = base.button_textures,
+                                        frameSize = (-1.5, 1.5, -0.5, 1),
+                                        parent = self.death_screen)
+
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
