@@ -184,16 +184,21 @@ class LoadLevel:
                                       frameSize = (-4.5, 4.5, -0.5, 1),
                                       parent = self.death_screen)
 
-        #there is still no restart button tho :(
-
-        self.exit_button = DirectButton(text = "Exit",
-                                        command = base.exit_game,
+        self.exit_button = DirectButton(text = "Restart",
+                                        command = self.restart_level,
                                         pos = (0, 0, -0.1),
                                         scale = 0.1,
                                         frameTexture = base.button_textures,
                                         frameSize = (-1.5, 1.5, -0.5, 1),
                                         parent = self.death_screen)
 
+        self.exit_button = DirectButton(text = "Exit",
+                                        command = base.exit_game,
+                                        pos = (0, 0, -0.3),
+                                        scale = 0.1,
+                                        frameTexture = base.button_textures,
+                                        frameSize = (-1.5, 1.5, -0.5, 1),
+                                        parent = self.death_screen)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
@@ -430,3 +435,17 @@ class LoadLevel:
         self.enemy_amount += amount
         self.enemy_amount_ui.setText(f"Enemies Left: {self.enemy_amount}")
         log.debug(f"Enemy amount has been set to {self.enemy_amount}")
+
+    def restart_level(self):
+        '''Restarts a level from zero'''
+        for enemy in self.enemies:
+            enemy.die()
+        for projectile in self.projectiles:
+            #this require something to be passed as argument, because usually it
+            #runs as taskmanager routine with events
+            projectile.die(0)
+        #It doesnt seem like I need to reset other variables tho...
+        self.enemies = []
+        self.projectiles = []
+        self.death_screen.hide()
+        base.start_game()
