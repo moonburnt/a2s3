@@ -4,7 +4,7 @@ from Game import config, entity2d
 
 log = logging.getLogger(__name__)
 
-#module where I specify character and other 2d objects
+#module where I specify player's class
 
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 

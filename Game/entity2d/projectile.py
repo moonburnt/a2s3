@@ -3,7 +3,7 @@ from Game import config, entity2d
 
 log = logging.getLogger(__name__)
 
-#module where I specify character and other 2d objects
+#module for 2d projectiles
 
 PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
 

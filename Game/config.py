@@ -62,7 +62,7 @@ CONTROLS = {"move_up": "w", "move_down": "s",
 #later I will build this from jsons or whatever configuration files I will choose
 STATS = {'default': {'hp': 50, 'dmg': 1, 'mov_spd': 1, 'skills': ['atk_0']},
          'player': {"hp": 100, "dmg": 10, 'mov_spd': 3, 'skills': ['atk_0']},
-         'enemy': {"hp": 100, "dmg": 5, 'mov_spd': 2, 'skills': ['atk_0']}}
+         'enemy': {"hp": 50, "dmg": 10, 'mov_spd': 2, 'skills': ['atk_0']}}
 
 #TODO: rename cd (cooldown) to something like atk_speed and make it work the opposite,
 #e.g the more the value - less time it gets to strike again. Also it may be a good

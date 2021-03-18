@@ -4,6 +4,7 @@ import logging
 from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, CollisionHandlerPusher
 from panda3d.core import NodePath
 from time import time
+from random import randint, choice
 from Game import entity2d, map_loader, config
 from direct.gui.DirectGui import DirectButton, DirectLabel
 
@@ -30,6 +31,9 @@ PAUSE_BETWEEN_WAVES = 5
 MAX_ENEMY_COUNT = 10
 #pause between spawn checks
 ENEMY_SPAWN_TIME = 2
+
+#chance of unique enemy to spawn, in %
+UNIQUE_ENEMY_CHANCE = 25
 
 class LoadLevel:
     def __init__(self):
@@ -281,16 +285,36 @@ class LoadLevel:
                     spawn = *spawnpoint, ENTITY_LAYER
                     vec_to_player = player_position - spawn
                     vec_length = vec_to_player.length()
-                    spawns.append((vec_length, spawn))
+                    #spawns.append((vec_length, spawn))
+                    spawns.append((vec_length, spawnpoint))
 
                 #sort spawns by the very first number in tuple (which is lengh)
                 spawns.sort()
 
                 #picking up the spawn from last list's entry (e.g the furthest from player)
-                spawn_position = spawns[-1][1]
-                log.debug(f"Spawning enemy on {spawn_position}")
+                #spawn_position = spawns[-1][1]
+                spawn_xy = spawns[-1][1]
+
+                #determining type of enemy to spawn
+                spawn_chance = randint(0, 100)
+                if spawn_chance < UNIQUE_ENEMY_CHANCE:
+                    #for now there are only 2 types of enemies, choosing from them
+                    affix = choice(("Big", "Small"))
+                    #nasty workaround to avoid flying of small enemies and falling
+                    #through the floor of big enemies. Once I will implement floor
+                    #collision, this can be removed. #TODO
+                    if affix == "Small":
+                        spawn_position = *spawn_xy, ENTITY_LAYER/2
+                    else:
+                        spawn_position = *spawn_xy, ENTITY_LAYER*2
+                else:
+                    affix = "Normal"
+                    spawn_position = *spawn_xy, ENTITY_LAYER
+
+
+                log.debug(f"Spawning {affix} enemy on {spawn_position}")
                 enemy = entity2d.Enemy("enemy", position = spawn_position,
-                                        hitbox_size = 12)
+                                        hitbox_size = 12, affix = affix)
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
                 self.enemy_id += 1

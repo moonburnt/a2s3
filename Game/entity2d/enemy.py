@@ -3,7 +3,7 @@ from Game import entity2d, config
 
 log = logging.getLogger(__name__)
 
-#module where I specify character and other 2d objects
+#module where I specify whatever stuff related to enemies
 
 DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
 
@@ -13,15 +13,37 @@ HIT_SCORE = 10
 KILL_SCORE = 15
 
 class Enemy(entity2d.Creature):
-    '''Subclass of Creature, dedicated to creation of enemies'''
-    def __init__(self, name, spritesheet = None, sprite_size = None,
+    '''Subclass of Creature, dedicated to creation of enemies. Accepts everything
+    like entity2d.Creature, but also affix. Which can be either "Normal", "Big" or
+    "Small". Based on affix, size, health and movement speed of enemy will get altered'''
+    def __init__(self, name, affix = "Normal", spritesheet = None, sprite_size = None,
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         collision_mask = ENEMY_COLLISION_MASK
         super().__init__(name, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 
-        base.task_mgr.add(self.ai_movement_handler, "controls handler")
+        if affix in ("Normal", "Big", "Small"):
+            self.affix = affix
+        else:
+            self.affix = "Normal"
+
+        if self.affix == "Big":
+            #if enemy is big - reducing movement speed by 25%, but increasing
+            #hp by 25% and size by x2
+            self.stats['mov_spd'] = (self.stats['mov_spd']/100)*75
+            self.stats['hp'] = (self.stats['hp']/100)*125
+            self.object.set_scale(2)
+        elif self.affix == "Small":
+            #if enemy is small - increasing movement speed by 25%, but reducing
+            #hp by 25% and size by x2
+            self.stats['mov_spd'] = (self.stats['mov_spd']/100)*125
+            self.stats['hp'] = (self.stats['hp']/100)*75
+            self.object.set_scale(0.5)
+        else:
+            pass
+
+        base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")
 
         #id variable that will be set from game_window. Placed it there to avoid
         #possible crashes and to remind that its a thing that exists
@@ -54,7 +76,11 @@ class Enemy(entity2d.Creature):
         #I dont know how it works, lol
         vector_to_player.normalize()
 
-        new_pos = enemy_position + (vector_to_player*mov_speed)
+        #workaround to ensure enemy will stay on its layer, even if its different
+        #from player due to size difference or whatever else reasons
+        vxy = vector_to_player.get_xy()
+        #new_pos = enemy_position + (vector_to_player*mov_speed)
+        new_pos = enemy_position + (vxy*mov_speed, 0)
         pos_diff = enemy_position - new_pos
 
         action = 'idle'

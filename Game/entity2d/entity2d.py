@@ -5,7 +5,7 @@ from Game import config, spritesheet_cutter
 
 log = logging.getLogger(__name__)
 
-#module where I specify character and other 2d objects
+#module with general classes used as parents for 2d entity objects
 
 STATS = config.STATS
 SKILLS = config.SKILLS
