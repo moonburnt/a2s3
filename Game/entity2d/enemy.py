@@ -1,0 +1,97 @@
+import logging
+from Game import entity2d, config
+
+log = logging.getLogger(__name__)
+
+#module where I specify character and other 2d objects
+
+DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+
+ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
+
+HIT_SCORE = 10
+KILL_SCORE = 15
+
+class Enemy(entity2d.Creature):
+    '''Subclass of Creature, dedicated to creation of enemies'''
+    def __init__(self, name, spritesheet = None, sprite_size = None,
+                 hitbox_size = None, collision_mask = None, position = None,
+                 animations_speed = None):
+        collision_mask = ENEMY_COLLISION_MASK
+        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+                         collision_mask, position, animations_speed)
+
+        base.task_mgr.add(self.ai_movement_handler, "controls handler")
+
+        #id variable that will be set from game_window. Placed it there to avoid
+        #possible crashes and to remind that its a thing that exists
+        self.id = None
+
+    def ai_movement_handler(self, event):
+        '''This is but nasty hack to make enemies follow character. TODO: remake
+        and move to its own module'''
+        #TODO: maybe make it possible to chase not for just player?
+        #TODO: not all enemies need to behave this way. e.g, for example, we can
+        #only affect enemies that have their ['ai'] set to ['chaser']...
+        #or something among these lines, will see in future
+
+        #disable this handler if the enemy or player are dead. Without it, game
+        #will crash the very next second after one of these events occur
+        if self.dead or base.level.player.dead:
+            return
+
+        if 'stun' in self.status_effects:
+            return event.cont
+
+        player_position = base.level.player.object.get_pos()
+        mov_speed = self.stats['mov_spd']
+
+        enemy_position = self.object.get_pos()
+        vector_to_player = player_position - enemy_position
+        distance_to_player = vector_to_player.length()
+        #normalizing vector is the key to avoid "flickering" effect, as its
+        #basically ignores whatever minor difference in placement there are
+        #I dont know how it works, lol
+        vector_to_player.normalize()
+
+        new_pos = enemy_position + (vector_to_player*mov_speed)
+        pos_diff = enemy_position - new_pos
+
+        action = 'idle'
+
+        #it may be good idea to also track camera angle, if I will decide
+        #to implement camera controls, at some point or another
+        if pos_diff[0] > 0:
+            self.direction = 'right'
+        else:
+            self.direction = 'left'
+
+        #this thing basically makes enemy move till it hit player, than play
+        #attack animation. May backfire if player's sprite size is not equal
+        #to player's hitbox
+        if distance_to_player > DEFAULT_SPRITE_SIZE[0]*2:
+            action = 'move'
+        else:
+            action = 'attack'
+
+        self.object.set_pos(new_pos)
+        self.change_animation(f'{action}_{self.direction}')
+
+        return event.cont
+
+    def get_damage(self, amount = None):
+        super().get_damage(amount)
+        #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
+        #increase it based on amount of damage received. But thats #TODO in future
+        base.level.increase_score_multiplier()
+        base.level.update_score(HIT_SCORE)
+
+    def die(self):
+        super().die()
+        #for now this increase score based on HIT_SCORE+KILL_SCORE.
+        #I dont think its a trouble, but may tweak at some point
+        base.level.update_score(KILL_SCORE)
+        #reduce enemy counter
+        base.level.update_enemy_counter(-1)
+
+        return

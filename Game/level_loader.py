@@ -4,7 +4,7 @@ import logging
 from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, CollisionHandlerPusher
 from panda3d.core import NodePath
 from time import time
-from Game import entity_2D, map_loader, config
+from Game import entity2d, map_loader, config
 from direct.gui.DirectGui import DirectButton, DirectLabel
 
 log = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class LoadLevel:
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
-        self.player = entity_2D.Player("player", position = self.map.player_spawnpoint,
+        self.player = entity2d.Player("player", position = self.map.player_spawnpoint,
                                        hitbox_size = 6)
 
         log.debug("Initializing enemy spawner")
@@ -289,7 +289,7 @@ class LoadLevel:
                 #picking up the spawn from last list's entry (e.g the furthest from player)
                 spawn_position = spawns[-1][1]
                 log.debug(f"Spawning enemy on {spawn_position}")
-                enemy = entity_2D.Enemy("enemy", position = spawn_position,
+                enemy = entity2d.Enemy("enemy", position = spawn_position,
                                         hitbox_size = 12)
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
