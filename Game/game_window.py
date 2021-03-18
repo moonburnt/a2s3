@@ -73,10 +73,12 @@ class GameWindow(ShowBase):
         self.win.set_clear_color((0,0,0,1))
 
         self.main_menu = NodePath("main menu")
-        self.main_menu.reparent_to(base.aspect2d)
-        #self.main_menu.reparent_to(render2d)
-        #self.main_menu.reparent_to(base.pixel2d)
-        #self.main_menu.reparent_to(pixel2d)
+        #reparenting this thing to pixel2d make buttons scale pixel-perfectly.
+        #In case scale equals image size, obviously.
+        #On other side, it adds requirement to manually calculate position based
+        #on window's size, since with pixel2d placement of items is calculated
+        #not from center, but from top left corner of window
+        self.main_menu.reparent_to(pixel2d)
         self.main_menu.show()
 
         #basically, the thing is - directgui can automatically assign multiple
@@ -86,35 +88,37 @@ class GameWindow(ShowBase):
                                 self.assets.sprite['button_active'],
                                 self.assets.sprite['button_selected'])
 
-        #this one will be attached to pixel2d, coz its an image and needs to be
-        #pixel-perfect. Scale is set to the scale of the very image, and position
-        #counts from top left corner of window.
         self.game_logo = OnscreenImage(image = self.assets.sprite['logo'],
-                                  scale = (122, 1, 53),
-                                  pos = (200, 1, -100),
-                                  parent = pixel2d)
+                                       scale = (122, 1, 53),
+                                       pos = (150, 1, -100),
+                                       parent = self.main_menu)
 
         #not assigning "self" stuff, coz Im not referring to these from elsewhere
         start_button = DirectButton(text = "Play",
                                     command = self.start_game,
-                                    pos = (0, 0, 0.1),
-                                    scale = 0.1,
+                                    pos = (150, 1, -300),
+                                    text_scale = 1,
+                                    text_pos = (0,-0.25),
+                                    scale = (64, 1, 32),
                                     frameTexture = self.button_textures,
-                                    frameSize = (-1.5, 1.5, -0.5, 1),
+                                    frameSize = (-2, 2, -1, 1),
                                     parent = self.main_menu)
 
         exit_button = DirectButton(text = "Exit",
                                    command = self.exit_game,
-                                   pos = (0, 0, -0.1),
-                                   scale = 0.1,
+                                   pos = (150, 1, -400),
+                                   text_pos = (0,-0.25),
+                                   scale = (64, 1, 32),
                                    frameTexture = self.button_textures,
-                                   frameSize = (-1.5, 1.5, -0.5, 1),
+                                   frameSize = (-2, 2, -1, 1),
                                    parent = self.main_menu)
+
+        #enabling transparency to all buttons in main_menu
+        self.main_menu.set_transparency(True)
 
     def start_game(self):
         '''Hide main menu frame and load up the level'''
         log.debug("Loading up the level")
-        self.game_logo.hide()
         self.main_menu.hide()
 
         #todo: add all the configurable stuff there as init options, like map size and such

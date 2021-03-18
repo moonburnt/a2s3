@@ -180,7 +180,7 @@ class LoadLevel:
         self.high_score = DirectLabel(text = f"Your score is {self.score}",
                                       pos = (0, 0, 0.1),
                                       scale = 0.1,
-                                      frameTexture = base.assets.sprite['button_active'],
+                                      frameTexture = base.assets.sprite['frame'],
                                       frameSize = (-4.5, 4.5, -0.5, 1),
                                       parent = self.death_screen)
 
@@ -207,6 +207,8 @@ class LoadLevel:
                                         frameTexture = base.button_textures,
                                         frameSize = (-3, 3, -0.5, 1),
                                         parent = self.death_screen)
+
+        self.death_screen.set_transparency(True)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
