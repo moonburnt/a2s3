@@ -18,7 +18,6 @@
 ## How to Play:
 
 - Install all dependencies (no setup.py available yet)
-- [Download game's assets](https://i.fiery.me/b2dyt.zip) and unpack them to game's folder
 - Run `./play`
 
 ## Compiling natively for your platform:
@@ -50,4 +49,4 @@ In order to reach 0.1 milestone (effectively an equal to "alpha"), the following
 
 **Code**: [GPLv3](LICENSE)
 
-**Assets**: whatever else, see `resources.txt` inside assets archive for info about particular license of each file
+**Assets**: whatever else, see `resources.txt` inside [assets](Assets) for info about particular license of each file

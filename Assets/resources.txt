@@ -1,0 +1,14 @@
+Some of these project's assets are third party. Each of them may have their own
+license. List of such assets and related licenses is below:
+
+Source: https://opengameart.org/content/5-chiptunes-action
+License: cc0
+Used: BGM/menu_theme.ogg
+
+Source: https://opengameart.org/content/512-sound-effects-8-bit-style
+License: cc0
+Used: SFX/*
+
+Source: https://www.deviantart.com/pix3m/art/Bitmap-font-Romulus-380739406
+License: cc3
+Used: Fonts/romulus.ttf
