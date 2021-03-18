@@ -50,4 +50,5 @@ In order to reach 0.1 milestone (effectively an equal to "alpha"), the following
 ## License:
 
 **Code**: [GPLv3](LICENSE)
+
 **Assets**: whatever else, see `resources.txt` inside assets archive for info about particular license of each file
