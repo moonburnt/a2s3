@@ -30,7 +30,6 @@
 In order to reach 0.1 milestone (effectively an equal to "alpha"), the following features should be implemented (in no particular order):
 
 - Main menu, where you can change window resolution and music/sfx volume, rebind keys and select size of map to play on
-- Restart menu, shown on player's death, that ~~show your score~~ and has buttons to reset the map, exit to main menu and ~~leave the game~~
 - Simple leaderboard menu where you can see your previous high scores
 - Placeholder birth and death animations
 - Save/load settings into custom Config.prc located in `$HOME/.config/a2s3/config.prc`

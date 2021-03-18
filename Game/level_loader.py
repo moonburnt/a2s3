@@ -184,20 +184,28 @@ class LoadLevel:
                                       frameSize = (-4.5, 4.5, -0.5, 1),
                                       parent = self.death_screen)
 
-        self.exit_button = DirectButton(text = "Restart",
-                                        command = self.restart_level,
-                                        pos = (0, 0, -0.1),
-                                        scale = 0.1,
-                                        frameTexture = base.button_textures,
-                                        frameSize = (-1.5, 1.5, -0.5, 1),
-                                        parent = self.death_screen)
+        self.restart_button = DirectButton(text = "Restart",
+                                           command = self.restart_level,
+                                           pos = (0, 0, -0.1),
+                                           scale = 0.1,
+                                           frameTexture = base.button_textures,
+                                           frameSize = (-3, 3, -0.5, 1),
+                                           parent = self.death_screen)
+
+        self.exit_level_button = DirectButton(text = "Back to Menu",
+                                              command = self.exit_level,
+                                              pos = (0, 0, -0.3),
+                                              scale = 0.1,
+                                              frameTexture = base.button_textures,
+                                              frameSize = (-3, 3, -0.5, 1),
+                                              parent = self.death_screen)
 
         self.exit_button = DirectButton(text = "Exit",
                                         command = base.exit_game,
-                                        pos = (0, 0, -0.3),
+                                        pos = (0, 0, -0.5),
                                         scale = 0.1,
                                         frameTexture = base.button_textures,
-                                        frameSize = (-1.5, 1.5, -0.5, 1),
+                                        frameSize = (-3, 3, -0.5, 1),
                                         parent = self.death_screen)
 
         log.debug(f"Initializing controls handler")
@@ -438,14 +446,25 @@ class LoadLevel:
 
     def restart_level(self):
         '''Restarts a level from zero'''
-        for enemy in self.enemies:
-            enemy.die()
-        for projectile in self.projectiles:
-            #this require something to be passed as argument, because usually it
-            #runs as taskmanager routine with events
-            projectile.die(0)
+        self.cleanup()
+        self.death_screen.hide()
+        base.start_game()
+
+    def cleanup(self):
+        '''Remove whatever garbage has got stuck to scene and reset variables'''
+        #this magic function remove all the nodes from scene, nullifying the need
+        #to manually call .die() for each enemy and projectile. There is a caveat
+        #tho - if I will ever attach some gui part of similar thing to base.render,
+        #these will be gone too... I think.
+        base.render.node().removeAllChildren()
+
         #It doesnt seem like I need to reset other variables tho...
         self.enemies = []
         self.projectiles = []
+
+    def exit_level(self):
+        '''Exit level to main menu'''
+        self.cleanup()
         self.death_screen.hide()
-        base.start_game()
+        base.game_logo.show()
+        base.main_menu.show()
