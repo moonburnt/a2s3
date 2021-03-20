@@ -37,42 +37,42 @@ if args.debug:
     log.setLevel(logging.DEBUG)
 
 if args.show_collisions:
-    Game.config.SHOW_COLLISIONS = True
+    Game.shared.SHOW_COLLISIONS = True
 
 if args.show_fps:
-    Game.config.FPS_METER = True
+    Game.shared.FPS_METER = True
 
-if args.map_x and (args.map_x > Game.config.MAP_SIZE[0]):
-    map_y = Game.config.MAP_SIZE[1]
-    Game.config.MAP_SIZE = (args.map_x, map_y)
+if args.map_x and (args.map_x > Game.shared.MAP_SIZE[0]):
+    map_y = Game.shared.MAP_SIZE[1]
+    Game.shared.MAP_SIZE = (args.map_x, map_y)
 
-if args.map_y and (args.map_y > Game.config.MAP_SIZE[1]):
-    map_x = Game.config.MAP_SIZE[0]
-    Game.config.MAP_SIZE = (map_x, args.map_y)
+if args.map_y and (args.map_y > Game.shared.MAP_SIZE[1]):
+    map_x = Game.shared.MAP_SIZE[0]
+    Game.shared.MAP_SIZE = (map_x, args.map_y)
 
-log.debug(f"Map size has been set to {Game.config.MAP_SIZE}")
+log.debug(f"Map size has been set to {Game.shared.MAP_SIZE}")
 #going for try/except, coz either argparse or python seems to threat 0 as "None"
 try:
     if (0 <= args.music_vol <= 100):
-        Game.config.MUSIC_VOLUME = args.music_vol / 100
+        Game.shared.MUSIC_VOLUME = args.music_vol / 100
         log.debug(f"Music volume has been set to {args.music_vol}%")
 except:
     pass
 
 try:
     if (0 <= args.sfx_vol <= 100):
-        Game.config.SFX_VOLUME = args.sfx_vol / 100
+        Game.shared.SFX_VOLUME = args.sfx_vol / 100
         log.debug(f"Music volume has been set to {args.sfx_vol}%")
 except:
     pass
 
-if args.window_x and (args.window_x > Game.config.DEFAULT_WINDOW_SIZE[0]):
-    win_y = Game.config.WINDOW_SIZE[1]
-    Game.config.WINDOW_SIZE = (args.window_x, win_y)
+if args.window_x and (args.window_x > Game.shared.DEFAULT_WINDOW_SIZE[0]):
+    win_y = Game.shared.WINDOW_SIZE[1]
+    Game.shared.WINDOW_SIZE = (args.window_x, win_y)
 
-if args.window_y and (args.window_y > Game.config.DEFAULT_WINDOW_SIZE[1]):
-    win_x = Game.config.WINDOW_SIZE[0]
-    Game.config.WINDOW_SIZE = (win_x, args.window_y)
+if args.window_y and (args.window_y > Game.shared.DEFAULT_WINDOW_SIZE[1]):
+    win_x = Game.shared.WINDOW_SIZE[0]
+    Game.shared.WINDOW_SIZE = (win_x, args.window_y)
 
 play = Game.game_window.GameWindow()
 log.info("Running the game")

@@ -1,16 +1,16 @@
 import logging
 from panda3d.core import (CardMaker, TextureStage, CollisionSphere, CollisionNode,
                           Texture, BitMask32)
-from Game import config, spritesheet_cutter
+from Game import shared, spritesheet_cutter
 
 log = logging.getLogger(__name__)
 
 #module with general classes used as parents for 2d entity objects
 
-STATS = config.STATS
-SKILLS = config.SKILLS
-ANIMS = config.ANIMS
-DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+STATS = shared.STATS
+SKILLS = shared.SKILLS
+ANIMS = shared.ANIMS
+DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
 DEFAULT_ANIMATIONS_SPEED = 0.1
 
 class Entity2D:
@@ -224,8 +224,8 @@ class Creature(Entity2D):
         #attaching our object's collisions to pusher and traverser
         #TODO: this way enemies will collide with walls too. Idk how to solve it
         #yet, without attaching walls to pusher (which will break them)
-        #config.PUSHER.add_collider(self.collision, self.object)
-        #config.CTRAV.add_collider(self.collision, config.PUSHER)
+        #shared.PUSHER.add_collider(self.collision, self.object)
+        #shared.CTRAV.add_collider(self.collision, shared.PUSHER)
         base.pusher.add_collider(self.collision, self.object)
         base.cTrav.add_collider(self.collision, base.pusher)
 

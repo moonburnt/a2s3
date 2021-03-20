@@ -1,14 +1,14 @@
 import logging
 from panda3d.core import Point3, Plane, Vec2
-from Game import config, entity2d
+from Game import shared, entity2d
 
 log = logging.getLogger(__name__)
 
 #module where I specify player's class
 
-DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
 
-PLAYER_COLLISION_MASK = config.PLAYER_COLLISION_MASK
+PLAYER_COLLISION_MASK = 0X06
 
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
@@ -165,7 +165,7 @@ class Player(entity2d.Creature):
             #this is a bit longer than stun lengh, to let player escape
             self.status_effects['immortal'] = 0.7
         #updating the value on player's hp gui
-        base.level.player_hp_ui.setText(f"{self.stats['hp']}")
+        base.level.player_hud.update_hp(self.stats['hp'])
         base.level.reset_score_multiplier()
 
     def die(self):
@@ -178,6 +178,4 @@ class Player(entity2d.Creature):
         base.camera.reparent_to(render)
         super().die()
 
-        #kinda nasty way to update the score part of death screen
-        base.level.high_score.setText(f"Your score is {base.level.score}")
         base.level.death_screen.show()

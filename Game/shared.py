@@ -1,10 +1,9 @@
-from panda3d.core import SamplerState
+#module where I specify variables to reffer to and to override from other modules
+
 import logging
 
 log = logging.getLogger(__name__)
 
-#module where I specify shared settings to reffer to from multiple modules at once
-#TODO: rename this to something like "shared" or idk
 GAME_NAME = "A2S3"
 
 #default (x, y) of sprites, to dont specify these manually when not necessary.
@@ -18,34 +17,9 @@ DEFAULT_SPRITE_SIZE = (32, 32)
 #heights, but for now it will do. And floor layer is always zero. Because yes
 ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
 FLOOR_LAYER = 0
-# So, bitmasks. These are tricky, but they make only selected objects collide.
-# We have 5 1's and 0's per bitmask. Each 1 means thing will collide with other
-#thing that has 1 on the very same place. It seems like we can use multiple masks
-#per item, but Im not going for that thing yet. So below we are kinda trying to
-#fit our current items into grand scheme of things. The requirements are following:
-#- Walls. Collide with player and all projectiles, doesnt collide with enemy
-#- Enemy. Collides with player and player's projectiles, doesnt collide with the rest
-#- Player. Collide with walls, enemy and enemy projectiles. Doesnt collide with
-#its own projectiles (coz at times they may spawn on top of player itself)
-#- Player's projectiles. Collide with enemy, *maybe* collide with walls. Wont
-#collide with player, cuz of reasons said above.
-#And, well, floor doesnt need any collisions, but thats what we have by default.
-#
-#With all things said, I've ended up with following raw values:
-# WALLS_COLLISION_MASK = 11100
-# ENEMY_COLLISION_MASK = 00011
-# ENEMY_PROJECTILE_COLLISION_MASK = 00100
-# PLAYER_COLLISION_MASK = 00110
-# PLAYER_PROJECTILE_COLLISION_MASK = 01001
-#
-# Which effectively transform into these numbers:
-WALLS_COLLISION_MASK = 0X28
-ENEMY_COLLISION_MASK = 0X03
-ENEMY_PROJECTILE_COLLISION_MASK = 0X04
-PLAYER_COLLISION_MASK = 0X06
-PLAYER_PROJECTILE_COLLISION_MASK = 0X09
-#I may adjust these or add more (say, powerups, coz they should collide with player
-#and walls, but not enemies or projectiles) in future, but for now thats it
+
+#WALLS_COLLISION_MASK = 0X28
+#ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
@@ -88,3 +62,9 @@ MAP_SIZE = (600, 300)
 #debug stuff
 SHOW_COLLISIONS = False
 FPS_METER = False
+
+## Variables that should be overwritten to use
+start_game = None
+exit_game = None
+restart_level = None
+exit_level = None

@@ -1,16 +1,14 @@
 #module dedicated to manage per-level stuff
 
 import logging
-from direct.gui.OnscreenText import OnscreenText, TextNode, CollisionTraverser, CollisionHandlerPusher
-from panda3d.core import NodePath
+from panda3d.core import CollisionTraverser, CollisionHandlerPusher
 from time import time
 from random import randint, choice
-from Game import entity2d, map_loader, config
-from direct.gui.DirectGui import DirectButton, DirectLabel
+from Game import entity2d, map_loader, shared, interface
 
 log = logging.getLogger(__name__)
 
-ENTITY_LAYER = config.ENTITY_LAYER
+ENTITY_LAYER = shared.ENTITY_LAYER
 DEAD_CLEANUP_TIME = 5
 #pause between calls to per-node's damage function. Making it anyhow lower will
 #reintroduce the bug with multiple damage calls occuring during single frame
@@ -46,11 +44,11 @@ class LoadLevel:
         base.pusher.set_horizontal(True)
         #showing all occuring collisions. This is debatably better than manually
         #enabling collision.show() for each entity entry
-        if config.SHOW_COLLISIONS:
+        if shared.SHOW_COLLISIONS:
             base.cTrav.show_collisions(render)
 
         log.debug("Generating the map")
-        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = config.MAP_SIZE)
+        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = shared.MAP_SIZE)
 
         log.debug("Initializing player")
         #character's position should always render on ENTITY_LAYER
@@ -116,36 +114,14 @@ class LoadLevel:
         base.camera.reparent_to(self.player.object)
 
         log.debug("Initializing player HUD")
-        #with that thing being there, we are able to toggle player_hud with one
-        #command together, without need to manually call for each node
-        #TODO: move hud to separate module, maybe class
-        self.player_hud = NodePath("player_hud")
-        self.player_hud.reparent_to(base.aspect2d)
-        self.player_hud.show()
-
-        #create white-colored text with player's hp above player's head
-        #TODO: move it to top left, add some image on background
-        self.player_hp_ui = OnscreenText(text = f"{self.player.stats['hp']}",
-                                         pos = (0, 0.01),
-                                         scale = 0.05,
-                                         fg = (1,1,1,1),
-                                         parent = self.player_hud,
-                                         mayChange = True)
+        self.player_hud = interface.PlayerHUD()
+        #syncing up hp right away, otherwise it will only shown correctly after hit
+        self.player_hud.update_hp(self.player.stats['hp'])
 
         #score is, well, a thing that increase each time you hit/kill enemy.
         #in future there may be ability to spend it on some powerups, but for
         #now its only there for future leaderboards
         self.score = 0
-        self.score_ui = OnscreenText(text = f"Score: {self.score}",
-                                     pos = (-1.7, 0.9),
-                                     #alignment side may look non-obvious, depending
-                                     #on position and text it applies to
-                                     align = TextNode.ALeft,
-                                     scale = 0.05,
-                                     fg = (1,1,1,1),
-                                     parent = self.player_hud,
-                                     mayChange = True)
-
         #score multiplier is a thing, that, well, increase amount of score gained
         #for each action. For now, the idea is following: for each 10 hits to enemy
         #without taking damage, you increase it by MULTIPLIER_INCREASE_STEP. Getting
@@ -155,64 +131,16 @@ class LoadLevel:
         self.score_multiplier = 1
         #as said above - when below reaches 9 (coz count from 0), multiplier increase
         self.multiplier_increase_counter = 0
-        #visually it should be below score itself... I think?
-        self.score_multiplier_ui = OnscreenText(text = f"Multiplier: {self.score_multiplier}",
-                                                pos = (-1.7, 0.85),
-                                                align = TextNode.ALeft,
-                                                scale = 0.05,
-                                                fg = (1,1,1,1),
-                                                parent = self.player_hud,
-                                                mayChange = True)
-
         #its variable and not len of enemy list, coz it doesnt clean up right away
         self.enemy_amount = 0
-        #this one should be displayed on right... I think?
-        self.enemy_amount_ui = OnscreenText(text = f"Enemies Left: {self.enemy_amount}",
-                                            pos = (1.7, 0.85),
-                                            align = TextNode.ARight,
-                                            scale = 0.05,
-                                            fg = (1,1,1,1),
-                                            parent = self.player_hud,
-                                            mayChange = True)
 
-        #And this will be "game over" screen, shown on player's death
-        #I REALLY need to move these somewhere else, at this point...
-        self.death_screen = NodePath("death_screen")
-        self.death_screen.reparent_to(base.aspect2d)
+        #making required functions available via shared module, so there will be
+        #no need to keep hierarchical consistency to access them
+        shared.restart_level = self.restart_level
+        shared.exit_level = self.exit_level
+        #initializing death screen
+        self.death_screen = interface.DeathScreen()
         self.death_screen.hide()
-
-        self.high_score = DirectLabel(text = f"Your score is {self.score}",
-                                      pos = (0, 0, 0.1),
-                                      scale = 0.1,
-                                      frameTexture = base.assets.sprite['frame'],
-                                      frameSize = (-4.5, 4.5, -0.5, 1),
-                                      parent = self.death_screen)
-
-        self.restart_button = DirectButton(text = "Restart",
-                                           command = self.restart_level,
-                                           pos = (0, 0, -0.1),
-                                           scale = 0.1,
-                                           frameTexture = base.button_textures,
-                                           frameSize = (-3, 3, -0.5, 1),
-                                           parent = self.death_screen)
-
-        self.exit_level_button = DirectButton(text = "Back to Menu",
-                                              command = self.exit_level,
-                                              pos = (0, 0, -0.3),
-                                              scale = 0.1,
-                                              frameTexture = base.button_textures,
-                                              frameSize = (-3, 3, -0.5, 1),
-                                              parent = self.death_screen)
-
-        self.exit_button = DirectButton(text = "Exit",
-                                        command = base.exit_game,
-                                        pos = (0, 0, -0.5),
-                                        scale = 0.1,
-                                        frameTexture = base.button_textures,
-                                        frameSize = (-3, 3, -0.5, 1),
-                                        parent = self.death_screen)
-
-        self.death_screen.set_transparency(True)
 
         log.debug(f"Initializing controls handler")
         #task manager is function that runs on background each frame and execute
@@ -226,25 +154,25 @@ class LoadLevel:
 
         #.accept() is method that track panda's events and perform certain functions
         #once these occur. "-up" prefix means key has been released
-        base.accept(config.CONTROLS['move_up'],
+        base.accept(shared.CONTROLS['move_up'],
                     self.change_key_state, ["move_up", True])
-        base.accept(f"{config.CONTROLS['move_up']}-up",
+        base.accept(f"{shared.CONTROLS['move_up']}-up",
                     self.change_key_state, ["move_up", False])
-        base.accept(config.CONTROLS['move_down'],
+        base.accept(shared.CONTROLS['move_down'],
                     self.change_key_state, ["move_down", True])
-        base.accept(f"{config.CONTROLS['move_down']}-up",
+        base.accept(f"{shared.CONTROLS['move_down']}-up",
                     self.change_key_state, ["move_down", False])
-        base.accept(config.CONTROLS['move_left'],
+        base.accept(shared.CONTROLS['move_left'],
                     self.change_key_state, ["move_left", True])
-        base.accept(f"{config.CONTROLS['move_left']}-up",
+        base.accept(f"{shared.CONTROLS['move_left']}-up",
                     self.change_key_state, ["move_left", False])
-        base.accept(config.CONTROLS['move_right'],
+        base.accept(shared.CONTROLS['move_right'],
                     self.change_key_state, ["move_right", True])
-        base.accept(f"{config.CONTROLS['move_right']}-up",
+        base.accept(f"{shared.CONTROLS['move_right']}-up",
                     self.change_key_state, ["move_right", False])
-        base.accept(config.CONTROLS['attack'],
+        base.accept(shared.CONTROLS['attack'],
                     self.change_key_state, ["attack", True])
-        base.accept(f"{config.CONTROLS['attack']}-up",
+        base.accept(f"{shared.CONTROLS['attack']}-up",
                     self.change_key_state, ["attack", False])
 
     def change_key_state(self, key_name, key_status):
@@ -437,7 +365,8 @@ class LoadLevel:
         '''Update score variable and displayed score amount by int(amount * self.score_multiplier)'''
         increase = amount*self.score_multiplier
         self.score += int(increase)
-        self.score_ui.setText(f"Score: {self.score}")
+        self.player_hud.update_score(self.score)
+        self.death_screen.update_score(self.score)
         log.debug(f"Increased score to {self.score}")
 
     def increase_score_multiplier(self):
@@ -454,20 +383,20 @@ class LoadLevel:
 
         self.multiplier_increase_counter = 0
         self.score_multiplier += MULTIPLIER_INCREASE_STEP
-        self.score_multiplier_ui.setText(f"Multiplier: {self.score_multiplier}")
+        self.player_hud.update_multiplier(self.score_multiplier)
         log.debug(f"Increased score multiplier to {self.score_multiplier}")
 
     def reset_score_multiplier(self):
         '''Reset score multiplayer to defaults'''
         self.score_multiplier = DEFAULT_SCORE_MULTIPLIER
         self.multiplier_increase_counter = 0
-        self.score_multiplier_ui.setText(f"Multiplier: {self.score_multiplier}")
+        self.player_hud.update_multiplier(self.score_multiplier)
         log.debug(f"Reset score multiplier to {self.score_multiplier}")
 
     def update_enemy_counter(self, amount):
         '''Update self.enemy_amount by int amount. By default its +'''
         self.enemy_amount += amount
-        self.enemy_amount_ui.setText(f"Enemies Left: {self.enemy_amount}")
+        self.player_hud.update_enemy_counter(self.enemy_amount)
         log.debug(f"Enemy amount has been set to {self.enemy_amount}")
 
     def restart_level(self):
@@ -492,5 +421,4 @@ class LoadLevel:
         '''Exit level to main menu'''
         self.cleanup()
         self.death_screen.hide()
-        base.game_logo.show()
         base.main_menu.show()

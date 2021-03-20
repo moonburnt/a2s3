@@ -2,7 +2,6 @@
 from os import listdir
 from os.path import isfile, isdir, basename, join, splitext
 from panda3d.core import SamplerState
-from Game import config
 import logging
 
 log = logging.getLogger(__name__)

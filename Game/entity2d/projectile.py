@@ -1,11 +1,11 @@
 import logging
-from Game import config, entity2d
+from Game import entity2d
 
 log = logging.getLogger(__name__)
 
 #module for 2d projectiles
 
-PLAYER_PROJECTILE_COLLISION_MASK = config.PLAYER_PROJECTILE_COLLISION_MASK
+PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 
 HIT_SCORE = 10
 KILL_SCORE = 15

@@ -1,13 +1,13 @@
 import logging
-from Game import entity2d, config
+from Game import entity2d, shared
 
 log = logging.getLogger(__name__)
 
 #module where I specify whatever stuff related to enemies
 
-DEFAULT_SPRITE_SIZE = config.DEFAULT_SPRITE_SIZE
+DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
 
-ENEMY_COLLISION_MASK = config.ENEMY_COLLISION_MASK
+ENEMY_COLLISION_MASK = ENEMY_COLLISION_MASK = 0X03
 
 HIT_SCORE = 10
 KILL_SCORE = 15

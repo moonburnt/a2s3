@@ -2,14 +2,14 @@ import logging
 from panda3d.core import (CardMaker, TextureStage, CollisionPlane,
                           Plane, CollisionNode)
 from math import ceil
-from Game import config
+from Game import shared
 
 log = logging.getLogger(__name__)
 
 #module where I specify everything related to generating and loading maps
 
-FLOOR_LAYER = config.FLOOR_LAYER
-ENTITY_LAYER = config.ENTITY_LAYER
+FLOOR_LAYER = shared.FLOOR_LAYER
+ENTITY_LAYER = shared.ENTITY_LAYER
 
 class FlatMap:
     def __init__(self, texture, size):
@@ -78,6 +78,6 @@ class FlatMap:
             wall_node = CollisionNode("wall")
             #it looks like without adding node to pusher (we dont need that there),
             #masks wont work. Thus for now I wont use them, as defaults seem to work
-            #wall_node.set_collide_mask(BitMask32(config.WALLS_COLLISION_MASK))
+            #wall_node.set_collide_mask(BitMask32(shared.WALLS_COLLISION_MASK))
             wall_node.add_solid(CollisionPlane(Plane(*sizes)))
             wall = render.attach_new_node(wall_node)
