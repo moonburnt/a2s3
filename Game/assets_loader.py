@@ -21,9 +21,7 @@ class AssetsLoader:
         self.sfx = {}
         self.sprite = {}
 
-        self.load_music(MUSIC_DIR)
-        self.load_sfx(SFX_DIR)
-        self.load_sprite(SPRITE_DIR)
+        self.load_all()
 
     def get_files(self, pathtodir):
         '''
@@ -101,3 +99,20 @@ class AssetsLoader:
 
         log.debug("Updating sprite storage")
         self.sprite = self.sprite | data
+
+    def load_all(self):
+        '''Load all assets from default paths'''
+        self.load_music(MUSIC_DIR)
+        self.load_sfx(SFX_DIR)
+        self.load_sprite(SPRITE_DIR)
+
+    def reset(self):
+        '''Reset assets dictionaries to empty state'''
+        self.music = {}
+        self.sfx = {}
+        self.sprite = {}
+
+    def reload(self):
+        '''Reset assets dictionaries to be empty, then load defaults'''
+        self.reset()
+        self.load_all()
