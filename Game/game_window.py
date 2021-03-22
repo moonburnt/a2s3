@@ -59,9 +59,9 @@ class GameWindow(ShowBase):
         #same goes for sfx manager, which is a separate thing
         sfx_mgr = base.sfxManagerList[0]
         sfx_mgr.set_volume(shared.SFX_VOLUME)
-        menu_theme = self.assets.music['menu_theme']
-        menu_theme.set_loop(True)
-        menu_theme.play()
+        self.menu_theme = self.assets.music['menu_theme']
+        self.menu_theme.set_loop(True)
+        self.menu_theme.play()
 
         #turning on fps meter, in case its enabled in settings
         base.setFrameRateMeter(shared.FPS_METER)

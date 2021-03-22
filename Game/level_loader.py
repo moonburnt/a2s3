@@ -113,6 +113,11 @@ class LoadLevel:
         #making camera always follow character
         base.camera.reparent_to(self.player.object)
 
+        log.debug("Enabling music")
+        self.music = base.assets.music['battle']
+        self.music.set_loop(True)
+        self.music.play()
+
         log.debug("Initializing player HUD")
         self.player_hud = interface.PlayerHUD()
         #syncing up hp right away, otherwise it will only shown correctly after hit
@@ -399,6 +404,22 @@ class LoadLevel:
         self.player_hud.update_enemy_counter(self.enemy_amount)
         log.debug(f"Enemy amount has been set to {self.enemy_amount}")
 
+    def on_player_death(self):
+        '''Function called when player has died'''
+        #TODO: rename this function to something less stupid
+
+        #reparenting camera, to keep it above map's center
+        #todo: make camera follow not player, but some node above player's head
+        #so even if player's object get destroyed - camera remains on top of it
+        base.camera.reparent_to(render)
+
+        dm = base.assets.music['death']
+        dm.set_loop(True)
+        dm.play()
+
+        self.player_hud.hide()
+        self.death_screen.show()
+
     def restart_level(self):
         '''Restarts a level from zero'''
         self.cleanup()
@@ -421,4 +442,6 @@ class LoadLevel:
         '''Exit level to main menu'''
         self.cleanup()
         self.death_screen.hide()
+
+        base.menu_theme.play()
         base.main_menu.show()
