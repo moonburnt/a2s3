@@ -110,14 +110,14 @@ class Enemy(entity2d.Creature):
         #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
         #increase it based on amount of damage received. But thats #TODO in future
         base.level.increase_score_multiplier()
-        base.level.update_score(HIT_SCORE)
+        base.level.increase_score(HIT_SCORE)
 
     def die(self):
         super().die()
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
-        base.level.update_score(KILL_SCORE)
+        base.level.increase_score(KILL_SCORE)
         #reduce enemy counter
-        base.level.update_enemy_counter(-1)
+        base.level.enemy_amount -= 1
 
         return

@@ -188,7 +188,8 @@ class LoadLevel:
 
         #its important to sync items there, otherwise they will show incorrect
         #values before related event occurs for first time
-        self.update_player_hud()
+        #self.update_player_hud()
+        base.task_mgr.add(self.update_player_hud, "player hud autoupdater")
         interface.switch(self.player_hud)
 
     def spawn_enemies(self, event):
@@ -256,7 +257,7 @@ class LoadLevel:
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
                 self.enemy_id += 1
-                self.update_enemy_counter(1)
+                self.enemy_amount += 1
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {self.enemy_amount} enemies on screen")
 
@@ -371,11 +372,10 @@ class LoadLevel:
         log.debug(f"Attempting to deal damage to {target_name} ({target_id})")
         dmgfunc(dmg)
 
-    def update_score(self, amount):
-        '''Update score variable and displayed score amount by int(amount * self.score_multiplier)'''
+    def increase_score(self, amount):
+        '''Increase score variable and displayed score amount by int(amount * self.score_multiplier)'''
         increase = amount*self.score_multiplier
         self.score += int(increase)
-        self.player_hud.update_score(self.score)
         log.debug(f"Increased score to {self.score}")
 
     def increase_score_multiplier(self):
@@ -392,30 +392,28 @@ class LoadLevel:
 
         self.multiplier_increase_counter = 0
         self.score_multiplier += MULTIPLIER_INCREASE_STEP
-        self.player_hud.update_multiplier(self.score_multiplier)
         log.debug(f"Increased score multiplier to {self.score_multiplier}")
 
     def reset_score_multiplier(self):
         '''Reset score multiplayer to defaults'''
         self.score_multiplier = DEFAULT_SCORE_MULTIPLIER
         self.multiplier_increase_counter = 0
-        self.player_hud.update_multiplier(self.score_multiplier)
         log.debug(f"Reset score multiplier to {self.score_multiplier}")
 
-    def update_enemy_counter(self, amount):
-        '''Update self.enemy_amount by int amount. By default its +'''
-        self.enemy_amount += amount
-        self.player_hud.update_enemy_counter(self.enemy_amount)
-        log.debug(f"Enemy amount has been set to {self.enemy_amount}")
-
-    def update_player_hud(self):
-        '''Update all player hud elements to be in sync'''
+    def update_player_hud(self, event):
+        '''Meant to be ran as taskmanager routine.
+           Update all player hud elements to be in sync'''
         #todo: remake this into taskmanager thing that runs each frame
         #this way, there will be no need for dozen of other functions above
+        if self.player.dead:
+            return
+
         self.player_hud.update_hp(self.player.stats['hp'])
         self.player_hud.update_enemy_counter(self.enemy_amount)
         self.player_hud.update_multiplier(self.score_multiplier)
         self.player_hud.update_score(self.score)
+
+        return event.cont
 
     def on_player_death(self):
         '''Function called when player has died'''
