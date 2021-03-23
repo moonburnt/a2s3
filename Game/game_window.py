@@ -73,6 +73,7 @@ class GameWindow(ShowBase):
         shared.start_game = self.start_game
         shared.exit_game = self.exit_game
         self.main_menu = interface.MainMenu()
+        self.main_menu.show()
 
     def start_game(self):
         '''Hide main menu frame and load up the level'''

@@ -38,6 +38,10 @@ class Menu:
                                 base.assets.sprite['button_active'],
                                 base.assets.sprite['button_selected'])
 
+        #this will change the default behavior of menus, but to me it will make
+        #things more convenient. E.g if you need to show something - do it manually
+        self.hide()
+
     #I dont actually need to attach these, but doing so will make toggling class easier
     def hide(self):
         self.frame.hide()

@@ -37,7 +37,7 @@ class LoadLevel:
     def __init__(self):
         #doing it there before everything else to avoid issues during generation
         #of walls and entity objects
-        log.debug("Initializing collision processors")
+        log.debug("Setting up collision processors")
         base.cTrav = CollisionTraverser()
         base.pusher = CollisionHandlerPusher()
         #avoiding the issue with entities falling under the floor on some collisions
@@ -47,35 +47,6 @@ class LoadLevel:
         if shared.SHOW_COLLISIONS:
             base.cTrav.show_collisions(render)
 
-        log.debug("Generating the map")
-        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = shared.MAP_SIZE)
-
-        log.debug("Initializing player")
-        #character's position should always render on ENTITY_LAYER
-        #setting this lower may cause glitches, as below lies the FLOOR_LAYER
-        #hitbox is adjusted to match our current sprites. In case of change - will
-        #need to tweak it manually
-        self.player = entity2d.Player("player", position = self.map.player_spawnpoint,
-                                       hitbox_size = 6)
-
-        log.debug("Initializing enemy spawner")
-        self.wave_number = 1
-        self.enemies_left = DEFAULT_ENEMIES_AMOUNT
-        #TODO: rework this thing to spawn multiple enemies per tick
-        self.enemy_spawn_timer = ENEMY_SPAWN_TIME
-
-        #these will be our dictionaries to store enemies and projectiles to reffer to
-        self.enemies = []
-        self.projectiles = []
-        #and this is amount of time, per which dead objects get removed from these
-        self.cleanup_timer = DEAD_CLEANUP_TIME
-
-        #variable for enemy spawner to make debugging process easier. Basically,
-        #its meant to increase with each new enemy and never reset until game over.
-        #this can also be potentially used for some highscore stats
-        self.enemy_id = 0
-
-        log.debug("Setting up collision event patterns")
         #this way we are basically naming the events we want to track, so these
         #will be possible to handle via base.accept and do the stuff accordingly
         #"in" is what happens when one object start colliding with another
@@ -110,44 +81,21 @@ class LoadLevel:
         #maybe I should add ability to change camera's angle, at some point?
         base.camera.set_pos(0, 700, 500)
         base.camera.look_at(0, 0, 0)
-        #making camera always follow character
-        base.camera.reparent_to(self.player.object)
 
-        log.debug("Enabling music")
+        log.debug("Setting up music")
         self.music = base.assets.music['battle']
         self.music.set_loop(True)
-        self.music.play()
 
-        log.debug("Initializing player HUD")
+        log.debug("Initializing UI")
         self.player_hud = interface.PlayerHUD()
-        #syncing up hp right away, otherwise it will only shown correctly after hit
-        self.player_hud.update_hp(self.player.stats['hp'])
-
-        #score is, well, a thing that increase each time you hit/kill enemy.
-        #in future there may be ability to spend it on some powerups, but for
-        #now its only there for future leaderboards
-        self.score = 0
-        #score multiplier is a thing, that, well, increase amount of score gained
-        #for each action. For now, the idea is following: for each 10 hits to enemy
-        #without taking damage, you increase it by MULTIPLIER_INCREASE_STEP. Getting
-        #damage resets it to default value (which is 1). It may be good idea to
-        #make it instead increase if player is using different skills in order
-        #to kill enemies (and not repeating autoattack). But for now thats about it
-        self.score_multiplier = 1
-        #as said above - when below reaches 9 (coz count from 0), multiplier increase
-        self.multiplier_increase_counter = 0
-        #its variable and not len of enemy list, coz it doesnt clean up right away
-        self.enemy_amount = 0
-
         #making required functions available via shared module, so there will be
         #no need to keep hierarchical consistency to access them
         shared.restart_level = self.restart_level
         shared.exit_level = self.exit_level
         #initializing death screen
         self.death_screen = interface.DeathScreen()
-        self.death_screen.hide()
 
-        log.debug(f"Initializing controls handler")
+        log.debug("Initializing handlers")
         #task manager is function that runs on background each frame and execute
         #whatever functions are attached to it
         base.task_mgr.add(self.spawn_enemies, "enemy spawner")
@@ -180,11 +128,68 @@ class LoadLevel:
         base.accept(f"{shared.CONTROLS['attack']}-up",
                     self.change_key_state, ["attack", False])
 
+        self.setup_level()
+
     def change_key_state(self, key_name, key_status):
         '''Receive str(key_name) and bool(key_status).
         Change key_status of related key in self.controls_status'''
         self.controls_status[key_name] = key_status
         log.debug(f"{key_name} has been set to {key_status}")
+
+    def setup_level(self):
+        '''Set default level's variables'''
+        log.debug("Generating the map")
+        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = shared.MAP_SIZE)
+
+        log.debug("Initializing player")
+        #character's position should always render on ENTITY_LAYER
+        #setting this lower may cause glitches, as below lies the FLOOR_LAYER
+        #hitbox is adjusted to match our current sprites. In case of change - will
+        #need to tweak it manually
+        self.player = entity2d.Player("player", position = self.map.player_spawnpoint,
+                                       hitbox_size = 6)
+
+        self.wave_number = 1
+        self.enemies_left = DEFAULT_ENEMIES_AMOUNT
+        #TODO: rework this thing to spawn multiple enemies per tick
+        self.enemy_spawn_timer = ENEMY_SPAWN_TIME
+
+        #these will be our lists to store enemies and projectiles to reffer to
+        self.enemies = []
+        self.projectiles = []
+        #and this is amount of time, per which dead objects get removed from these
+        self.cleanup_timer = DEAD_CLEANUP_TIME
+
+        #variable for enemy spawner to make debugging process easier. Basically,
+        #its meant to increase with each new enemy and never reset until game over.
+        #this can also be potentially used for some highscore stats
+        self.enemy_id = 0
+
+        #score is, well, a thing that increase each time you hit/kill enemy.
+        #in future there may be ability to spend it on some powerups, but for
+        #now its only there for future leaderboards
+        self.score = 0
+        #score multiplier is a thing, that, well, increase amount of score gained
+        #for each action. For now, the idea is following: for each 10 hits to enemy
+        #without taking damage, you increase it by MULTIPLIER_INCREASE_STEP. Getting
+        #damage resets it to default value (which is 1). It may be good idea to
+        #make it instead increase if player is using different skills in order
+        #to kill enemies (and not repeating autoattack). But for now thats about it
+        self.score_multiplier = 1
+        #as said above - when below reaches 9 (coz count from 0), multiplier increase
+        self.multiplier_increase_counter = 0
+        #its variable and not len of enemy list, coz it doesnt clean up right away
+        self.enemy_amount = 0
+
+        #making camera always follow character
+        base.camera.reparent_to(self.player.object)
+
+        self.music.play()
+
+        #its important to sync items there, otherwise they will show incorrect
+        #values before related event occurs for first time
+        self.update_player_hud()
+        self.player_hud.show()
 
     def spawn_enemies(self, event):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
@@ -371,7 +376,6 @@ class LoadLevel:
         increase = amount*self.score_multiplier
         self.score += int(increase)
         self.player_hud.update_score(self.score)
-        self.death_screen.update_score(self.score)
         log.debug(f"Increased score to {self.score}")
 
     def increase_score_multiplier(self):
@@ -404,10 +408,20 @@ class LoadLevel:
         self.player_hud.update_enemy_counter(self.enemy_amount)
         log.debug(f"Enemy amount has been set to {self.enemy_amount}")
 
+    def update_player_hud(self):
+        '''Update all player hud elements to be in sync'''
+        #todo: remake this into taskmanager thing that runs each frame
+        #this way, there will be no need for dozen of other functions above
+        self.player_hud.update_hp(self.player.stats['hp'])
+        self.player_hud.update_enemy_counter(self.enemy_amount)
+        self.player_hud.update_multiplier(self.score_multiplier)
+        self.player_hud.update_score(self.score)
+
     def on_player_death(self):
         '''Function called when player has died'''
         #TODO: rename this function to something less stupid
 
+        self.death_screen.update_score(self.score)
         #reparenting camera, to keep it above map's center
         #todo: make camera follow not player, but some node above player's head
         #so even if player's object get destroyed - camera remains on top of it
@@ -424,19 +438,15 @@ class LoadLevel:
         '''Restarts a level from zero'''
         self.cleanup()
         self.death_screen.hide()
-        base.start_game()
+        self.setup_level()
 
     def cleanup(self):
-        '''Remove whatever garbage has got stuck to scene and reset variables'''
+        '''Remove whatever garbage has got stuck to scene'''
         #this magic function remove all the nodes from scene, nullifying the need
         #to manually call .die() for each enemy and projectile. There is a caveat
         #tho - if I will ever attach some gui part of similar thing to base.render,
         #these will be gone too... I think.
         base.render.node().removeAllChildren()
-
-        #It doesnt seem like I need to reset other variables tho...
-        self.enemies = []
-        self.projectiles = []
 
     def exit_level(self):
         '''Exit level to main menu'''
