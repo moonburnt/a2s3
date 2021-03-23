@@ -189,7 +189,7 @@ class LoadLevel:
         #its important to sync items there, otherwise they will show incorrect
         #values before related event occurs for first time
         self.update_player_hud()
-        self.player_hud.show()
+        interface.switch(self.player_hud)
 
     def spawn_enemies(self, event):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
@@ -431,13 +431,11 @@ class LoadLevel:
         dm.set_loop(True)
         dm.play()
 
-        self.player_hud.hide()
-        self.death_screen.show()
+        interface.switch(self.death_screen)
 
     def restart_level(self):
         '''Restarts a level from zero'''
         self.cleanup()
-        self.death_screen.hide()
         self.setup_level()
 
     def cleanup(self):
@@ -451,7 +449,6 @@ class LoadLevel:
     def exit_level(self):
         '''Exit level to main menu'''
         self.cleanup()
-        self.death_screen.hide()
 
         base.menu_theme.play()
-        base.main_menu.show()
+        interface.switch(base.main_menu)

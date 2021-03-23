@@ -10,6 +10,20 @@ from Game import shared
 
 log = logging.getLogger(__name__)
 
+CURRENT_INTERFACE = None
+
+def switch(menu):
+    '''Switch CURRENT_INTERFACE menu to one passed as argument'''
+    #this is kind of nasty thing. But if used correctly, it should allow to easily
+    #switch active interfaces from one to another, in case only one can exist at
+    #given time. Manual usage of hide/show functions still make sense, in case
+    #some guis need to coexist
+    global CURRENT_INTERFACE
+    if CURRENT_INTERFACE:
+        CURRENT_INTERFACE.hide()
+    CURRENT_INTERFACE = menu
+    menu.show()
+
 class Menu:
     '''Main class for all huds and menus. Require nodepath name to be passed as
     argument during initialization process'''
