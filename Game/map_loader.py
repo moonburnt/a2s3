@@ -12,8 +12,14 @@ FLOOR_LAYER = shared.FLOOR_LAYER
 ENTITY_LAYER = shared.ENTITY_LAYER
 
 class FlatMap:
-    def __init__(self, texture, size):
-        self.size_x, self.size_y = size
+    def __init__(self, texture, size, scale = None):
+        if not scale or scale < 1:
+            scale = 1
+
+        raw_size_x = size[0]*scale
+        raw_size_y = size[1]*scale
+        self.size_x = raw_size_x
+        self.size_y = raw_size_y
         self.texture = texture
         log.debug(f"Generating map of size {self.size_x}x{self.size_y}")
         self.map_size = (-self.size_x/2, self.size_x/2, -self.size_y/2, self.size_y/2)

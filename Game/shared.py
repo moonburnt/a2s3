@@ -58,6 +58,7 @@ ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)
+MAP_SCALE = 1
 
 #debug stuff
 SHOW_COLLISIONS = False

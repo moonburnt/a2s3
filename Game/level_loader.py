@@ -135,7 +135,9 @@ class LoadLevel:
     def setup_level(self):
         '''Set default level's variables'''
         log.debug("Generating the map")
-        self.map = map_loader.FlatMap(base.assets.sprite['floor'], size = shared.MAP_SIZE)
+        self.map = map_loader.FlatMap(base.assets.sprite['floor'],
+                                      size = shared.MAP_SIZE,
+                                      scale = shared.MAP_SCALE)
 
         log.debug("Initializing player")
         #character's position should always render on ENTITY_LAYER
