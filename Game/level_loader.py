@@ -82,10 +82,6 @@ class LoadLevel:
         base.camera.set_pos(0, 700, 500)
         base.camera.look_at(0, 0, 0)
 
-        log.debug("Setting up music")
-        self.music = base.assets.music['battle']
-        self.music.set_loop(True)
-
         log.debug("Initializing UI")
         self.player_hud = interface.PlayerHUD()
         #making required functions available via shared module, so there will be
@@ -184,7 +180,7 @@ class LoadLevel:
         #making camera always follow character
         base.camera.reparent_to(self.player.object)
 
-        self.music.play()
+        base.music_player.crossfade(base.assets.music['battle'])
 
         #its important to sync items there, otherwise they will show incorrect
         #values before related event occurs for first time
@@ -425,9 +421,7 @@ class LoadLevel:
         #so even if player's object get destroyed - camera remains on top of it
         base.camera.reparent_to(render)
 
-        dm = base.assets.music['death']
-        dm.set_loop(True)
-        dm.play()
+        base.music_player.crossfade(base.assets.music['death'])
 
         interface.switch(self.death_screen)
 
@@ -448,5 +442,5 @@ class LoadLevel:
         '''Exit level to main menu'''
         self.cleanup()
 
-        base.menu_theme.play()
+        base.music_player.crossfade(base.assets.music['menu_theme'])
         interface.switch(base.main_menu)

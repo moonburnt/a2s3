@@ -6,6 +6,7 @@ from .assets_loader import *
 from .level_loader import *
 from .spritesheet_cutter import *
 from .interface import *
+from .music_player import *
 
 import logging
 

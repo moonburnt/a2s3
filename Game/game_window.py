@@ -4,7 +4,7 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
-from Game import shared, assets_loader, level_loader, interface
+from Game import shared, assets_loader, level_loader, interface, music_player
 
 log = logging.getLogger(__name__)
 
@@ -53,15 +53,15 @@ class GameWindow(ShowBase):
         log.debug(f"Resolution has been set to {resolution}")
 
         log.debug("Setting up the sound")
-        #setting volume like that, so it should apply to all music tracks
-        music_mgr = base.musicManager
-        music_mgr.set_volume(shared.MUSIC_VOLUME)
+        #setting volume so it should apply to all music tracks
+        self.music_player = music_player.MusicPlayer()
+        self.music_player.set_player_volume(shared.MUSIC_VOLUME)
+
         #same goes for sfx manager, which is a separate thing
         sfx_mgr = base.sfxManagerList[0]
         sfx_mgr.set_volume(shared.SFX_VOLUME)
-        self.menu_theme = self.assets.music['menu_theme']
-        self.menu_theme.set_loop(True)
-        self.menu_theme.play()
+
+        self.music_player.crossfade(self.assets.music['menu_theme'])
 
         #turning on fps meter, in case its enabled in settings
         base.setFrameRateMeter(shared.FPS_METER)
@@ -89,5 +89,6 @@ class GameWindow(ShowBase):
         '''Run whatever cleanup tasks and exit the game'''
         #TODO: maybe save up some stuff and remove unused garbage from memory?
         log.info("Exiting the game... Bye :(")
+        self.music_player.stop_all()
         #this doesnt have the snek case version
         base.userExit()
