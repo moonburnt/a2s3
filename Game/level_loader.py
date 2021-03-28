@@ -34,7 +34,8 @@ ENEMY_SPAWN_TIME = 2
 UNIQUE_ENEMY_CHANCE = 25
 
 class LoadLevel:
-    def __init__(self):
+    def __init__(self, map_scale: int):
+        self.map_scale = map_scale
         #doing it there before everything else to avoid issues during generation
         #of walls and entity objects
         log.debug("Setting up collision processors")
@@ -84,12 +85,10 @@ class LoadLevel:
 
         log.debug("Initializing UI")
         self.player_hud = interface.PlayerHUD()
-        #making required functions available via shared module, so there will be
-        #no need to keep hierarchical consistency to access them
-        shared.restart_level = self.restart_level
-        shared.exit_level = self.exit_level
         #initializing death screen
-        self.death_screen = interface.DeathScreen()
+        self.death_screen = interface.DeathScreen(restart_command = self.restart_level,
+                                                  exit_level_command = self.exit_level,
+                                                  exit_game_command = base.exit_game)
 
         log.debug("Initializing handlers")
         #task manager is function that runs on background each frame and execute
@@ -137,7 +136,7 @@ class LoadLevel:
         log.debug("Generating the map")
         self.map = map_loader.FlatMap(base.assets.sprite['floor'],
                                       size = shared.MAP_SIZE,
-                                      scale = shared.MAP_SCALE)
+                                      scale = self.map_scale)
 
         log.debug("Initializing player")
         #character's position should always render on ENTITY_LAYER

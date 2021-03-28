@@ -2,7 +2,7 @@
 
 import logging
 from panda3d.core import NodePath
-from direct.gui.DirectGui import DirectButton, DirectLabel
+from direct.gui.DirectGui import DirectButton, DirectLabel, DirectOptionMenu
 from direct.gui.OnscreenText import OnscreenText, TextNode
 from direct.gui.OnscreenImage import OnscreenImage
 
@@ -64,7 +64,7 @@ class Menu:
         self.frame.show()
 
 class MainMenu(Menu):
-    def __init__(self):
+    def __init__(self, play_command, exit_command):
         name = "main menu"
         parent = base.pixel2d
         super().__init__(name, parent)
@@ -84,7 +84,7 @@ class MainMenu(Menu):
 
         #not assigning "self" stuff, coz Im not referring to these from elsewhere
         start_button = DirectButton(text = "Play",
-                                    command = shared.start_game,
+                                    command = play_command,
                                     pos = (150, 1, -300),
                                     text_scale = 1,
                                     text_pos = (0,-0.25),
@@ -94,7 +94,7 @@ class MainMenu(Menu):
                                     parent = self.frame)
 
         exit_button = DirectButton(text = "Exit",
-                                   command = shared.exit_game,
+                                   command = exit_command,
                                    pos = (150, 1, -400),
                                    text_pos = (0,-0.25),
                                    scale = (64, 1, 32),
@@ -102,9 +102,69 @@ class MainMenu(Menu):
                                    frameSize = (-2, 2, -1, 1),
                                    parent = self.frame)
 
+class MapSettings(Menu):
+    '''Menu where player can change map scale and other things'''
+    def __init__(self, play_command, back_command):
+        name = "map settings"
+        parent = base.aspect2d
+        super().__init__(name, parent)
+
+        self.play_command = play_command
+        self.map_scale = 1
+        #this is extremely stupid, but this thing require strings, not ints
+        self.map_scales = ["1", "2", "3", "4", "5"]
+
+        selection_title = DirectLabel(text = "Map Scale:",
+                                      pos = (0, 0, 0.3),
+                                      scale = 0.1,
+                                      frameTexture = base.assets.sprite['frame'],
+                                      frameSize = (-3, 3, -0.5, 1),
+                                      parent = self.frame)
+
+        #this thing looks ugly and there seem to be no way to apply texture to
+        #popup list. TODO: make a custom bicycle to handle that functionality
+
+        #also this thing doesnt show text. Ehh...
+        map_scale_selection = DirectOptionMenu(
+                                    command = self.update_map_scale,
+                                    items = self.map_scales,
+                                    initialitem = 0,
+                                    pos = (0, 0, 0.1),
+                                    popupMarker_scale = 0.1,
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    parent = self.frame)
+
+        start_button = DirectButton(text = "Play",
+                                    command = self.run_level,
+                                    pos = (0.3, 0, -0.1),
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    parent = self.frame)
+
+        back_button = DirectButton(text = "Back",
+                                    command = back_command,
+                                    pos = (-0.3, 0, -0.1),
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    parent = self.frame)
+
+    def update_map_scale(self, scale):
+        self.map_scale = scale
+        log.info(f"Map scale has been set to {self.map_scale}")
+
+    def run_level(self):
+        #this is done like that, because this stupid gui framework cant even
+        #autopick updated self.map_scale value. Gross
+        map_scale = int(self.map_scale)
+        self.play_command(map_scale)
+
 class DeathScreen(Menu):
     '''Screen shown on player's death'''
-    def __init__(self):
+    def __init__(self, restart_command, exit_level_command, exit_game_command):
         name = "death screen"
         parent = base.aspect2d
         super().__init__(name, parent)
@@ -117,7 +177,7 @@ class DeathScreen(Menu):
                                       parent = self.frame)
 
         self.restart_button = DirectButton(text = "Restart",
-                                           command = shared.restart_level,
+                                           command = restart_command,
                                            pos = (0, 0, -0.1),
                                            scale = 0.1,
                                            frameTexture = self.button_textures,
@@ -125,7 +185,7 @@ class DeathScreen(Menu):
                                            parent = self.frame)
 
         self.exit_level_button = DirectButton(text = "Back to Menu",
-                                              command = shared.exit_level,
+                                              command = exit_level_command,
                                               pos = (0, 0, -0.3),
                                               scale = 0.1,
                                               frameTexture = self.button_textures,
@@ -133,7 +193,7 @@ class DeathScreen(Menu):
                                               parent = self.frame)
 
         self.exit_button = DirectButton(text = "Exit",
-                                        command = shared.exit_game,
+                                        command = exit_game_command,
                                         pos = (0, 0, -0.5),
                                         scale = 0.1,
                                         frameTexture = self.button_textures,

@@ -17,10 +17,6 @@ ap.add_argument("--debug", help="Add debug messages to output",
                 action = "store_true")
 ap.add_argument("--show-collisions", help="Toggle showcase of objects collisions",
                 action = "store_true")
-ap.add_argument("--map-x", help = "Override default map's X. If less than default "
-                                  "- will be still set to default", type = int)
-ap.add_argument("--map-y", help = "Override default map's y. If less than default "
-                                  "- will be still set to default", type = int)
 ap.add_argument("--music-vol", help = "Override default music volume. Should be "
                                     "between 0 and 100, else using defaults", type = int)
 ap.add_argument("--sfx-vol", help = "Override default music volume. Should be "
@@ -42,15 +38,6 @@ if args.show_collisions:
 if args.show_fps:
     Game.shared.FPS_METER = True
 
-if args.map_x and (args.map_x > Game.shared.MAP_SIZE[0]):
-    map_y = Game.shared.MAP_SIZE[1]
-    Game.shared.MAP_SIZE = (args.map_x, map_y)
-
-if args.map_y and (args.map_y > Game.shared.MAP_SIZE[1]):
-    map_x = Game.shared.MAP_SIZE[0]
-    Game.shared.MAP_SIZE = (map_x, args.map_y)
-
-log.debug(f"Map size has been set to {Game.shared.MAP_SIZE}")
 #going for try/except, coz either argparse or python seems to threat 0 as "None"
 try:
     if (0 <= args.music_vol <= 100):

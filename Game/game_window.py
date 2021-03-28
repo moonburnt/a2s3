@@ -70,12 +70,20 @@ class GameWindow(ShowBase):
         #make it possible to set to other values, aswell as pictures
         self.win.set_clear_color((0,0,0,1))
 
-        shared.start_game = self.start_game
-        shared.exit_game = self.exit_game
-        self.main_menu = interface.MainMenu()
+        self.main_menu = interface.MainMenu(play_command = self.set_map,
+                                            exit_command = self.exit_game)
+        self.show_menu()
+
+        self.map_settings = interface.MapSettings(play_command = self.start_game,
+                                                  back_command = self.show_menu)
+
+    def set_map(self):
+        interface.switch(self.map_settings)
+
+    def show_menu(self):
         interface.switch(self.main_menu)
 
-    def start_game(self):
+    def start_game(self, map_scale):
         '''Hide main menu frame and load up the level'''
         log.debug("Loading up the level")
         #when I will remake assets loader to only load data necessary for current
@@ -83,7 +91,7 @@ class GameWindow(ShowBase):
         #self.main_menu.hide()
 
         #todo: add all the configurable stuff there as init options, like map size and such
-        self.level = level_loader.LoadLevel()
+        self.level = level_loader.LoadLevel(map_scale)
 
     def exit_game(self):
         '''Run whatever cleanup tasks and exit the game'''
