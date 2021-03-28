@@ -52,6 +52,9 @@ class Menu:
                                 base.assets.sprite['button_active'],
                                 base.assets.sprite['button_selected'])
 
+        self.hover_sfx = base.assets.sfx['menu_hover']
+        self.select_sfx = base.assets.sfx['menu_select']
+
         #this will change the default behavior of menus, but to me it will make
         #things more convenient. E.g if you need to show something - do it manually
         self.hide()
@@ -91,6 +94,8 @@ class MainMenu(Menu):
                                     scale = (64, 1, 32),
                                     frameTexture = self.button_textures,
                                     frameSize = (-2, 2, -1, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
         exit_button = DirectButton(text = "Exit",
@@ -100,6 +105,8 @@ class MainMenu(Menu):
                                    scale = (64, 1, 32),
                                    frameTexture = self.button_textures,
                                    frameSize = (-2, 2, -1, 1),
+                                   clickSound = self.select_sfx,
+                                   rolloverSound = self.hover_sfx,
                                    parent = self.frame)
 
 class MapSettings(Menu):
@@ -134,6 +141,9 @@ class MapSettings(Menu):
                                     scale = 0.1,
                                     frameTexture = self.button_textures,
                                     frameSize = (-3, 3, -0.5, 1),
+                                    #clickSound = self.select_sfx,
+                                    clickSound = self.hover_sfx,
+                                    rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
         start_button = DirectButton(text = "Play",
@@ -142,6 +152,8 @@ class MapSettings(Menu):
                                     scale = 0.1,
                                     frameTexture = self.button_textures,
                                     frameSize = (-3, 3, -0.5, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
         back_button = DirectButton(text = "Back",
@@ -150,6 +162,8 @@ class MapSettings(Menu):
                                     scale = 0.1,
                                     frameTexture = self.button_textures,
                                     frameSize = (-3, 3, -0.5, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
     def update_map_scale(self, scale):
@@ -182,6 +196,8 @@ class DeathScreen(Menu):
                                            scale = 0.1,
                                            frameTexture = self.button_textures,
                                            frameSize = (-3, 3, -0.5, 1),
+                                           clickSound = self.select_sfx,
+                                           rolloverSound = self.hover_sfx,
                                            parent = self.frame)
 
         self.exit_level_button = DirectButton(text = "Back to Menu",
@@ -190,6 +206,8 @@ class DeathScreen(Menu):
                                               scale = 0.1,
                                               frameTexture = self.button_textures,
                                               frameSize = (-3, 3, -0.5, 1),
+                                              clickSound = self.select_sfx,
+                                              rolloverSound = self.hover_sfx,
                                               parent = self.frame)
 
         self.exit_button = DirectButton(text = "Exit",
@@ -198,6 +216,8 @@ class DeathScreen(Menu):
                                         scale = 0.1,
                                         frameTexture = self.button_textures,
                                         frameSize = (-3, 3, -0.5, 1),
+                                        clickSound = self.select_sfx,
+                                        rolloverSound = self.hover_sfx,
                                         parent = self.frame)
 
     def update_score(self, value):
