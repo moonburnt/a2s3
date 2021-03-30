@@ -449,6 +449,7 @@ class LoadLevel:
         self.player_hud.update_enemy_counter(self.enemy_amount)
         self.player_hud.update_multiplier(self.score_multiplier)
         self.player_hud.update_score(self.score)
+        self.player_hud.update_current_wave(self.wave_number)
 
         return event.cont
 

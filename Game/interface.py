@@ -259,10 +259,23 @@ class PlayerHUD(Menu):
                                              parent = self.frame,
                                              mayChange = True)
 
-        #this one should be displayed on right... I think?
+        #these should be displayer on right, I think
+        #visually it should be below score itself... I think?
+        self.current_wave = OnscreenText(text = "Current Wave: 0",
+                                         pos = (1.7, 0.9),
+                                         #pos = (1.35, 0.9),
+                                         align = TextNode.ARight,
+                                         #align = TextNode.ALeft,
+                                         scale = 0.05,
+                                         fg = (1,1,1,1),
+                                         parent = self.frame,
+                                         mayChange = True)
+
         self.enemy_amount = OnscreenText(text = "Enemies Left: 0",
                                          pos = (1.7, 0.85),
+                                         #pos = (1.35, 0.85),
                                          align = TextNode.ARight,
+                                         #align = TextNode.ALeft,
                                          scale = 0.05,
                                          fg = (1,1,1,1),
                                          parent = self.frame,
@@ -280,3 +293,6 @@ class PlayerHUD(Menu):
 
     def update_enemy_counter(self, value):
         self.enemy_amount.setText(f"Enemies Left: {value}")
+
+    def update_current_wave(self, value):
+        self.current_wave.setText(f"Current Wave: {value}")
