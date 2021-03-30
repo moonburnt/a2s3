@@ -220,7 +220,7 @@ class DeathScreen(Menu):
                                         rolloverSound = self.hover_sfx,
                                         parent = self.frame)
 
-    def update_score(self, value):
+    def update_score(self, value: int):
         '''Change dispayed self.high_score to provided value'''
         self.high_score.setText(f"Your score is {value}")
 
@@ -281,18 +281,82 @@ class PlayerHUD(Menu):
                                          parent = self.frame,
                                          mayChange = True)
 
-    def update_hp(self, value):
+        #idk if these should be there or on separate hud, but for now will keep em
+        self.wave_cleared_msg = OnscreenText(text = "Wave Cleared!",
+                                         pos = (0, 0.85),
+                                         align = TextNode.ACenter,
+                                         scale = 0.1,
+                                         fg = (1,1,1,1),
+                                         parent = self.frame,
+                                         mayChange = True)
+        self.wave_cleared_msg.hide()
+
+        self.new_wave_msg = OnscreenText(text = "Wave 0",
+                                         pos = (0, 0.85),
+                                         align = TextNode.ACenter,
+                                         scale = 0.1,
+                                         fg = (1,1,1,1),
+                                         parent = self.frame,
+                                         mayChange = True)
+        self.new_wave_msg.hide()
+
+        self.kill_requirement_msg = OnscreenText(text = "Kill 0 Enemies To Proceed",
+                                         pos = (0, 0.75),
+                                         align = TextNode.ACenter,
+                                         scale = 0.05,
+                                         fg = (1,1,1,1),
+                                         parent = self.frame,
+                                         mayChange = True)
+        self.kill_requirement_msg.hide()
+
+    def show_wave_cleared(self):
+        '''Inform player that wave has been cleared, then hide message after 2 secs'''
+        #TODO: rename this function to something less stupid
+
+        #this can probably be done with lerp intervals, but I currently have no
+        #access to panda docs to find out how to do that properly
+        log.debug("Showing 'wave cleared' message")
+        self.wave_cleared_msg.show()
+
+        def wave_hide_task(event):
+            self.wave_cleared_msg.hide()
+            return
+
+        base.task_mgr.do_method_later(2, wave_hide_task, "hide 'wave cleared' msg")
+
+    def show_new_wave_msg(self, wave_number: int, kill_requirement: int):
+        '''Inform player that new wave has started and how many enemies they need
+        to kill to proceed further'''
+        log.debug("Showing new wave messages")
+        self.new_wave_msg.setText(f"Wave {wave_number}")
+        self.kill_requirement_msg.setText(f"Kill {kill_requirement} Enemies To Proceed")
+        self.new_wave_msg.show()
+        self.kill_requirement_msg.show()
+
+        #this function is hidden inside, coz we have no use for it outside
+        def wave_hide_task(event):
+            self.new_wave_msg.hide()
+            self.kill_requirement_msg.hide()
+            return
+
+        base.task_mgr.do_method_later(2.5, wave_hide_task, "hide 'new wave' msg")
+
+    def update_hp(self, value: int):
         '''Update self.player_hp to provided value'''
         self.player_hp.setText(str(value))
 
-    def update_score(self, value):
+    def update_score(self, value: int):
+        '''Update self.score to provided value'''
         self.score.setText(f"Score: {value}")
 
-    def update_multiplier(self, value):
+    def update_multiplier(self, value: float):
+        '''Update selt.score_multiplier to provided value'''
         self.score_multiplier.setText(f"Multiplier: {value}")
 
-    def update_enemy_counter(self, value):
+    def update_enemy_counter(self, value: int):
+        '''Update self.enemy_amount to provided value'''
         self.enemy_amount.setText(f"Enemies Left: {value}")
 
-    def update_current_wave(self, value):
+    def update_current_wave(self, value: int):
+        '''Update self.current_wave to provided value'''
         self.current_wave.setText(f"Current Wave: {value}")

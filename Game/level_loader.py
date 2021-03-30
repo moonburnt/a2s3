@@ -201,6 +201,7 @@ class LoadLevel:
             #if not self.enemies:
             if self.enemy_amount <= 0:
                 log.info("Wave cleared, initializing wave changer")
+                self.player_hud.show_wave_cleared()
                 base.task_mgr.add(self.wave_changer, "wave changer")
                 return
             return event.cont
@@ -296,7 +297,8 @@ class LoadLevel:
 
         #todo: show message about beginning of new wave
         log.info(f"Starting wave {self.wave_number} with {self.enemies_this_wave} enemies")
-
+        self.player_hud.show_new_wave_msg(wave_number = self.wave_number,
+                                          kill_requirement = self.enemies_this_wave)
         base.task_mgr.add(self.spawn_enemies, "enemy spawner")
         return
 
