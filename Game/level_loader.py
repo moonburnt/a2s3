@@ -19,14 +19,11 @@ MAX_SCORE_MULTIPLIER = 5 #maybe just make it MULTIPLIER_INCREASE_STEP*10 ?
 MULTIPLIER_INCREASE_STEP = 0.5
 
 #this designed to work like that: default amount is amount of enemies on first wave
-DEFAULT_ENEMIES_AMOUNT = 5
-#and multiplier is like current_amount*enemy_multiplier. So, basically. If our
-#first wave has 5 enemies, second will have int(5*1.5), 2nd - int(7*1.5). And so on
-ENEMY_MULTIPLIER = 1.5
+DEFAULT_ENEMIES_AMOUNT = 10
 #lengh of pause between waves (in seconds)
-PAUSE_BETWEEN_WAVES = 5
+PAUSE_BETWEEN_WAVES = 3
 #maximum amount of enemies on screen
-MAX_ENEMY_COUNT = 10
+MAX_ENEMY_COUNT = 30
 #pause between spawn checks
 ENEMY_SPAWN_TIME = 2
 
@@ -93,7 +90,6 @@ class LoadLevel:
         log.debug("Initializing handlers")
         #task manager is function that runs on background each frame and execute
         #whatever functions are attached to it
-        base.task_mgr.add(self.spawn_enemies, "enemy spawner")
         base.task_mgr.add(self.remove_dead, "remove dead")
 
         #dictionary that stores default state of keys
@@ -146,10 +142,12 @@ class LoadLevel:
         self.player = entity2d.Player("player", position = self.map.player_spawnpoint,
                                        hitbox_size = 6)
 
-        self.wave_number = 1
-        self.enemies_left = DEFAULT_ENEMIES_AMOUNT
+        self.wave_number = 0
+        self.enemy_increase = 10
+        self.enemies_this_wave = DEFAULT_ENEMIES_AMOUNT
         #TODO: rework this thing to spawn multiple enemies per tick
         self.enemy_spawn_timer = ENEMY_SPAWN_TIME
+        self.pause_between_waves = PAUSE_BETWEEN_WAVES
 
         #these will be our lists to store enemies and projectiles to reffer to
         self.enemies = []
@@ -189,11 +187,22 @@ class LoadLevel:
         base.task_mgr.add(self.update_player_hud, "player hud autoupdater")
         interface.switch(self.player_hud)
 
+        base.task_mgr.add(self.wave_changer, "wave changer")
+
     def spawn_enemies(self, event):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
         ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
         #safety check to dont spawn more enemies if player is dead
         if not self.player.object:
+            #return event.cont
+            return
+
+        if self.enemies_this_wave <= 0:
+            #if not self.enemies:
+            if self.enemy_amount <= 0:
+                log.info("Wave cleared, initializing wave changer")
+                base.task_mgr.add(self.wave_changer, "wave changer")
+                return
             return event.cont
 
         #this clock runs on background and updates each frame
@@ -255,10 +264,41 @@ class LoadLevel:
                 enemy.object.set_python_tag("id", enemy.id)
                 self.enemy_id += 1
                 self.enemy_amount += 1
+                self.enemies_this_wave -= 1
                 self.enemies.append(enemy)
                 log.debug(f"There are currently {self.enemy_amount} enemies on screen")
 
         return event.cont
+
+    def wave_changer(self, event):
+        '''Taskmanager routine that runs between waves'''
+        if self.player.dead:
+            return
+
+        dt = globalClock.get_dt()
+
+        self.pause_between_waves -= dt
+        if self.pause_between_waves > 0:
+            return event.cont
+
+        log.debug("Attempting to change the wave")
+        self.pause_between_waves = PAUSE_BETWEEN_WAVES
+        self.wave_number += 1
+
+        #this formula is questionable at best, but for now it will do
+        self.enemies_this_wave = int((DEFAULT_ENEMIES_AMOUNT/100)*self.enemy_increase*self.wave_number)
+        #ensuring that no empty waves can occur
+        if self.enemies_this_wave <= 1:
+            self.enemies_this_wave = 1
+
+        self.enemy_increase += int(self.enemy_increase/self.wave_number)
+        log.debug(f"Enemy increase has been set to {self.enemy_increase}")
+
+        #todo: show message about beginning of new wave
+        log.info(f"Starting wave {self.wave_number} with {self.enemies_this_wave} enemies")
+
+        base.task_mgr.add(self.spawn_enemies, "enemy spawner")
+        return
 
     def remove_dead(self, event):
         '''Designed to run as taskmanager routine. Each self.cleanup_timer secs,
