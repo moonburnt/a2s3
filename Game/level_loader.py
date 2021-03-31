@@ -160,6 +160,9 @@ class LoadLevel:
         #this can also be potentially used for some highscore stats
         self.enemy_id = 0
 
+        #amount of enemies, killed by player
+        self.kill_counter = 0
+
         #score is, well, a thing that increase each time you hit/kill enemy.
         #in future there may be ability to spend it on some powerups, but for
         #now its only there for future leaderboards
@@ -458,8 +461,9 @@ class LoadLevel:
     def on_player_death(self):
         '''Function called when player has died'''
         #TODO: rename this function to something less stupid
-
-        self.death_screen.update_death_message(self.score, self.wave_number)
+        self.death_screen.update_death_message(self.score,
+                                               self.wave_number,
+                                               self.kill_counter)
         #reparenting camera, to keep it above map's center
         #todo: make camera follow not player, but some node above player's head
         #so even if player's object get destroyed - camera remains on top of it

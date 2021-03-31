@@ -190,7 +190,7 @@ class DeathScreen(Menu):
                                       pos = (0, 0, 0.3),
                                       scale = 0.1,
                                       frameTexture = base.assets.sprite['frame'],
-                                      frameSize = (-4.5, 4.5, -1.5, 1),
+                                      frameSize = (-4.5, 4.5, -2.5, 1),
                                       parent = self.frame)
 
         self.restart_button = DirectButton(text = "Restart",
@@ -223,9 +223,11 @@ class DeathScreen(Menu):
                                         rolloverSound = self.hover_sfx,
                                         parent = self.frame)
 
-    def update_death_message(self, score: int, wave: int):
+    def update_death_message(self, score: int, wave: int, killed: int):
         '''Change dispayed self.high_score to provided value'''
-        self.death_message.setText(f"Score: {score}\nLast Wave: {wave}")
+        self.death_message.setText(f"Score: {score}\n"
+                                   f"Last Wave: {wave}\n"
+                                   f"Enemies Killed: {killed}")
 
 class PlayerHUD(Menu):
     '''Player's hud, displayed in game. Wave counter, player's hp, etc'''

@@ -117,7 +117,8 @@ class Enemy(entity2d.Creature):
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
         base.level.increase_score(KILL_SCORE)
+        #increase player's kill counter
+        base.level.kill_counter += 1
+        log.debug(f"Kill counter has been increased to {base.level.kill_counter}")
         #reduce enemy counter
         base.level.enemy_amount -= 1
-
-        return
