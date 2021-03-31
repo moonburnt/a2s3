@@ -183,11 +183,14 @@ class DeathScreen(Menu):
         parent = base.aspect2d
         super().__init__(name, parent)
 
-        self.high_score = DirectLabel(text = "Your score is 0",
-                                      pos = (0, 0, 0.1),
+        #not setting text, coz it will be overwritten anyway
+        #TODO: set align to be on left. Maybe replae death_message's DirectLabel
+        #with OnscreenText and draw frame on background?
+        self.death_message = DirectLabel(
+                                      pos = (0, 0, 0.3),
                                       scale = 0.1,
                                       frameTexture = base.assets.sprite['frame'],
-                                      frameSize = (-4.5, 4.5, -0.5, 1),
+                                      frameSize = (-4.5, 4.5, -1.5, 1),
                                       parent = self.frame)
 
         self.restart_button = DirectButton(text = "Restart",
@@ -220,9 +223,9 @@ class DeathScreen(Menu):
                                         rolloverSound = self.hover_sfx,
                                         parent = self.frame)
 
-    def update_score(self, value: int):
+    def update_death_message(self, score: int, wave: int):
         '''Change dispayed self.high_score to provided value'''
-        self.high_score.setText(f"Your score is {value}")
+        self.death_message.setText(f"Score: {score}\nLast Wave: {wave}")
 
 class PlayerHUD(Menu):
     '''Player's hud, displayed in game. Wave counter, player's hp, etc'''

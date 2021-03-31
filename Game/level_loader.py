@@ -459,7 +459,7 @@ class LoadLevel:
         '''Function called when player has died'''
         #TODO: rename this function to something less stupid
 
-        self.death_screen.update_score(self.score)
+        self.death_screen.update_death_message(self.score, self.wave_number)
         #reparenting camera, to keep it above map's center
         #todo: make camera follow not player, but some node above player's head
         #so even if player's object get destroyed - camera remains on top of it
