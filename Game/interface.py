@@ -22,8 +22,6 @@ from direct.gui.DirectGui import DirectButton, DirectLabel, DirectOptionMenu
 from direct.gui.OnscreenText import OnscreenText, TextNode
 from direct.gui.OnscreenImage import OnscreenImage
 
-from Game import shared
-
 log = logging.getLogger(__name__)
 
 CURRENT_INTERFACE = None
@@ -39,6 +37,51 @@ def switch(menu):
         CURRENT_INTERFACE.hide()
     CURRENT_INTERFACE = menu
     menu.show()
+
+class Popup:
+    '''Meta class for messages that appear on certain actions and disappear into nowhere'''
+    def __init__(self, text = None, pos = (0, 0), align = TextNode.ACenter, scale = 1,
+                 fg = (1,1,1,1), parent = None, name = "Popup", duration = 1):
+
+        if not parent:
+            parent = base.aspect2d
+
+        self.duration = duration
+        self.name = name
+
+        #maybe make it possible for popup message to be not just text? idk
+        self.popup_msg = OnscreenText(pos = pos,
+                                      align = align,
+                                      scale = scale,
+                                      fg = fg,
+                                      parent = parent,
+                                      mayChange = True)
+
+        if text:
+            self.set_text(text)
+
+        self.popup_msg.hide()
+
+    def set_duration(self, duration):
+        #duration may be both int and float, idk how to do that yet
+        self.duration = duration
+
+    def set_text(self, text: str):
+        '''Set message's text. Same as setText of panda's native gui items'''
+        self.popup_msg.setText(text)
+
+    def show(self):
+        '''Show popup for self.duration seconds, then auto-hide it away'''
+        #todo: add ability to use some visual effects
+        self.popup_msg.show()
+
+        #todo: maybe remake it into lerp, so there wont be need to involve base.
+        #this function is hidden inside, coz we have no use for it outside
+        def hide_popup_task(event):
+            self.popup_msg.hide()
+            return
+
+        base.task_mgr.do_method_later(self.duration, hide_popup_task, self.name)
 
 class Menu:
     '''Main class for all huds and menus. Require nodepath name to be passed as
@@ -303,64 +346,37 @@ class PlayerHUD(Menu):
                                          mayChange = True)
 
         #idk if these should be there or on separate hud, but for now will keep em
-        self.wave_cleared_msg = OnscreenText(text = "Wave Cleared!",
+        #also idk about styling. I tried to make it look somehow ok, but idk
+        self.wave_cleared_msg =     Popup(
+                                         text = "Wave Cleared!",
                                          pos = (0, 0.85),
-                                         align = TextNode.ACenter,
                                          scale = 0.1,
-                                         fg = (1,1,1,1),
                                          parent = self.frame,
-                                         mayChange = True)
-        self.wave_cleared_msg.hide()
+                                         duration = 2
+                                         )
 
-        self.new_wave_msg = OnscreenText(text = "Wave 0",
+        self.new_wave_msg =         Popup(
                                          pos = (0, 0.85),
-                                         align = TextNode.ACenter,
                                          scale = 0.1,
-                                         fg = (1,1,1,1),
                                          parent = self.frame,
-                                         mayChange = True)
-        self.new_wave_msg.hide()
+                                         duration = 2.5
+                                         )
 
-        self.kill_requirement_msg = OnscreenText(text = "Kill 0 Enemies To Proceed",
+        self.kill_requirement_msg = Popup(
                                          pos = (0, 0.75),
-                                         align = TextNode.ACenter,
                                          scale = 0.05,
-                                         fg = (1,1,1,1),
                                          parent = self.frame,
-                                         mayChange = True)
-        self.kill_requirement_msg.hide()
-
-    def show_wave_cleared(self):
-        '''Inform player that wave has been cleared, then hide message after 2 secs'''
-        #TODO: rename this function to something less stupid
-
-        #this can probably be done with lerp intervals, but I currently have no
-        #access to panda docs to find out how to do that properly
-        log.debug("Showing 'wave cleared' message")
-        self.wave_cleared_msg.show()
-
-        def wave_hide_task(event):
-            self.wave_cleared_msg.hide()
-            return
-
-        base.task_mgr.do_method_later(2, wave_hide_task, "hide 'wave cleared' msg")
+                                         duration = 2.5
+                                         )
 
     def show_new_wave_msg(self, wave_number: int, kill_requirement: int):
         '''Inform player that new wave has started and how many enemies they need
         to kill to proceed further'''
         log.debug("Showing new wave messages")
-        self.new_wave_msg.setText(f"Wave {wave_number}")
-        self.kill_requirement_msg.setText(f"Kill {kill_requirement} Enemies To Proceed")
+        self.new_wave_msg.set_text(f"Wave {wave_number}")
+        self.kill_requirement_msg.set_text(f"Kill {kill_requirement} Enemies To Proceed")
         self.new_wave_msg.show()
         self.kill_requirement_msg.show()
-
-        #this function is hidden inside, coz we have no use for it outside
-        def wave_hide_task(event):
-            self.new_wave_msg.hide()
-            self.kill_requirement_msg.hide()
-            return
-
-        base.task_mgr.do_method_later(2.5, wave_hide_task, "hide 'new wave' msg")
 
     def update_hp(self, value: int):
         '''Update self.player_hp to provided value'''
