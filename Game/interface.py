@@ -282,11 +282,35 @@ class DeathScreen(Menu):
                                         rolloverSound = self.hover_sfx,
                                         parent = self.frame)
 
+        #idk if this should be there either. But will do for now
+        self.dn_duration = 2
+
+        #notice how its parent is different
+        self.death_notification = Popup(text = "Death",
+                                        scale = 0.5,
+                                        parent = base.aspect2d,
+                                        duration = self.dn_duration)
+
     def update_death_message(self, score: int, wave: int, killed: int):
         '''Change dispayed self.high_score to provided value'''
         self.death_message.setText(f"Score: {score}\n"
                                    f"Last Wave: {wave}\n"
                                    f"Enemies Killed: {killed}")
+
+    def show(self):
+        #Overriding default "show" function, to first show death message and
+        #only then display the highscores/restart menu
+
+        #I need to specify it there, coz super cant handle calling for functions
+        #of parent class from multi-layered function
+        sup = super().show
+
+        def show_frame(event):
+            sup()
+            return
+
+        self.death_notification.show()
+        base.task_mgr.do_method_later(self.dn_duration, show_frame, "show death screen")
 
 class PlayerHUD(Menu):
     '''Player's hud, displayed in game. Wave counter, player's hp, etc'''
