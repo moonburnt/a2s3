@@ -1,0 +1,24 @@
+# Example player class. Stats arent final, format may change
+name = "Knight"
+
+[Stats]
+hp = 100
+dmg = 10
+mov_spd = 3
+skills = [ "Slash" ]
+
+[Assets]
+sprite = "player"
+#TODO: add some sound that will be played on getting hit
+#hurt_sound =
+death_sound = "player_death"
+
+[Animations]
+idle_right = [ 0, 0 ]
+idle_left = [ 4, 4 ]
+move_right = [ 8, 11 ]
+move_left = [ 12, 15 ]
+attack_right = [ 16, 19 ]
+attack_left = [ 20, 23 ]
+hurt_right = [ 24, 27 ]
+hurt_left = [ 28, 31 ]

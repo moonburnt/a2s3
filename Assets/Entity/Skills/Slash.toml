@@ -1,0 +1,25 @@
+# Example skill
+name = "Slash"
+
+[Stats]
+#this will be caster's dmg*damage_multiplier
+damage_multiplier = 1
+#skill's cooldown
+cooldown = 0.5
+#size of skill's projectile
+scale = 1.5
+#this will be caster's knockback*knockback_multiplier
+#basically how far target will be kicked on collision
+#knockback_multiplier = 1
+
+#I dont think other legacy variables should be there... Maybe remake them, idk
+
+[Assets]
+#TODO
+#hit_sound =
+#death_sound =
+#idk if there should also be something for caster's animation... maybe later
+projectile_sprite = "attack"
+
+[Animations]
+default = [ 0, 3 ]

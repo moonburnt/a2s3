@@ -18,6 +18,7 @@
 
 from os import listdir
 from os.path import isfile, isdir, basename, join, splitext
+from toml import load as tomload
 from panda3d.core import SamplerState
 import logging
 
@@ -28,6 +29,10 @@ ASSETS_DIR = join(GAME_DIR, 'Assets')
 SPRITE_DIR = join(ASSETS_DIR, 'Sprites')
 MUSIC_DIR = join(ASSETS_DIR, 'BGM')
 SFX_DIR = join(ASSETS_DIR, 'SFX')
+ENTITY_DIR = join(ASSETS_DIR, 'Entity')
+CLASSES_DIR = join(ENTITY_DIR, 'Classes')
+ENEMIES_DIR = join(ENTITY_DIR, 'Enemies')
+SKILLS_DIR = join(ENTITY_DIR, 'Skills')
 
 class AssetsLoader:
     def __init__(self):
@@ -37,12 +42,15 @@ class AssetsLoader:
         self.music = {}
         self.sfx = {}
         self.sprite = {}
+        self.classes = {}
+        self.enemies = {}
+        self.skills = {}
 
         self.load_all()
 
-    def get_files(self, pathtodir):
+    def get_files(self, pathtodir:str):
         '''
-        Receives str(path to directory with files), returns list(files in directory)
+        Fetches and returns list of files in provided directory and its subdirectories
         '''
         files = []
 
@@ -65,11 +73,8 @@ class AssetsLoader:
         log.debug(f"Got following files in total: {files}")
         return files
 
-    def load_music(self, pathtodir):
-        '''Receive str(path to directory with music). Tries to load up all files
-        from specified directory and all subdirs as music files and, then, update
-        self.music dictionary with them. In case there are multiple entries with
-        very same names - older ones will get overwritten'''
+    def load_music(self, pathtodir:str):
+        '''Load and update currently known music from provided directory and its subdirs'''
         files = self.get_files(pathtodir)
 
         data = {}
@@ -81,11 +86,8 @@ class AssetsLoader:
         log.debug("Updating music storage")
         self.music = self.music | data
 
-    def load_sfx(self, pathtodir):
-        '''Receive str(path to directory with sfx). Tries to load up all files
-        from specified directory and all subdirs as sfx files and, then, update
-        self.sfx dictionary with them. In case there are multiple entries with
-        very same names - older ones will get overwritten'''
+    def load_sfx(self, pathtodir:str):
+        '''Load and update currently known sfx from provided directory and its subdirs'''
         files = self.get_files(pathtodir)
 
         data = {}
@@ -97,12 +99,8 @@ class AssetsLoader:
         log.debug("Updating sfx storage")
         self.sfx = self.sfx | data
 
-    def load_sprite(self, pathtodir):
-        '''Receive str(path to directory with sprites). Tries to load up all files
-        from specified directory and all subdirs as sprite files and, then, update
-        self.sprite dictionary with them. Also apply sampler state filter to all
-        sprites, so they wont look blurry in-game. In case there are multiple
-        entries with very same names - older ones will get overwritten'''
+    def load_sprite(self, pathtodir:str):
+        '''Load and update currently known sprites from provided directory and its subdirs'''
         files = self.get_files(pathtodir)
 
         data = {}
@@ -117,17 +115,52 @@ class AssetsLoader:
         log.debug("Updating sprite storage")
         self.sprite = self.sprite | data
 
+    def _load_toml(self, pathtodir:str):
+        '''Load toml data from all .toml files in provided and return it as meta-dictionary'''
+        files = self.get_files(pathtodir)
+        data = {}
+        for item in files:
+            name_of_file = basename(item)
+            name_without_extension = splitext(name_of_file)[0]
+            data[name_without_extension] = tomload(item)
+
+        return data
+
+    def load_classes(self, pathtodir:str):
+        '''Load and update currently known classes from provided directory and its subdirs'''
+        data = self._load_toml(pathtodir)
+        log.debug("Updating classes storage")
+        self.classes = self.classes | data
+
+    def load_enemies(self, pathtodir:str):
+        '''Load and update currently known enemies from provided directory and its subdirs'''
+        data = self._load_toml(pathtodir)
+        log.debug("Updating enemies storage")
+        self.enemies = self.enemies | data
+
+    def load_skills(self, pathtodir:str):
+        '''Load and update currently known skills from provided directory and its subdirs'''
+        data = self._load_toml(pathtodir)
+        log.debug("Updating skills storage")
+        self.skills = self.skills | data
+
     def load_all(self):
         '''Load all assets from default paths'''
         self.load_music(MUSIC_DIR)
         self.load_sfx(SFX_DIR)
         self.load_sprite(SPRITE_DIR)
+        self.load_classes(CLASSES_DIR)
+        self.load_enemies(ENEMIES_DIR)
+        self.load_skills(SKILLS_DIR)
 
     def reset(self):
         '''Reset assets dictionaries to empty state'''
         self.music = {}
         self.sfx = {}
         self.sprite = {}
+        self.classes = {}
+        self.enemies = {}
+        self.skills = {}
 
     def reload(self):
         '''Reset assets dictionaries to be empty, then load defaults'''

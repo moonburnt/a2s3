@@ -14,6 +14,7 @@
 
 - python 3.9+
 - panda3d 1.10.8
+- toml 0.10.2
 
 ## How to Play:
 

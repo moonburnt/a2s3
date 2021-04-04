@@ -1,0 +1,24 @@
+#Example enemy
+name = "Cuboid"
+
+[Stats]
+hp = 50
+dmg = 10
+mov_spd = 2
+#skills = [ "atk_0" ]
+
+[Assets]
+sprite = "enemy"
+death_sound = "enemy_death"
+
+[Animations]
+idle_right = [ 0, 0 ]
+idle_left = [ 4, 4 ]
+move_right = [ 0, 3 ]
+move_left = [ 4, 7 ]
+attack_right = [ 8, 11 ]
+attack_left = [ 12, 15 ]
+hurt_right = [ 16, 19 ]
+hurt_left = [ 20, 23 ]
+
+
