@@ -103,3 +103,8 @@ class FlatMap:
             #wall_node.set_collide_mask(BitMask32(shared.WALLS_COLLISION_MASK))
             wall_node.add_solid(CollisionPlane(Plane(*sizes)))
             wall = render.attach_new_node(wall_node)
+
+            #adding tag with wall's coordinations, so it will be possible to
+            #push entities back if these collide with wall
+            #because calling .get_pos() will return LPoint3f(0,0,0)
+            wall_node.set_python_tag("position", sizes)

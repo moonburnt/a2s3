@@ -17,7 +17,7 @@
 #module dedicated to manage per-level stuff
 
 import logging
-from panda3d.core import CollisionTraverser, CollisionHandlerPusher
+from panda3d.core import CollisionTraverser, CollisionHandlerEvent
 from time import time
 from random import randint, choice
 from Game import entity2d, map_loader, shared, interface
@@ -53,9 +53,7 @@ class LoadLevel:
         #of walls and entity objects
         log.debug("Setting up collision processors")
         base.cTrav = CollisionTraverser()
-        base.pusher = CollisionHandlerPusher()
-        #avoiding the issue with entities falling under the floor on some collisions
-        base.pusher.set_horizontal(True)
+        base.chandler = CollisionHandlerEvent()
         #showing all occuring collisions. This is debatably better than manually
         #enabling collision.show() for each entity entry
         if shared.SHOW_COLLISIONS:
@@ -66,8 +64,8 @@ class LoadLevel:
         #"in" is what happens when one object start colliding with another
         #"again" is if object continue to collide with another
         #"out" is when objects stop colliding
-        base.pusher.addInPattern('%fn-into-%in')
-        base.pusher.addAgainPattern('%fn-again-%in')
+        base.chandler.addInPattern('%fn-into-%in')
+        base.chandler.addAgainPattern('%fn-again-%in')
         #we dont need this one there
         #base.pusher.addOutPattern('%fn-out-%in')
 
@@ -86,6 +84,13 @@ class LoadLevel:
         base.accept('enemy-into-attack', self.damage_enemy)
         base.accept('attack-again-enemy', self.damage_enemy)
         base.accept('enemy-again-attack', self.damage_enemy)
+
+        #tracking collisions with walls, in order to create custom pusher-like
+        #behaviour with collisioneventhandler
+        base.accept('player-into-wall', self.on_wall_collision)
+        base.accept('player-again-wall', self.on_wall_collision)
+        base.accept('enemy-into-wall', self.on_wall_collision)
+        base.accept('enemy-again-wall', self.on_wall_collision)
 
         log.debug("Setting up camera")
         #this will set camera to be right above card.
@@ -429,6 +434,48 @@ class LoadLevel:
         target_id = target.get_net_python_tag('id')
         log.debug(f"Attempting to deal damage to {target_name} ({target_id})")
         dmgfunc(dmg)
+
+    def on_wall_collision(self, entry):
+        '''Function that triggers if player or enemy collides with wall and pushes
+        them back'''
+        col = entry.get_from_node_path()
+        col_obj = col.get_parent()
+        wall = entry.get_into_node_path()
+        #safety check for situations when object is in process of dying but hasnt
+        #been removed completely yet
+        if not col_obj:
+            log.warning(f"{col} seems to be dead, collision wont occur")
+            return
+
+        #print(f"{col_obj} collides with wall")
+
+        #first, lets get wall's parent, coz render/wall/wall is collision node,
+        #and our tags are attached to render/wall, which is nodepath itself
+        wall_obj = wall.get_parent()
+        #getting pos like that, because of check mapgen's comments on wall init
+        wall_pos = wall.get_python_tag("position")[0]
+
+        col_pos = col_obj.get_pos()
+
+        vector = col_pos - wall_pos
+        vector.normalize()
+
+        vx, vy = vector.get_xy()
+
+        #TODO: move knockback to object's tags. This will make it possible to
+        #rework this function to use it in other collision cases too
+        knockback = 5
+
+        #workaround to fix the issue with entity running into a wall getting
+        #pushed to wall's center. This way it wont hapen anymore... I think
+        if wall_pos[1] != 0:
+            vx = 0
+        if wall_pos[0] != 0:
+            vy = 0
+
+        new_pos = col_pos - (vx*knockback, vy*knockback, 0)
+
+        col_obj.set_pos(new_pos)
 
     def increase_score(self, amount):
         '''Increase score variable and displayed score amount by int(amount * self.score_multiplier)'''

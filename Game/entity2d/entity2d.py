@@ -237,13 +237,9 @@ class Creature(Entity2D):
         self.object.set_python_tag("stats", self.stats)
         self.object.set_python_tag("get_damage", self.get_damage)
 
-        #attaching our object's collisions to pusher and traverser
-        #TODO: this way enemies will collide with walls too. Idk how to solve it
-        #yet, without attaching walls to pusher (which will break them)
-        #shared.PUSHER.add_collider(self.collision, self.object)
-        #shared.CTRAV.add_collider(self.collision, shared.PUSHER)
-        base.pusher.add_collider(self.collision, self.object)
-        base.cTrav.add_collider(self.collision, base.pusher)
+        #attaching our object's collisions to traverser
+        #otherwise they wont be detected
+        base.cTrav.add_collider(self.collision, base.chandler)
 
         #billboard is effect to ensure that object always face camera the same
         #e.g this is the key to achieve that "2.5D style" I aim for
