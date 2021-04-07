@@ -86,14 +86,22 @@ class GameWindow(ShowBase):
         self.win.set_clear_color((0,0,0,1))
 
         self.main_menu = interface.MainMenu(play_command = self.set_map,
+                                            options_command = self.options,
                                             exit_command = self.exit_game)
         self.show_menu()
+
+        self.options_menu = interface.OptionsMenu(back_command = self.show_menu,
+                                                  music_volume = shared.MUSIC_VOLUME,
+                                                  sfx_volume = shared.SFX_VOLUME)
 
         self.map_settings = interface.MapSettings(play_command = self.start_game,
                                                   back_command = self.show_menu)
 
     def set_map(self):
         interface.switch(self.map_settings)
+
+    def options(self):
+        interface.switch(self.options_menu)
 
     def show_menu(self):
         interface.switch(self.main_menu)
