@@ -185,17 +185,17 @@ class MainMenu(Menu):
 class OptionsMenu(Menu):
     '''Options menu where player can change game options such as volume.'''
 
-    def __init__(self, back_command, music_volume, sfx_volume):
+    def __init__(self, back_command):
         super().__init__("options menu", base.aspect2d)
 
         self.back_command = back_command
 
         # Current value, updated via sliders
-        self.music_volume = music_volume
-        self.sfx_volume = sfx_volume
+        self.music_volume = shared.MUSIC_VOLUME
+        self.sfx_volume = shared.MUSIC_VOLUME
         # Save them to restore if player clicks 'back' without saving
-        self.old_music_volume = music_volume
-        self.old_sfx_volume = sfx_volume
+        self.old_music_volume = shared.MUSIC_VOLUME
+        self.old_sfx_volume = shared.SFX_VOLUME
 
         options_label = DirectLabel(text = "Options",
                                     pos = (0, 0, 0.8),
@@ -214,7 +214,7 @@ class OptionsMenu(Menu):
         self.music_slider = DirectSlider(pos = (0.3, 0, 0.5),
                                          scale = 0.4,
                                          parent = self.frame,
-                                         value = self.music_volume,
+                                         value = shared.MUSIC_VOLUME,
                                          command = self.update_music_volume)
 
         sfx_label = DirectLabel(text = "SFX",
@@ -227,7 +227,7 @@ class OptionsMenu(Menu):
         self.sfx_slider = DirectSlider(pos = (0.3, 0, 0.2),
                                        scale = 0.4,
                                        parent = self.frame,
-                                       value = self.sfx_volume,
+                                       value = shared.SFX_VOLUME,
                                        command = self.update_sfx_volume)
 
         ok_button = DirectButton(text = "Ok",
@@ -257,19 +257,24 @@ class OptionsMenu(Menu):
         shared.MUSIC_VOLUME = self.music_volume
         shared.SFX_VOLUME = self.sfx_volume
 
+        self.old_music_volume = self.music_volume
+        self.old_sfx_volume = self.sfx_volume
+
         self.back_command()
 
     def restore_and_close(self):
         '''Restore previous options' values and return to parent menu.'''
 
-        base.musicManager.set_volume(self.old_music_volume)
+        base.music_player.set_player_volume(self.old_music_volume)
         base.sfxManagerList[0].set_volume(self.old_sfx_volume)
+        self.music_slider.setValue(self.old_music_volume)
+        self.sfx_slider.setValue(self.old_sfx_volume)
 
         self.back_command()
 
     def update_music_volume(self):
         self.music_volume = self.music_slider["value"]
-        base.musicManager.set_volume(self.music_volume)
+        base.music_player.set_player_volume(self.music_volume)
 
     def update_sfx_volume(self):
         self.sfx_volume = self.sfx_slider["value"]

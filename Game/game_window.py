@@ -90,9 +90,7 @@ class GameWindow(ShowBase):
                                             exit_command = self.exit_game)
         self.show_menu()
 
-        self.options_menu = interface.OptionsMenu(back_command = self.show_menu,
-                                                  music_volume = shared.MUSIC_VOLUME,
-                                                  sfx_volume = shared.SFX_VOLUME)
+        self.options_menu = interface.OptionsMenu(back_command = self.show_menu)
 
         self.map_settings = interface.MapSettings(play_command = self.start_game,
                                                   back_command = self.show_menu)
