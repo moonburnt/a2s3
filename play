@@ -33,10 +33,14 @@ ap.add_argument("--debug", help="Add debug messages to output",
                 action = "store_true")
 ap.add_argument("--show-collisions", help="Toggle showcase of objects collisions",
                 action = "store_true")
-ap.add_argument("--music-vol", help = "Override default music volume. Should be "
-                                    "between 0 and 100, else using defaults", type = int)
-ap.add_argument("--sfx-vol", help = "Override default music volume. Should be "
-                                    "between 0 and 100, else using defaults", type = int)
+ap.add_argument("--music-vol",
+                help = "Override default music volume. Should be "
+                       "between 0 and 100, else using defaults",
+                type = int, default = 100)
+ap.add_argument("--sfx-vol",
+                help = "Override default music volume. Should be "
+                       "between 0 and 100, else using defaults",
+                type = int, default = 100)
 ap.add_argument("--show-fps", help="Enable fps meter", action = "store_true")
 ap.add_argument("--window-x", help = "Override default window's X. If less than default "
                                   "- will be still set to default", type = int)
@@ -54,20 +58,13 @@ if args.show_collisions:
 if args.show_fps:
     Game.shared.FPS_METER = True
 
-#going for try/except, coz either argparse or python seems to threat 0 as "None"
-try:
-    if (0 <= args.music_vol <= 100):
-        Game.shared.MUSIC_VOLUME = args.music_vol / 100
-        log.debug(f"Music volume has been set to {args.music_vol}%")
-except:
-    pass
+if (0 <= args.music_vol <= 100):
+    Game.shared.MUSIC_VOLUME = args.music_vol / 100
+    log.debug(f"Music volume has been set to {args.music_vol}%")
 
-try:
-    if (0 <= args.sfx_vol <= 100):
-        Game.shared.SFX_VOLUME = args.sfx_vol / 100
-        log.debug(f"Music volume has been set to {args.sfx_vol}%")
-except:
-    pass
+if (0 <= args.sfx_vol <= 100):
+    Game.shared.SFX_VOLUME = args.sfx_vol / 100
+    log.debug(f"Music volume has been set to {args.sfx_vol}%")
 
 if args.window_x and (args.window_x > Game.shared.DEFAULT_WINDOW_SIZE[0]):
     win_y = Game.shared.WINDOW_SIZE[1]
