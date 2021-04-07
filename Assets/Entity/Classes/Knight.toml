@@ -6,6 +6,7 @@ hp = 100
 dmg = 10
 mov_spd = 3
 skills = [ "Slash" ]
+hitbox_size = 6
 
 [Assets]
 sprite = "player"

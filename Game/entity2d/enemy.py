@@ -36,7 +36,8 @@ class Enemy(entity2d.Creature):
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         collision_mask = ENEMY_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+        category = "enemy"
+        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 
         if affix in ("Normal", "Big", "Small"):

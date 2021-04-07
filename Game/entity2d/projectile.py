@@ -34,7 +34,8 @@ class Projectile(entity2d.Entity2D):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+        category = "player_projectile"
+        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 
         self.damage = damage

@@ -6,9 +6,10 @@ hp = 50
 dmg = 10
 mov_spd = 2
 #skills = [ "atk_0" ]
+hitbox_size = 12
 
 [Assets]
-sprite = "enemy"
+sprite = "cuboid"
 death_sound = "enemy_death"
 
 [Animations]

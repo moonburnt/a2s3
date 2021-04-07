@@ -32,7 +32,8 @@ class Player(entity2d.Creature):
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         collision_mask = PLAYER_COLLISION_MASK
-        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+        category = "player"
+        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 
         base.task_mgr.add(self.controls_handler, "controls handler")

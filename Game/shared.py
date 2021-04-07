@@ -52,7 +52,7 @@ CONTROLS = {"move_up": "w", "move_down": "s",
 #later I will build this from jsons or whatever configuration files I will choose
 STATS = {'default': {'hp': 50, 'dmg': 1, 'mov_spd': 1, 'skills': ['atk_0']},
          'player': {"hp": 100, "dmg": 10, 'mov_spd': 3, 'skills': ['atk_0']},
-         'enemy': {"hp": 50, "dmg": 10, 'mov_spd': 2, 'skills': ['atk_0']}}
+         'cuboid': {"hp": 50, "dmg": 10, 'mov_spd': 2, 'skills': ['atk_0']}}
 
 #TODO: rename cd (cooldown) to something like atk_speed and make it work the opposite,
 #e.g the more the value - less time it gets to strike again. Also it may be a good
@@ -67,7 +67,7 @@ SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': 
 ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11),
                     'move_left': (12,15), 'attack_right': (16,19), 'attack_left': (20, 23),
                     'hurt_right': (24, 27), 'hurt_left': (28, 31)},
-         'enemy': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3),
+         'cuboid': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3),
                    'move_left': (4,7), 'attack_right': (8,11), 'attack_left': (12,15),
                    'hurt_right': (16, 19), 'hurt_left': (20, 23)},
          'attack': {'default': (0, 3)}}

@@ -80,10 +80,10 @@ class LoadLevel:
         base.accept('enemy-again-player', self.damage_player)
 
         #also tracking collisions of enemy with player's attack projectile
-        base.accept('attack-into-enemy', self.damage_enemy)
-        base.accept('enemy-into-attack', self.damage_enemy)
-        base.accept('attack-again-enemy', self.damage_enemy)
-        base.accept('enemy-again-attack', self.damage_enemy)
+        base.accept('player_projectile-into-enemy', self.damage_enemy)
+        base.accept('enemy-into-player_projectile', self.damage_enemy)
+        base.accept('player_projectile-again-enemy', self.damage_enemy)
+        base.accept('enemy-again-player_projectile', self.damage_enemy)
 
         #tracking collisions with walls, in order to create custom pusher-like
         #behaviour with collisioneventhandler
@@ -281,9 +281,9 @@ class LoadLevel:
                     affix = "Normal"
                     spawn_position = *spawn_xy, ENTITY_LAYER
 
-
-                log.debug(f"Spawning {affix} enemy on {spawn_position}")
-                enemy = entity2d.Enemy("enemy", position = spawn_position,
+                enemy_type = "cuboid"
+                log.debug(f"Spawning {affix} {enemy_type} on {spawn_position}")
+                enemy = entity2d.Enemy(enemy_type, position = spawn_position,
                                         hitbox_size = 12, affix = affix)
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
@@ -362,8 +362,8 @@ class LoadLevel:
         #search for whole tree, instead of just selected node. And since the node
         #we get via methods above is not the same as node we want - this is kind
         #of what we should use
-        hit_name = hit.get_net_python_tag("name")
-        tar_name = tar.get_net_python_tag("name")
+        hit_name = hit.get_net_python_tag("category")
+        tar_name = tar.get_net_python_tag("category")
 
         #workaround for "None Type" exception that rarely occurs if one of colliding
         #nodes has died the very second it needs to be used in another collision
@@ -406,8 +406,8 @@ class LoadLevel:
 
         #log.debug(f"{hit} collides with {tar}")
 
-        hit_name = hit.get_net_python_tag("name")
-        tar_name = tar.get_net_python_tag("name")
+        hit_name = hit.get_net_python_tag("category")
+        tar_name = tar.get_net_python_tag("category")
 
         if not hit_name or not tar_name:
             log.warning("One of targets is dead, no damage will be calculated")

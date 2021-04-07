@@ -33,7 +33,7 @@ class Entity2D:
     '''
     Main class, dedicated to creation of collideable 2D objects.
     '''
-    def __init__(self, name, spritesheet = None, sprite_size = None,
+    def __init__(self, name, category, spritesheet = None, sprite_size = None,
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         log.debug(f"Initializing {name} object")
@@ -67,7 +67,7 @@ class Entity2D:
         horizontal_scale, vertical_scale = sprite_data['offset_steps']
         offsets = sprite_data['offsets']
 
-        entity_frame = CardMaker(name)
+        entity_frame = CardMaker(category)
         #setting frame's size. Say, for 32x32 sprite all of these need to be 16
         entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
@@ -101,7 +101,7 @@ class Entity2D:
             entity_object.set_pos(*position)
 
         #setting character's collisions
-        entity_collider = CollisionNode(name)
+        entity_collider = CollisionNode(category)
 
         #if no collision mask has been received - using defaults
         if collision_mask:
@@ -125,6 +125,7 @@ class Entity2D:
             entity_anims = ANIMS[name]
 
         self.name = name
+        self.category = category
         self.object = entity_object
         self.collision = entity_collision
         self.sprites = offsets
@@ -141,6 +142,7 @@ class Entity2D:
         #attaching python tags to object node, so these will be accessible during
         #collision events and similar stuff
         self.object.set_python_tag("name", self.name)
+        self.object.set_python_tag("category", self.category)
 
         #I thought to put ctrav there, but for whatever reason it glitched projectile
         #to fly into left wall. So I moved it to Creature subclass
@@ -203,11 +205,11 @@ class Entity2D:
 
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
-    def __init__(self, name, spritesheet = None, sprite_size = None,
+    def __init__(self, name, category, spritesheet = None, sprite_size = None,
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name, spritesheet, sprite_size, hitbox_size,
+        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
         #attempting to find stats of entity with name {name} in STATS
         #if not found - will fallback to STATS['default']
