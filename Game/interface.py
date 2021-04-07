@@ -18,9 +18,11 @@
 
 import logging
 from panda3d.core import NodePath
-from direct.gui.DirectGui import DirectButton, DirectLabel, DirectOptionMenu
+from direct.gui.DirectGui import DirectButton, DirectLabel, DirectOptionMenu, DirectSlider
 from direct.gui.OnscreenText import OnscreenText, TextNode
 from direct.gui.OnscreenImage import OnscreenImage
+
+from Game import shared
 
 log = logging.getLogger(__name__)
 
@@ -126,7 +128,7 @@ class Menu:
         self.frame.show()
 
 class MainMenu(Menu):
-    def __init__(self, play_command, exit_command):
+    def __init__(self, play_command, options_command, exit_command):
         name = "main menu"
         parent = base.pixel2d
         super().__init__(name, parent)
@@ -157,9 +159,21 @@ class MainMenu(Menu):
                                     rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
+        options_button = DirectButton(text = "Options",
+                                      command = options_command,
+                                      pos = (150, 1, -400),
+                                      text_scale = 1,
+                                      text_pos = (0, -0.25),
+                                      scale = (64, 1, 32),
+                                      frameTexture = self.button_textures,
+                                      frameSize = (-2, 2, -1, 1),
+                                      clickSound = self.select_sfx,
+                                      rolloverSound = self.hover_sfx,
+                                      parent = self.frame)
+
         exit_button = DirectButton(text = "Exit",
                                    command = exit_command,
-                                   pos = (150, 1, -400),
+                                   pos = (150, 1, -500),
                                    text_pos = (0,-0.25),
                                    scale = (64, 1, 32),
                                    frameTexture = self.button_textures,
@@ -167,6 +181,106 @@ class MainMenu(Menu):
                                    clickSound = self.select_sfx,
                                    rolloverSound = self.hover_sfx,
                                    parent = self.frame)
+
+class OptionsMenu(Menu):
+    '''Options menu where player can change game options such as volume.'''
+
+    def __init__(self, back_command):
+        super().__init__("options menu", base.aspect2d)
+
+        self.back_command = back_command
+
+        # Current value, updated via sliders
+        self.music_volume = shared.MUSIC_VOLUME
+        self.sfx_volume = shared.SFX_VOLUME
+        # Save them to restore if player clicks 'back' without saving
+        self.old_music_volume = shared.MUSIC_VOLUME
+        self.old_sfx_volume = shared.SFX_VOLUME
+
+        options_label = DirectLabel(text = "Options",
+                                    pos = (0, 0, 0.8),
+                                    scale = 0.1,
+                                    frameTexture = base.assets.sprite["frame"],
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    parent = self.frame)
+
+        music_label = DirectLabel(text = "Music",
+                                  pos = (-0.5, 0, 0.5),
+                                  scale = 0.1,
+                                  frameTexture = base.assets.sprite["frame"],
+                                  frameSize = (-3, 3, -0.5, 1),
+                                  parent = self.frame)
+
+        self.music_slider = DirectSlider(pos = (0.3, 0, 0.5),
+                                         scale = 0.4,
+                                         parent = self.frame,
+                                         value = shared.MUSIC_VOLUME,
+                                         command = self.update_music_volume)
+
+        sfx_label = DirectLabel(text = "SFX",
+                                pos = (-0.5, 0, 0.2),
+                                scale = 0.1,
+                                frameTexture = base.assets.sprite["frame"],
+                                frameSize = (-3, 3, -0.5, 1),
+                                parent = self.frame)
+
+        self.sfx_slider = DirectSlider(pos = (0.3, 0, 0.2),
+                                       scale = 0.4,
+                                       parent = self.frame,
+                                       value = shared.SFX_VOLUME,
+                                       command = self.update_sfx_volume)
+
+        ok_button = DirectButton(text = "Ok",
+                                 command = self.save_and_close,
+                                 pos = (-0.3, 0, -0.3),
+                                 scale = 0.1,
+                                 frameTexture = self.button_textures,
+                                 frameSize = (-3, 3, -0.5, 1),
+                                 clickSound = self.select_sfx,
+                                 rolloverSound = self.hover_sfx,
+                                 parent = self.frame)
+
+        back_button = DirectButton(text = "Back",
+                                    command = self.restore_and_close,
+                                    pos = (0.4, 0, -0.3),
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
+                                    parent = self.frame)
+
+    def save_and_close(self):
+        '''Save options and return to parent menu.'''
+
+        log.info("Saving options...")
+        shared.MUSIC_VOLUME = self.music_volume
+        shared.SFX_VOLUME = self.sfx_volume
+
+        self.old_music_volume = self.music_volume
+        self.old_sfx_volume = self.sfx_volume
+
+        self.back_command()
+
+    def restore_and_close(self):
+        '''Restore previous options' values and return to parent menu.'''
+
+        base.music_player.set_player_volume(self.old_music_volume)
+        base.sfxManagerList[0].set_volume(self.old_sfx_volume)
+        self.music_slider.setValue(self.old_music_volume)
+        self.sfx_slider.setValue(self.old_sfx_volume)
+
+        self.back_command()
+
+    def update_music_volume(self):
+        self.music_volume = self.music_slider["value"]
+        base.music_player.set_player_volume(self.music_volume)
+
+    def update_sfx_volume(self):
+        self.sfx_volume = self.sfx_slider["value"]
+        base.sfxManagerList[0].set_volume(self.sfx_volume)
+
+
 
 class MapSettings(Menu):
     '''Menu where player can change map scale and other things'''
