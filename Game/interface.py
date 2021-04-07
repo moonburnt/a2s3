@@ -192,7 +192,7 @@ class OptionsMenu(Menu):
 
         # Current value, updated via sliders
         self.music_volume = shared.MUSIC_VOLUME
-        self.sfx_volume = shared.MUSIC_VOLUME
+        self.sfx_volume = shared.SFX_VOLUME
         # Save them to restore if player clicks 'back' without saving
         self.old_music_volume = shared.MUSIC_VOLUME
         self.old_sfx_volume = shared.SFX_VOLUME
