@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 class GameWindow(ShowBase):
     def __init__(self):
         log.debug("Setting up the window")
-        ShowBase.__init__(self)
+        super().__init__()
 
         #disabling mouse to dont mess with camera
         self.disable_mouse()
@@ -73,8 +73,8 @@ class GameWindow(ShowBase):
         self.music_player.set_player_volume(shared.MUSIC_VOLUME)
 
         #same goes for sfx manager, which is a separate thing
-        sfx_mgr = base.sfxManagerList[0]
-        sfx_mgr.set_volume(shared.SFX_VOLUME)
+        self.sfx_manager = base.sfxManagerList[0]
+        self.sfx_manager.set_volume(shared.SFX_VOLUME)
 
         self.music_player.crossfade(self.assets.music['menu_theme'])
 

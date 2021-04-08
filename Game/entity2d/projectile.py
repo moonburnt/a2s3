@@ -15,13 +15,14 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
-from Game import entity2d
+from Game import entity2d, shared
 
 log = logging.getLogger(__name__)
 
 #module for 2d projectiles
 
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
+CATEGORY = shared.PLAYER_PROJECTILE_CATEGORY
 
 HIT_SCORE = 10
 KILL_SCORE = 15
@@ -34,7 +35,7 @@ class Projectile(entity2d.Entity2D):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        category = "player_projectile"
+        category = CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 

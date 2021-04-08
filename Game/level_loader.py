@@ -46,6 +46,10 @@ ENEMY_SPAWN_TIME = 2
 #chance of unique enemy to spawn, in %
 UNIQUE_ENEMY_CHANCE = 25
 
+ENEMY_CATEGORY = shared.ENEMY_CATEGORY
+PLAYER_CATEGORY = shared.PLAYER_CATEGORY
+PLAYER_PROJECTILE_CATEGORY = shared.PLAYER_PROJECTILE_CATEGORY
+
 class LoadLevel:
     def __init__(self, map_scale: int):
         self.map_scale = map_scale
@@ -74,23 +78,23 @@ class LoadLevel:
         #run function that deals damage to player. I have no idea why, but passing
         #things arguments to "damage target" function directly, like we did with
         #controls, didnt work. So we are using kind of "proxy function" to do that
-        base.accept('player-into-enemy', self.damage_player)
-        base.accept('enemy-into-player', self.damage_player)
-        base.accept('player-again-enemy', self.damage_player)
-        base.accept('enemy-again-player', self.damage_player)
+        base.accept(f'{PLAYER_CATEGORY}-into-{ENEMY_CATEGORY}', self.damage_player)
+        base.accept(f'{ENEMY_CATEGORY}-into-{PLAYER_CATEGORY}', self.damage_player)
+        base.accept(f'{PLAYER_CATEGORY}-again-{ENEMY_CATEGORY}', self.damage_player)
+        base.accept(f'{ENEMY_CATEGORY}-again-{PLAYER_CATEGORY}', self.damage_player)
 
         #also tracking collisions of enemy with player's attack projectile
-        base.accept('player_projectile-into-enemy', self.damage_enemy)
-        base.accept('enemy-into-player_projectile', self.damage_enemy)
-        base.accept('player_projectile-again-enemy', self.damage_enemy)
-        base.accept('enemy-again-player_projectile', self.damage_enemy)
+        base.accept(f'{PLAYER_PROJECTILE_CATEGORY}-into-{ENEMY_CATEGORY}', self.damage_enemy)
+        base.accept(f'{ENEMY_CATEGORY}-into-{PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
+        base.accept(f'{PLAYER_PROJECTILE_CATEGORY}-again-{ENEMY_CATEGORY}', self.damage_enemy)
+        base.accept(f'{ENEMY_CATEGORY}-again-{PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
 
         #tracking collisions with walls, in order to create custom pusher-like
         #behaviour with collisioneventhandler
-        base.accept('player-into-wall', self.on_wall_collision)
-        base.accept('player-again-wall', self.on_wall_collision)
-        base.accept('enemy-into-wall', self.on_wall_collision)
-        base.accept('enemy-again-wall', self.on_wall_collision)
+        base.accept(f'{PLAYER_CATEGORY}-into-wall', self.on_wall_collision)
+        base.accept(f'{PLAYER_CATEGORY}-again-wall', self.on_wall_collision)
+        base.accept(f'{ENEMY_CATEGORY}-into-wall', self.on_wall_collision)
+        base.accept(f'{ENEMY_CATEGORY}-again-wall', self.on_wall_collision)
 
         log.debug("Setting up camera")
         #this will set camera to be right above card.

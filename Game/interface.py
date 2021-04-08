@@ -266,7 +266,7 @@ class OptionsMenu(Menu):
         '''Restore previous options' values and return to parent menu.'''
 
         base.music_player.set_player_volume(self.old_music_volume)
-        base.sfxManagerList[0].set_volume(self.old_sfx_volume)
+        base.sfx_manager.set_volume(self.old_sfx_volume)
         self.music_slider.setValue(self.old_music_volume)
         self.sfx_slider.setValue(self.old_sfx_volume)
 
@@ -278,7 +278,7 @@ class OptionsMenu(Menu):
 
     def update_sfx_volume(self):
         self.sfx_volume = self.sfx_slider["value"]
-        base.sfxManagerList[0].set_volume(self.sfx_volume)
+        base.sfx_manager.set_volume(self.sfx_volume)
 
 
 

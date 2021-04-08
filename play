@@ -36,11 +36,11 @@ ap.add_argument("--show-collisions", help="Toggle showcase of objects collisions
 ap.add_argument("--music-vol",
                 help = "Override default music volume. Should be "
                        "between 0 and 100, else using defaults",
-                type = int, default = 100)
+                type = int, default = (Game.shared.MUSIC_VOLUME*100))
 ap.add_argument("--sfx-vol",
                 help = "Override default music volume. Should be "
                        "between 0 and 100, else using defaults",
-                type = int, default = 100)
+                type = int, default = (Game.shared.MUSIC_VOLUME*100))
 ap.add_argument("--show-fps", help="Enable fps meter", action = "store_true")
 ap.add_argument("--window-x", help = "Override default window's X. If less than default "
                                   "- will be still set to default", type = int)

@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
 
 ENEMY_COLLISION_MASK = ENEMY_COLLISION_MASK = 0X03
+CATEGORY = shared.ENEMY_CATEGORY
 
 HIT_SCORE = 10
 KILL_SCORE = 15
@@ -36,7 +37,7 @@ class Enemy(entity2d.Creature):
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         collision_mask = ENEMY_COLLISION_MASK
-        category = "enemy"
+        category = CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 

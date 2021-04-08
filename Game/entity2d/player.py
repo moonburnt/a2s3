@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
 
 PLAYER_COLLISION_MASK = 0X06
+CATEGORY = shared.PLAYER_CATEGORY
 
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
@@ -32,7 +33,7 @@ class Player(entity2d.Creature):
                  hitbox_size = None, collision_mask = None, position = None,
                  animations_speed = None):
         collision_mask = PLAYER_COLLISION_MASK
-        category = "player"
+        category = CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
 

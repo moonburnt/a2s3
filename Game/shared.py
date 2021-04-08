@@ -34,6 +34,12 @@ DEFAULT_SPRITE_SIZE = (32, 32)
 ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
 FLOOR_LAYER = 0
 
+#these are collision categories, referring to multiple objects of one type that
+#can collide with others and trigger some functions on collision with selected type
+ENEMY_CATEGORY = "enemy"
+PLAYER_CATEGORY = "player"
+PLAYER_PROJECTILE_CATEGORY = "player_projectile"
+
 #WALLS_COLLISION_MASK = 0X28
 #ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
