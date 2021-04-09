@@ -156,9 +156,16 @@ class Entity2D:
     def update_anims(self, event):
         '''Meant to run as taskmanager routine. Update entity's animation's frame
         each self.animations_speed seconds'''
-        #safety check to dont do anything if custom anim isnt set or entity is
-        #already dead. #Will maybe remove death statement later (coz gibs), idk
-        if self.dead or not self.current_animation:
+        # if self.dead or not self.current_animation:
+            # return event.cont
+
+        #this is better, coz it wont break death animation.
+        #and we dont need to continue tasks if object has been removed anyway
+        if not self.object:
+            return
+
+        #safety check to dont do anything if custom anim isnt set
+        if not self.current_animation:
             return event.cont
 
         #ensuring that whatever below only runs if enough time has passed

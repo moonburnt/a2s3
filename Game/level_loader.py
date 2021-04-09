@@ -345,7 +345,8 @@ class LoadLevel:
         self.cleanup_timer = DEAD_CLEANUP_TIME
         log.debug(f"Cleaning up dead entities from memory")
         for entity in self.enemies:
-            if entity.dead:
+            #if entity.dead:
+            if entity.can_be_removed:
                 self.enemies.remove(entity)
 
         for entity in self.projectiles:

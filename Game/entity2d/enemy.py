@@ -28,6 +28,7 @@ CATEGORY = shared.ENEMY_CATEGORY
 
 HIT_SCORE = 10
 KILL_SCORE = 15
+ROT_TIMER = 15
 
 class Enemy(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of enemies. Accepts everything
@@ -40,6 +41,10 @@ class Enemy(entity2d.Creature):
         category = CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
                          collision_mask, position, animations_speed)
+
+        self.rot_timer = ROT_TIMER
+        self.death_anim_timer = 0.3
+        self.can_be_removed = False
 
         if affix in ("Normal", "Big", "Small"):
             self.affix = affix
@@ -124,14 +129,56 @@ class Enemy(entity2d.Creature):
         return event.cont
 
     def get_damage(self, amount = None):
+        if self.dead:
+            return
         super().get_damage(amount)
         #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
         #increase it based on amount of damage received. But thats #TODO in future
         base.level.increase_score_multiplier()
         base.level.increase_score(HIT_SCORE)
 
+    def mark_for_removal(self, event):
+        '''Taskmanager routine that remove object's node and marks instance for
+        removal from enemies list'''
+        dt = globalClock.get_dt()
+        self.rot_timer -= dt
+        if self.rot_timer > 0:
+            return event.cont
+
+        self.can_be_removed = True
+        self.object.remove_node()
+        return
+
+    #this wont be necessary once I will rework animations handling from entity
+    #task to separate class. But for now thats about it
+    def dying_task(self, event):
+        '''Taskmanager routine that make entity play death animation, then
+        schedulge its object's removal'''
+        dt = globalClock.get_dt()
+        self.death_anim_timer -= dt
+        if self.death_anim_timer > 0:
+            return event.cont
+
+        self.change_animation(f'dead_{self.direction}')
+        base.task_mgr.add(self.mark_for_removal, "mark for removal")
+        return
+
     def die(self):
-        super().die()
+        #super().die()
+        self.collision.remove_node()
+        self.dead = True
+        self.change_animation(f'dying_{self.direction}')
+        death_sound = f"{self.name}_death"
+        #playing different sounds, depending if target has its own death sound or not
+        if death_sound in base.assets.sfx:
+            base.assets.sfx[death_sound].play()
+        else:
+            log.warning(f"{self.name} has no custom death sound, using fallback")
+            base.assets.sfx['default_death'].play()
+
+        base.task_mgr.add(self.dying_task, "dying task")
+
+        log.debug(f"{self.name} is now dead")
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
         base.level.increase_score(KILL_SCORE)
