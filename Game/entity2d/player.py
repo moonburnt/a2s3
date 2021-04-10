@@ -22,30 +22,22 @@ log = logging.getLogger(__name__)
 
 #module where I specify player's class
 
-DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
-
 PLAYER_COLLISION_MASK = 0X06
-CATEGORY = shared.PLAYER_CATEGORY
 
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
     def __init__(self, name, spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None,
-                 animations_speed = None):
+                 hitbox_size = None, collision_mask = None, position = None):
         collision_mask = PLAYER_COLLISION_MASK
-        category = CATEGORY
+        category = shared.PLAYER_CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position, animations_speed)
+                         collision_mask, position)
 
         base.task_mgr.add(self.controls_handler, "controls handler")
         #the thing to track mouse position relatively to map. See attack handling
         #It probably could be better to move this thing to map func/class instead?
         #TODO
         self.ground_plane = Plane((0,0,1), (0,0,0))
-
-        #this will be removed together with whole dying task, once I will decide
-        #to rework animations handling mechanism for all entities
-        self.death_anim_timer = 0.3
 
     def controls_handler(self, event):
         '''
@@ -151,7 +143,7 @@ class Player(entity2d.Creature):
             y_vec = Vec2(0, 1)
             angle = y_vec.signed_angle_deg(hit_vector_2D)
 
-            pos_diff = DEFAULT_SPRITE_SIZE[0]/2
+            pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
             #this is a bit awkward with billboard effect, coz slashing below
             #make projectile go into the ground. I should do something about it
             #TODO

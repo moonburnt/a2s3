@@ -21,10 +21,7 @@ log = logging.getLogger(__name__)
 
 #module where I specify whatever stuff related to enemies
 
-DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
-
-ENEMY_COLLISION_MASK = ENEMY_COLLISION_MASK = 0X03
-CATEGORY = shared.ENEMY_CATEGORY
+ENEMY_COLLISION_MASK = 0X03
 
 HIT_SCORE = 10
 KILL_SCORE = 15
@@ -35,12 +32,11 @@ class Enemy(entity2d.Creature):
     like entity2d.Creature, but also affix. Which can be either "Normal", "Big" or
     "Small". Based on affix, size, health and movement speed of enemy will get altered'''
     def __init__(self, name, affix = "Normal", spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None,
-                 animations_speed = None):
+                 hitbox_size = None, collision_mask = None, position = None):
         collision_mask = ENEMY_COLLISION_MASK
-        category = CATEGORY
+        category = shared.ENEMY_CATEGORY
         super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position, animations_speed)
+                         collision_mask, position)
 
         self.rot_timer = ROT_TIMER
         self.can_be_removed = False
@@ -117,7 +113,7 @@ class Enemy(entity2d.Creature):
         #this thing basically makes enemy move till it hit player, than play
         #attack animation. May backfire if player's sprite size is not equal
         #to player's hitbox
-        if distance_to_player > DEFAULT_SPRITE_SIZE[0]*2:
+        if distance_to_player > shared.DEFAULT_SPRITE_SIZE[0]*2:
             action = 'move'
         else:
             action = 'attack'
@@ -145,15 +141,14 @@ class Enemy(entity2d.Creature):
             return event.cont
 
         self.can_be_removed = True
+        self.animation = None
         self.object.remove_node()
         return
 
     def die(self):
         super().die()
 
-        #doing it there, because I couldnt figure out how to override taskmanager
-        #tasks from parent class correctly. Yep, we will lose 0.3 seconds of gibs
-        #lifetime, but whatever - who cares?
+        #remove enemy's gibs after self.rot_timer seconds
         base.task_mgr.add(self.mark_for_removal, "mark for removal")
 
         #for now this increase score based on HIT_SCORE+KILL_SCORE.

@@ -23,6 +23,7 @@ from .level_loader import *
 from .spritesheet_cutter import *
 from .interface import *
 from .music_player import *
+from .animation import *
 
 import logging
 
