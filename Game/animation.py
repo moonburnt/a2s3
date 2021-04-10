@@ -89,19 +89,13 @@ class AnimatedObject:
         #this can be a bit complicated to tweak later, because sprites become
         #offsets and offsets become sprites... Idk what Im typing anymore lol
         for sprite in sprites:
-            args = []
             name = sprite['action']
-            args.append(name)
-            args.append(offsets)
-            args.append(sprite['sprites'])
-            args.append(self.object)
-            if 'speed' in sprite:
-                args.append(sprite['speed'])
-            if 'loop' in sprite:
-                args.append(sprite['loop'])
-            else:
-                args.append(False)
-            animation = Animation(*args)
+            animation = Animation(name = name,
+                                  sprites = offsets,
+                                  animation_offsets = sprite['sprites'],
+                                  parent = self.object,
+                                  loop = sprite.get('loop', False),
+                                  speed = sprite.get('speed', DEFAULT_ANIMATIONS_SPEED))
             self.animations[name] = animation
 
     def play(self, animation:str):
