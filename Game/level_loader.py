@@ -221,8 +221,11 @@ class LoadLevel:
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
         ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
         #safety check to dont spawn more enemies if player is dead
-        if not self.player.object:
+        #if not self.player.object:
             #return event.cont
+        #    return
+
+        if self.player.dead:
             return
 
         if self.enemies_this_wave <= 0:
@@ -535,7 +538,7 @@ class LoadLevel:
         #reparenting camera, to keep it above map's center
         #todo: make camera follow not player, but some node above player's head
         #so even if player's object get destroyed - camera remains on top of it
-        base.camera.reparent_to(render)
+        #base.camera.reparent_to(render)
 
         base.music_player.crossfade(base.assets.music['death'])
 
@@ -548,11 +551,22 @@ class LoadLevel:
 
     def cleanup(self):
         '''Remove whatever garbage has got stuck to scene'''
+        #reparenting camera to render itself, to keep it above scene's center.
+        #Otherwise it will keep showing player's remains regardless of stuff below
+        base.camera.reparent_to(render)
+
         #this magic function remove all the nodes from scene, nullifying the need
         #to manually call .die() for each enemy and projectile. There is a caveat
         #tho - if I will ever attach some gui part of similar thing to base.render,
         #these will be gone too... I think.
         base.render.node().removeAllChildren()
+
+        #JUST IN CASE, removing player object.
+        self.player.object.remove_node()
+
+        self.player = None
+        self.enemies = None
+        self.projectiles = None
 
     def exit_level(self):
         '''Exit level to main menu'''

@@ -198,15 +198,6 @@ class Entity2D:
 
     def die(self):
         self.collision.remove_node()
-        #idk if cleaning up tags will make sense if node will be removed anyway
-        #left it there for future reference
-        # python_tags = self.object.get_python_tags().copy()
-        # for item in python_tags:
-            # self.object.clear_python_tag(item)
-        # del python_tags
-        #it may be good idea for creatures to dont remove the node on death, but
-        #play some death animation and then leave gibs on floor for a while. #TODO
-        self.object.remove_node()
         self.dead = True
         log.debug(f"{self.name} is now dead")
 
@@ -261,6 +252,10 @@ class Creature(Entity2D):
         self.last_collision_time = 0
         self.object.set_python_tag("last_collision_time", self.last_collision_time)
 
+        #this will be removed together with whole dying task, once I will decide
+        #to rework animations handling mechanism for all entities
+        self.death_anim_timer = 0.3
+
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
         status effects. When it reaches 0 - remove status effect'''
@@ -312,13 +307,32 @@ class Creature(Entity2D):
 
         self.change_animation(f"hurt_{self.direction}")
 
+    def dying_task(self, event):
+        '''Taskmanager routine that make entity play death animation'''
+        dt = globalClock.get_dt()
+        self.death_anim_timer -= dt
+        if self.death_anim_timer > 0:
+            return event.cont
+
+        self.change_animation(f'dead_{self.direction}')
+        return
+
     def die(self):
+        super().die()
+        #Death of creature is a bit different than death of other entities, because
+        #we dont remove object node itself right away, but keep it to rot. And
+        #then, with some additional taskmanager task, clean things up
+        #self.collision.remove_node()
+        #self.dead = True
+        self.change_animation(f'dying_{self.direction}')
         death_sound = f"{self.name}_death"
+
         #playing different sounds, depending if target has its own death sound or not
-        try:
+        if death_sound in base.assets.sfx:
             base.assets.sfx[death_sound].play()
-        except KeyError:
+        else:
             log.warning(f"{self.name} has no custom death sound, using fallback")
             base.assets.sfx['default_death'].play()
 
-        super().die()
+        base.task_mgr.add(self.dying_task, "dying task")
+        #log.debug(f"{self.name} is now dead")

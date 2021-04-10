@@ -43,7 +43,6 @@ class Enemy(entity2d.Creature):
                          collision_mask, position, animations_speed)
 
         self.rot_timer = ROT_TIMER
-        self.death_anim_timer = 0.3
         self.can_be_removed = False
 
         if affix in ("Normal", "Big", "Small"):
@@ -149,36 +148,14 @@ class Enemy(entity2d.Creature):
         self.object.remove_node()
         return
 
-    #this wont be necessary once I will rework animations handling from entity
-    #task to separate class. But for now thats about it
-    def dying_task(self, event):
-        '''Taskmanager routine that make entity play death animation, then
-        schedulge its object's removal'''
-        dt = globalClock.get_dt()
-        self.death_anim_timer -= dt
-        if self.death_anim_timer > 0:
-            return event.cont
-
-        self.change_animation(f'dead_{self.direction}')
-        base.task_mgr.add(self.mark_for_removal, "mark for removal")
-        return
-
     def die(self):
-        #super().die()
-        self.collision.remove_node()
-        self.dead = True
-        self.change_animation(f'dying_{self.direction}')
-        death_sound = f"{self.name}_death"
-        #playing different sounds, depending if target has its own death sound or not
-        if death_sound in base.assets.sfx:
-            base.assets.sfx[death_sound].play()
-        else:
-            log.warning(f"{self.name} has no custom death sound, using fallback")
-            base.assets.sfx['default_death'].play()
+        super().die()
 
-        base.task_mgr.add(self.dying_task, "dying task")
+        #doing it there, because I couldnt figure out how to override taskmanager
+        #tasks from parent class correctly. Yep, we will lose 0.3 seconds of gibs
+        #lifetime, but whatever - who cares?
+        base.task_mgr.add(self.mark_for_removal, "mark for removal")
 
-        log.debug(f"{self.name} is now dead")
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
         base.level.increase_score(KILL_SCORE)

@@ -43,6 +43,10 @@ class Player(entity2d.Creature):
         #TODO
         self.ground_plane = Plane((0,0,1), (0,0,0))
 
+        #this will be removed together with whole dying task, once I will decide
+        #to rework animations handling mechanism for all entities
+        self.death_anim_timer = 0.3
+
     def controls_handler(self, event):
         '''
         Intended to be used as part of task manager routine. Automatically receive

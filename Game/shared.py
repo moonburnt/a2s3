@@ -72,7 +72,8 @@ SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': 
 #todo: maybe move attack anim somewhere else, idk
 ANIMS = {'player': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (8,11),
                     'move_left': (12,15), 'attack_right': (16,19), 'attack_left': (20, 23),
-                    'hurt_right': (24, 27), 'hurt_left': (28, 31)},
+                    'hurt_right': (24, 27), 'hurt_left': (28, 31), 'dying_left': (32, 35),
+                    'dying_right': (36,39), 'dead_right': (35, 35), 'dead_left': (39, 39)},
          'cuboid': {'idle_right': (0,0), 'idle_left': (4,4), 'move_right': (0,3),
                    'move_left': (4,7), 'attack_right': (8,11), 'attack_left': (12,15),
                    'hurt_right': (16, 19), 'hurt_left': (20, 23), 'dying_right': (23, 26),

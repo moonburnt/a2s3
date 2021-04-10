@@ -60,4 +60,6 @@ class Projectile(entity2d.Entity2D):
 
     def die(self, event):
         super().die()
+        #moved it there, because death of creature required it
+        self.object.remove_node()
         return

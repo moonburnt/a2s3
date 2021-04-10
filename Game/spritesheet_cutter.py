@@ -32,10 +32,10 @@ def cut_spritesheet(spritesheet, size):
     # 1. Spritesheet HAS TO DIVIDE TO PROVIDED SPRITE SIZE WITHOUT REMAINDER. If
     #it doesnt cut to perfect sprites, you will get strange results during using
     #some of these sprites.
-    # 2. There should be EVEN amount of sprite rows and columns. Otherwise - see
+    # 2. Amount of sprite rows and columns MUST BE POWER OF 2. Otherwise - see
     #above. This is because of limitation of set_tex_offset() and set_tex_scale()
-    #functions, both of which operate with floats between 0 and 1 to determine the
-    #position. And, as you can guess - you cant divide 1 to odd number perfectly.
+    #functions, both of which operate with floats between 0 and 1 to determine
+    #texture's size and position.
     #I assume, its possible to fix both of these. But right now I have no idea how
     #As for first - maybe cut garbage data with PNMimage module, before processing?
 
