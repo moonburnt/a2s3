@@ -24,7 +24,6 @@ from Game import entity2d, map_loader, shared, interface
 
 log = logging.getLogger(__name__)
 
-ENTITY_LAYER = shared.ENTITY_LAYER
 DEAD_CLEANUP_TIME = 5
 #pause between calls to per-node's damage function. Making it anyhow lower will
 #reintroduce the bug with multiple damage calls occuring during single frame
@@ -45,10 +44,6 @@ ENEMY_SPAWN_TIME = 2
 
 #chance of unique enemy to spawn, in %
 UNIQUE_ENEMY_CHANCE = 25
-
-ENEMY_CATEGORY = shared.ENEMY_CATEGORY
-PLAYER_CATEGORY = shared.PLAYER_CATEGORY
-PLAYER_PROJECTILE_CATEGORY = shared.PLAYER_PROJECTILE_CATEGORY
 
 class LoadLevel:
     def __init__(self, map_scale: int):
@@ -78,23 +73,23 @@ class LoadLevel:
         #run function that deals damage to player. I have no idea why, but passing
         #things arguments to "damage target" function directly, like we did with
         #controls, didnt work. So we are using kind of "proxy function" to do that
-        base.accept(f'{PLAYER_CATEGORY}-into-{ENEMY_CATEGORY}', self.damage_player)
-        base.accept(f'{ENEMY_CATEGORY}-into-{PLAYER_CATEGORY}', self.damage_player)
-        base.accept(f'{PLAYER_CATEGORY}-again-{ENEMY_CATEGORY}', self.damage_player)
-        base.accept(f'{ENEMY_CATEGORY}-again-{PLAYER_CATEGORY}', self.damage_player)
+        base.accept(f'{shared.PLAYER_CATEGORY}-into-{shared.ENEMY_CATEGORY}', self.damage_player)
+        base.accept(f'{shared.ENEMY_CATEGORY}-into-{shared.PLAYER_CATEGORY}', self.damage_player)
+        base.accept(f'{shared.PLAYER_CATEGORY}-again-{shared.ENEMY_CATEGORY}', self.damage_player)
+        base.accept(f'{shared.ENEMY_CATEGORY}-again-{shared.PLAYER_CATEGORY}', self.damage_player)
 
         #also tracking collisions of enemy with player's attack projectile
-        base.accept(f'{PLAYER_PROJECTILE_CATEGORY}-into-{ENEMY_CATEGORY}', self.damage_enemy)
-        base.accept(f'{ENEMY_CATEGORY}-into-{PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
-        base.accept(f'{PLAYER_PROJECTILE_CATEGORY}-again-{ENEMY_CATEGORY}', self.damage_enemy)
-        base.accept(f'{ENEMY_CATEGORY}-again-{PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
+        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-into-{shared.ENEMY_CATEGORY}', self.damage_enemy)
+        base.accept(f'{shared.ENEMY_CATEGORY}-into-{shared.PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
+        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-again-{shared.ENEMY_CATEGORY}', self.damage_enemy)
+        base.accept(f'{shared.ENEMY_CATEGORY}-again-{shared.PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
 
         #tracking collisions with walls, in order to create custom pusher-like
         #behaviour with collisioneventhandler
-        base.accept(f'{PLAYER_CATEGORY}-into-wall', self.on_wall_collision)
-        base.accept(f'{PLAYER_CATEGORY}-again-wall', self.on_wall_collision)
-        base.accept(f'{ENEMY_CATEGORY}-into-wall', self.on_wall_collision)
-        base.accept(f'{ENEMY_CATEGORY}-again-wall', self.on_wall_collision)
+        base.accept(f'{shared.PLAYER_CATEGORY}-into-wall', self.on_wall_collision)
+        base.accept(f'{shared.PLAYER_CATEGORY}-again-wall', self.on_wall_collision)
+        base.accept(f'{shared.ENEMY_CATEGORY}-into-wall', self.on_wall_collision)
+        base.accept(f'{shared.ENEMY_CATEGORY}-again-wall', self.on_wall_collision)
 
         log.debug("Setting up camera")
         #this will set camera to be right above card.
@@ -160,7 +155,7 @@ class LoadLevel:
                                       scale = self.map_scale)
 
         log.debug("Initializing player")
-        #character's position should always render on ENTITY_LAYER
+        #character's position should always render on shared.ENTITY_LAYER
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
@@ -259,7 +254,7 @@ class LoadLevel:
 
                 spawns = []
                 for spawnpoint in self.map.enemy_spawnpoints:
-                    spawn = *spawnpoint, ENTITY_LAYER
+                    spawn = *spawnpoint, shared.ENTITY_LAYER
                     vec_to_player = player_position - spawn
                     vec_length = vec_to_player.length()
                     #spawns.append((vec_length, spawn))
@@ -281,12 +276,12 @@ class LoadLevel:
                     #through the floor of big enemies. Once I will implement floor
                     #collision, this can be removed. #TODO
                     if affix == "Small":
-                        spawn_position = *spawn_xy, ENTITY_LAYER/2
+                        spawn_position = *spawn_xy, shared.ENTITY_LAYER/2
                     else:
-                        spawn_position = *spawn_xy, ENTITY_LAYER*2
+                        spawn_position = *spawn_xy, shared.ENTITY_LAYER*2
                 else:
                     affix = "Normal"
-                    spawn_position = *spawn_xy, ENTITY_LAYER
+                    spawn_position = *spawn_xy, shared.ENTITY_LAYER
 
                 enemy_type = "cuboid"
                 log.debug(f"Spawning {affix} {enemy_type} on {spawn_position}")
@@ -358,90 +353,108 @@ class LoadLevel:
 
         return event.cont
 
-    def damage_player(self, entry):
-        '''Deals damage to player when it collides with some object that should
-        hurt. Intended to be used from base.accept event handler'''
-        hit = entry.get_from_node_path()
-        tar = entry.get_into_node_path()
+    def sort_collision(self, collision_event, hitter_category: str):
+        '''Getting collision event and name of python tag "category", we are seeking
+        for. Checking both collisions for this tag and return tuple of objects (hitter,
+        target) (actual objects, NOT collision nodes). If none match, return None'''
+        #maybe I should rename this function to something like "find hitter", idk
+
+        hit = collision_event.get_from_node_path()
+        hitter_object = hit.get_parent()
+        tar = collision_event.get_into_node_path()
+        target_object = tar.get_parent()
 
         #log.debug(f"{hit} collides with {tar}")
 
-        #we are using "get_net_python_tag" over just "get_tag", coz this one will
-        #search for whole tree, instead of just selected node. And since the node
-        #we get via methods above is not the same as node we want - this is kind
-        #of what we should use
-        hit_name = hit.get_net_python_tag("category")
-        tar_name = tar.get_net_python_tag("category")
+        hit_category = hitter_object.get_python_tag("category")
+        tar_category = target_object.get_python_tag("category")
 
         #workaround for "None Type" exception that rarely occurs if one of colliding
         #nodes has died the very second it needs to be used in another collision
-        if not hit_name or not tar_name:
-            log.warning("One of targets is dead, no damage will be calculated")
+        if not hit_category or not tar_category:
+            log.warning(f"Either {hitter_object} or {target_object} is dead, "
+                         "collision wont occur")
             return
 
-        #bcuz we will damage player anyway - ensuring that object used as damage
-        #source is not the player but whatever else it collides with
-        if hit_name == "enemy":
-            dmg_source = hit
-            target = tar
+        if hit_category == hitter_category:
+            hitter = hitter_object
+            target = target_object
+        elif tar_category == hitter_category:
+            hitter = target_object
+            target = hitter_object
         else:
-            dmg_source = tar
-            target = hit
+            log.warning(f"No nodes with {hitter_category} category tag has been "
+                        f"found in {collision_event} collision!")
+            return
 
+        return (hitter, target)
+
+    def check_damage_possibility(self, target):
+        '''Checking if its possible to damage specified target right now, based
+        on its "last_collision_time" python tag'''
         #this is a workaround for issue caused by multiple collisions occuring
         #at single frame, so damage check function cant keep up with it. Basically,
         #we allow new target's collisions to only trigger damage function each
         #0.2 seconds. It may be good idea to abandon this thing in future in favor
         #of something like collisionhandlerqueue, but for now it works
-        tct = target.get_net_python_tag("last_collision_time")
-        x = time()
-        if x - tct < COLLISION_CHECK_PAUSE:
+
+        last_collision_time = target.get_python_tag("last_collision_time")
+        current_time = time()
+        if current_time - last_collision_time < COLLISION_CHECK_PAUSE:
+            return False
+
+        return True
+
+    def damage_player(self, entry):
+        '''Should be called from base.accept event handler when player collides
+        with something that may hurt it. Checks if its possible to deal damage
+        right now, then trigger player's "get_damage" function'''
+
+        colliders = self.sort_collision(entry, shared.ENEMY_CATEGORY)
+        if not colliders:
+            #log.warning("Collision cant occur")
             return
 
-        target.set_python_tag("last_collision_time", x)
+        hitter, target = colliders
 
-        ds = dmg_source.get_net_python_tag("stats")
-        dmg = ds['dmg']
-        dmgfunc = target.get_net_python_tag("get_damage")
-        dmgfunc(dmg)
+        if not self.check_damage_possibility(target):
+            #log.debug("Collision cant occur right now")
+            return
+
+        target.set_python_tag("last_collision_time", time())
+
+        ds = hitter.get_python_tag("stats")
+        damage = ds['dmg']
+        damage_function = target.get_python_tag("get_damage")
+        log.debug(f"Attempting to deal {damage} damage to player")
+        damage_function(damage)
 
     def damage_enemy(self, entry):
-        #nasty placeholder to make enemy receive damage from collision with player's
-        #projectile. Will need to rework it and merge with "damage_player" into
-        #something like "damage_target" or idk
-        hit = entry.get_from_node_path()
-        tar = entry.get_into_node_path()
+        '''Should be called from base.accept event handler when enemy collides
+        with something that may hurt it. Checks if its possible to deal damage
+        right now, then trigger enemy's "get_damage" function'''
 
-        #log.debug(f"{hit} collides with {tar}")
-
-        hit_name = hit.get_net_python_tag("category")
-        tar_name = tar.get_net_python_tag("category")
-
-        if not hit_name or not tar_name:
-            log.warning("One of targets is dead, no damage will be calculated")
+        colliders = self.sort_collision(entry, shared.PLAYER_PROJECTILE_CATEGORY)
+        if not colliders:
+            #log.warning("Collision cant occur")
             return
 
-        if hit_name == "attack":
-            dmg_source = hit
-            target = tar
-        else:
-            dmg_source = tar
-            target = hit
+        hitter, target = colliders
 
-        tct = target.get_net_python_tag("last_collision_time")
-        x = time()
-        if x - tct < COLLISION_CHECK_PAUSE:
+        if not self.check_damage_possibility(target):
+            #log.debug("Collision cant occur right now")
             return
 
-        target.set_python_tag("last_collision_time", x)
+        #idk if I should've saved time from above...
+        target.set_python_tag("last_collision_time", time())
 
-        dmg = dmg_source.get_net_python_tag("damage")
-        dmgfunc = target.get_net_python_tag("get_damage")
+        damage = hitter.get_python_tag("damage")
+        damage_function = target.get_python_tag("get_damage")
 
-        target_name = target.get_net_python_tag('name')
-        target_id = target.get_net_python_tag('id')
-        log.debug(f"Attempting to deal damage to {target_name} ({target_id})")
-        dmgfunc(dmg)
+        target_name = target.get_python_tag('name')
+        target_id = target.get_python_tag('id')
+        log.debug(f"Attempting to deal {damage} damage to {target_name} ({target_id})")
+        damage_function(damage)
 
     def on_wall_collision(self, entry):
         '''Function that triggers if player or enemy collides with wall and pushes
