@@ -26,12 +26,24 @@ PLAYER_COLLISION_MASK = 0X06
 
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
-    def __init__(self, name, spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None):
+    def __init__(self, name:str, position = None):
         collision_mask = PLAYER_COLLISION_MASK
         category = shared.PLAYER_CATEGORY
-        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position)
+
+        #this will crash on invalid, no safety checks for now
+        data = base.assets.classes[name]
+        spritesheet = data['Assets']['sprite']
+
+        super().__init__(name = data['Main']['name'],
+                         category = category,
+                         spritesheet = base.assets.sprite[spritesheet],
+                         animations = data['Animations'],
+                         stats = data['Stats'],
+                         skills = data['Main']['skills'],
+                         death_sound = data['Assets']['death_sound'],
+                         hitbox_size = data['Main'].get('hitbox_size', None),
+                         collision_mask = collision_mask,
+                         position = position)
 
         base.task_mgr.add(self.controls_handler, "controls handler")
         #the thing to track mouse position relatively to map. See attack handling

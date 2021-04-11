@@ -31,12 +31,23 @@ class Enemy(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of enemies. Accepts everything
     like entity2d.Creature, but also affix. Which can be either "Normal", "Big" or
     "Small". Based on affix, size, health and movement speed of enemy will get altered'''
-    def __init__(self, name, affix = "Normal", spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None):
+    def __init__(self, name:str, affix:str = "Normal", position = None):
         collision_mask = ENEMY_COLLISION_MASK
         category = shared.ENEMY_CATEGORY
-        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position)
+
+        data = base.assets.enemies[name]
+        spritesheet = data['Assets']['sprite']
+
+        super().__init__(name = data['Main']['name'],
+                         category = category,
+                         spritesheet = base.assets.sprite[spritesheet],
+                         animations = data['Animations'],
+                         stats = data['Stats'],
+                         skills = data['Main'].get('skills', None),
+                         death_sound = data['Assets']['death_sound'],
+                         hitbox_size = data['Main'].get('hitbox_size', None),
+                         collision_mask = collision_mask,
+                         position = position)
 
         self.rot_timer = ROT_TIMER
         self.can_be_removed = False

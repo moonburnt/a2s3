@@ -23,20 +23,30 @@ log = logging.getLogger(__name__)
 
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 
-HIT_SCORE = 10
-KILL_SCORE = 15
-
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name, direction, damage = 0, object_size = None,
-                 spritesheet = None, sprite_size = None, hitbox_size = None,
-                 collision_mask = None, position = None):
+    def __init__(self, name:str, direction, damage = 0, object_size = None,
+                 hitbox_size = None, position = None):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
         category = shared.PLAYER_PROJECTILE_CATEGORY
-        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position)
+
+        #this stuff is just workaround for updated entity2d
+        #TODO: implement tomls for skills, made projectile data comfigurable
+        #from these (or also make separate tomls for projectiles, idk)
+
+        animations = shared.SPRITES[name]
+        spritesheet = base.assets.sprite[name]
+
+        super().__init__(name = name,
+                         category = category,
+                         spritesheet = spritesheet,
+                         animations = animations,
+                         hitbox_size = hitbox_size,
+                         collision_mask = collision_mask,
+                         #sprite_size = sprite_size,
+                         position = position)
 
         self.damage = damage
         self.object.set_python_tag("damage", self.damage)

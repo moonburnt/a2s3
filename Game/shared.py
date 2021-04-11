@@ -54,11 +54,6 @@ SFX_VOLUME = 0.75
 CONTROLS = {"move_up": "w", "move_down": "s",
             "move_left": "a", "move_right": "d",
             "attack": "mouse1"}
-#placeholder stats to use
-#later I will build this from jsons or whatever configuration files I will choose
-STATS = {'default': {'hp': 50, 'dmg': 1, 'mov_spd': 1, 'skills': ['atk_0']},
-         'player': {"hp": 100, "dmg": 10, 'mov_spd': 3, 'skills': ['atk_0']},
-         'cuboid': {"hp": 50, "dmg": 10, 'mov_spd': 2, 'skills': ['atk_0']}}
 
 #TODO: rename cd (cooldown) to something like atk_speed and make it work the opposite,
 #e.g the more the value - less time it gets to strike again. Also it may be a good
@@ -69,27 +64,7 @@ SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': 
 
 #I have no idea why, but if 'loop' isnt set to True for single-sprite animations,
 #they just refuse to work. #TODO #NEEDFIX
-SPRITES = {'player': [{'action': 'idle_right', 'sprites': (0, 0), 'loop': True},
-                      {'action': 'idle_left', 'sprites': (4, 4), 'loop': True},
-                      {'action': 'move_right', 'sprites': (8, 11), 'loop': True},
-                      {'action': 'move_left', 'sprites': (12, 15), 'loop': True},
-                      {'action': 'attack_right', 'sprites': (16, 19), 'loop': True},
-                      {'action': 'attack_left', 'sprites': (20, 23), 'loop': True},
-                      {'action': 'hurt_right', 'sprites': (24, 27)},
-                      {'action': 'hurt_left', 'sprites': (28, 31)},
-                      {'action': 'dying_left', 'sprites': (32, 35)},
-                      {'action': 'dying_right', 'sprites': (36, 39)}],
-           'cuboid': [{'action': 'idle_right', 'sprites': (0, 0), 'loop': True},
-                      {'action': 'idle_left', 'sprites': (4, 4), 'loop': True},
-                      {'action': 'move_right', 'sprites': (0, 3), 'loop': True},
-                      {'action': 'move_left', 'sprites': (4, 7), 'loop': True},
-                      {'action': 'attack_right', 'sprites': (8, 11), 'loop': True},
-                      {'action': 'attack_left', 'sprites': (12, 15), 'loop': True},
-                      {'action': 'hurt_right', 'sprites': (16, 19)},
-                      {'action': 'hurt_left', 'sprites': (20, 23)},
-                      {'action': 'dying_left', 'sprites': (23, 26)},
-                      {'action': 'dying_right', 'sprites': (27, 30)}],
-           'attack': [{'action': 'default', 'sprites': (0, 3)}]}
+SPRITES = {'attack': {'default': {'sprites': (0, 3)}}}
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)

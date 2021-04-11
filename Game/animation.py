@@ -89,14 +89,13 @@ class AnimatedObject:
         #this can be a bit complicated to tweak later, because sprites become
         #offsets and offsets become sprites... Idk what Im typing anymore lol
         for sprite in sprites:
-            name = sprite['action']
-            animation = Animation(name = name,
+            animation = Animation(name = sprite,
                                   sprites = offsets,
-                                  animation_offsets = sprite['sprites'],
+                                  animation_offsets = sprites[sprite]['sprites'],
                                   parent = self.object,
-                                  loop = sprite.get('loop', False),
-                                  speed = sprite.get('speed', DEFAULT_ANIMATIONS_SPEED))
-            self.animations[name] = animation
+                                  loop = sprites[sprite].get('loop', False),
+                                  speed = sprites[sprite].get('speed', DEFAULT_ANIMATIONS_SPEED))
+            self.animations[sprite] = animation
 
     def play(self, animation:str):
         '''Make object play selected animation instead of whatever else plays'''
@@ -128,7 +127,8 @@ class AnimatedObject:
 class Animation:
     '''Animation node. Meant to be initalized from AnimatedObject. Holds one
     animation from spritesheet with provided playback settings'''
-    def __init__(self, name:str, sprites: list, animation_offsets:tuple, parent, loop: bool, speed:float = DEFAULT_ANIMATIONS_SPEED):
+    def __init__(self, name:str, sprites: list, animation_offsets:tuple,
+                 parent, loop: bool, speed:float = DEFAULT_ANIMATIONS_SPEED):
         #name of the animation itself
         self.name = name
 

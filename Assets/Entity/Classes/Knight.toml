@@ -1,12 +1,15 @@
 # Example player class. Stats arent final, format may change
+
+[Main]
 name = "Knight"
+hitbox_size = 6
+#skills = [ "Slash" ]
+skills = [ "atk_0" ]
 
 [Stats]
 hp = 100
 dmg = 10
 mov_spd = 3
-skills = [ "Slash" ]
-hitbox_size = 6
 
 [Assets]
 sprite = "player"
@@ -14,12 +17,38 @@ sprite = "player"
 #hurt_sound =
 death_sound = "player_death"
 
-[Animations]
-idle_right = [ 0, 0 ]
-idle_left = [ 4, 4 ]
-move_right = [ 8, 11 ]
-move_left = [ 12, 15 ]
-attack_right = [ 16, 19 ]
-attack_left = [ 20, 23 ]
-hurt_right = [ 24, 27 ]
-hurt_left = [ 28, 31 ]
+[Animations.idle_right]
+sprites = [ 0, 0 ]
+loop = true
+
+[Animations.idle_left]
+sprites = [ 4, 4 ]
+loop = true
+
+[Animations.move_right]
+sprites = [ 8, 11 ]
+loop = true
+
+[Animations.move_left]
+sprites = [ 12, 15 ]
+loop = true
+
+[Animations.attack_right]
+sprites = [ 16, 19 ]
+loop = true
+
+[Animations.attack_left]
+sprites = [ 20, 23 ]
+loop = true
+
+[Animations.hurt_right]
+sprites = [ 24, 27 ]
+
+[Animations.hurt_left]
+sprites = [ 28, 31 ]
+
+[Animations.dying_left]
+sprites = [ 32, 35 ]
+
+[Animations.dying_right]
+sprites = [ 36, 39 ]

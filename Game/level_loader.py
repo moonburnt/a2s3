@@ -159,8 +159,7 @@ class LoadLevel:
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
-        self.player = entity2d.Player("player", position = self.map.player_spawnpoint,
-                                       hitbox_size = 6)
+        self.player = entity2d.Player("Knight", position = self.map.player_spawnpoint)
 
         self.wave_number = 0
         self.enemy_increase = 10
@@ -216,10 +215,6 @@ class LoadLevel:
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each
         ENEMY_SPAWN_TIME seconds. Meant to be ran as taskmanager routine'''
         #safety check to dont spawn more enemies if player is dead
-        #if not self.player.object:
-            #return event.cont
-        #    return
-
         if self.player.dead:
             return
 
@@ -283,10 +278,11 @@ class LoadLevel:
                     affix = "Normal"
                     spawn_position = *spawn_xy, shared.ENTITY_LAYER
 
-                enemy_type = "cuboid"
+                enemy_type = "Cuboid"
                 log.debug(f"Spawning {affix} {enemy_type} on {spawn_position}")
-                enemy = entity2d.Enemy(enemy_type, position = spawn_position,
-                                        hitbox_size = 12, affix = affix)
+                enemy = entity2d.Enemy(name = enemy_type,
+                                       position = spawn_position,
+                                       affix = affix)
                 enemy.id = self.enemy_id
                 enemy.object.set_python_tag("id", enemy.id)
                 self.enemy_id += 1

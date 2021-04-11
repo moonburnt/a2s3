@@ -1,25 +1,51 @@
 #Example enemy
+
+[Main]
 name = "Cuboid"
+hitbox_size = 12
+#skills = [ "atk_0" ]
 
 [Stats]
 hp = 50
 dmg = 10
 mov_spd = 2
-#skills = [ "atk_0" ]
-hitbox_size = 12
 
 [Assets]
 sprite = "cuboid"
 death_sound = "enemy_death"
 
-[Animations]
-idle_right = [ 0, 0 ]
-idle_left = [ 4, 4 ]
-move_right = [ 0, 3 ]
-move_left = [ 4, 7 ]
-attack_right = [ 8, 11 ]
-attack_left = [ 12, 15 ]
-hurt_right = [ 16, 19 ]
-hurt_left = [ 20, 23 ]
+[Animations.idle_right]
+sprites = [ 0, 0 ]
+loop = true
 
+[Animations.idle_left]
+sprites = [ 4, 4 ]
+loop = true
 
+[Animations.move_right]
+sprites = [ 0, 3 ]
+loop = true
+
+[Animations.move_left]
+sprites = [ 4, 7 ]
+loop = true
+
+[Animations.attack_right]
+sprites = [ 8, 11 ]
+loop = true
+
+[Animations.attack_left]
+sprites = [ 12, 15 ]
+loop = true
+
+[Animations.hurt_right]
+sprites = [ 16, 19 ]
+
+[Animations.hurt_left]
+sprites = [ 20, 23 ]
+
+[Animations.dying_right]
+sprites = [ 23, 26 ]
+
+[Animations.dying_left]
+sprites = [ 27, 30 ]

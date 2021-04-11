@@ -22,37 +22,27 @@ log = logging.getLogger(__name__)
 
 #module with general classes used as parents for 2d entity objects
 
-STATS = shared.STATS
 SKILLS = shared.SKILLS
-DEFAULT_SPRITE_SIZE = shared.DEFAULT_SPRITE_SIZE
-DEFAULT_ANIMATIONS_SPEED = 0.1
 
 class Entity2D:
-    '''
-    Main class, dedicated to creation of collideable 2D objects.
-    '''
-    def __init__(self, name, category, spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None):
-        log.debug(f"Initializing {name} object")
+    '''Main class, dedicated to creation of collideable 2D objects.'''
 
-        if not sprite_size:
-            sprite_size = DEFAULT_SPRITE_SIZE
-
-        size_x, size_y = sprite_size
-        log.debug(f"{name}'s size has been set to {size_x}x{size_y}")
-
+    def __init__(self, name: str, category: str, spritesheet, animations,
+                 hitbox_size: int = None, collision_mask = None,
+                 sprite_size: tuple = None, position = None):
         self.name = name
+        log.debug(f"Initializing {self.name} object")
+
         self.category = category
 
-        #temporary workarounds, will be removed with toml support
-        if not spritesheet:
-            texture = base.assets.sprite[name]
-        else:
-            texture = base.assets.sprite[spritesheet]
+        if not sprite_size:
+            sprite_size = shared.DEFAULT_SPRITE_SIZE
 
-        entity_anims = shared.SPRITES[name]
+        log.debug(f"{self.name}'s size has been set to {sprite_size}")
 
-        self.animation = animation.AnimatedObject(name, texture, entity_anims, sprite_size)
+        self.category = category
+
+        self.animation = animation.AnimatedObject(name, spritesheet, animations, sprite_size)
         self.object = self.animation.object
 
         #if no position has been received - wont set it up
@@ -74,7 +64,7 @@ class Entity2D:
         else:
             #coz its sphere and not oval - it doesnt matter if we use x or y
             #but, for sake of convenience - we are going for size_y
-            self.hitbox_size = (size_y/2)
+            self.hitbox_size = (sprite_size[1]/2)
 
         entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
         self.collision = self.object.attach_new_node(entity_collider)
@@ -94,44 +84,46 @@ class Entity2D:
         #self.collision.show()
 
     def change_animation(self, action):
-        #proxy function that triggers self.animation's switch. Kept there for
-        #backwards compatibility, also seems to be nicer way to call things
+        '''Proxy function that triggers self.animation's switch. Kept there for
+        backwards compatibility, also seems to be nicer way to call things'''
         self.animation.switch(action)
 
     def die(self):
+        '''Function that should be triggered when entity is about to die'''
         self.collision.remove_node()
         self.dead = True
         log.debug(f"{self.name} is now dead")
 
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
-    def __init__(self, name, category, spritesheet = None, sprite_size = None,
-                 hitbox_size = None, collision_mask = None, position = None):
+    def __init__(self, name: str, category: str, spritesheet, animations: dict,
+                 stats: dict, skills: list, death_sound:str = None, hitbox_size: int = None,
+                 collision_mask = None, sprite_size: tuple = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name, category, spritesheet, sprite_size, hitbox_size,
-                         collision_mask, position)
-        #attempting to find stats of entity with name {name} in STATS
-        #if not found - will fallback to STATS['default']
-        if name in STATS:
-            entity_stats = STATS[name]
-        else:
-            entity_stats = STATS['default']
-        log.debug(f"Set {name}'s stats to be {entity_stats}")
+        super().__init__(name, category, spritesheet, animations, hitbox_size,
+                         collision_mask, sprite_size,  position)
 
         #this is probably not the best way, but whatever - temporary solution
         #also this will crash if there are no skills, but that shouldnt happen
-        entity_skills = {}
-        for item in entity_stats['skills']:
-            if item in SKILLS:
-                entity_skills[item] = SKILLS[item].copy()
+        if skills:
+            entity_skills = {}
+            for item in skills:
+                if item in SKILLS:
+                    entity_skills[item] = SKILLS[item].copy()
+            self.skills = entity_skills
+
+        if death_sound and (death_sound in base.assets.sfx):
+            self.death_sound = base.assets.sfx[death_sound]
+        else:
+            log.warning(f"{name} has no custom death sound, using fallback")
+            self.death_sound = base.assets.sfx['default_death']
 
         self.direction = 'right'
         #self.current_animation = f'idle_{self.direction}'
         self.animation.switch(f'idle_{self.direction}')
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
-        self.stats = entity_stats.copy()
-        self.skills = entity_skills
+        self.stats = stats.copy()
 
         #list with timed status effects. When any of these reach 0 - they get ignored
         self.status_effects = {}
@@ -211,11 +203,5 @@ class Creature(Entity2D):
         #we dont remove object node itself right away, but keep it to rot. And
         #then, with some additional taskmanager task, clean things up
         self.change_animation(f'dying_{self.direction}')
-        death_sound = f"{self.name}_death"
 
-        #playing different sounds, depending if target has its own death sound or not
-        if death_sound in base.assets.sfx:
-            base.assets.sfx[death_sound].play()
-        else:
-            log.warning(f"{self.name} has no custom death sound, using fallback")
-            base.assets.sfx['default_death'].play()
+        self.death_sound.play()
