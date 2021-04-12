@@ -129,7 +129,13 @@ class Enemy(entity2d.Creature):
         else:
             action = 'attack'
 
-        self.object.set_pos(new_pos)
+        #workaround for issue when enemy keeps running into player despite already
+        #colliding with it, which cause enemy's animation to go wild.
+        #idk about the numbers yet. I think, ideally it should be calculated from
+        #player's hitbox and enemy's hitbox... but for now this will do
+        if distance_to_player > 6:
+            self.object.set_pos(new_pos)
+        #self.object.set_pos(new_pos)
         self.change_animation(f'{action}_{self.direction}')
 
         return event.cont
