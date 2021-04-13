@@ -39,6 +39,7 @@ FLOOR_LAYER = 0
 ENEMY_CATEGORY = "enemy"
 PLAYER_CATEGORY = "player"
 PLAYER_PROJECTILE_CATEGORY = "player_projectile"
+ENEMY_PROJECTILE_CATEGORY = "enemy_projectile"
 
 #WALLS_COLLISION_MASK = 0X28
 #ENEMY_PROJECTILE_COLLISION_MASK = 0X04
@@ -55,16 +56,9 @@ CONTROLS = {"move_up": "w", "move_down": "s",
             "move_left": "a", "move_right": "d",
             "attack": "mouse1"}
 
-#TODO: rename cd (cooldown) to something like atk_speed and make it work the opposite,
-#e.g the more the value - less time it gets to strike again. Also it may be a good
-#idea to keep different attack's anims and damage in related subdics, instead of
-#relying on global stats and other functions. But thats to solve in future
-#"used" is effectively an equal to "on cooldown"
-SKILLS = {'atk_0': {'name': 'Basic Attack', 'def_cd': 0.5, 'cur_cd': 0, 'used': False}}
-
 #I have no idea why, but if 'loop' isnt set to True for single-sprite animations,
 #they just refuse to work. #TODO #NEEDFIX
-SPRITES = {'attack': {'default': {'sprites': (0, 3)}}}
+SPRITES = {'slash': {'default': {'sprites': (0, 3)}}}
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)

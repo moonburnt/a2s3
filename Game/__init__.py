@@ -24,6 +24,7 @@ from .spritesheet_cutter import *
 from .interface import *
 from .music_player import *
 from .animation import *
+from .skill import *
 
 import logging
 

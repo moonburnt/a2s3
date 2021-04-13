@@ -3,8 +3,7 @@
 [Main]
 name = "Knight"
 hitbox_size = 6
-#skills = [ "Slash" ]
-skills = [ "atk_0" ]
+skills = [ "Slash" ]
 
 [Stats]
 hp = 100

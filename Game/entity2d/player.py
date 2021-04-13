@@ -15,7 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
-from panda3d.core import Point3, Plane, Vec2
+from panda3d.core import Point3, Plane, Vec2, Vec3
 from Game import shared, entity2d
 
 log = logging.getLogger(__name__)
@@ -45,11 +45,52 @@ class Player(entity2d.Creature):
                          collision_mask = collision_mask,
                          position = position)
 
-        base.task_mgr.add(self.controls_handler, "controls handler")
-        #the thing to track mouse position relatively to map. See attack handling
+        base.task_mgr.add(self.controls_handler,
+                        f"controls handler of {self.name}")
+        #the thing to track mouse position relatively to map. See get_mouse_vector.
         #It probably could be better to move this thing to map func/class instead?
         #TODO
         self.ground_plane = Plane((0,0,1), (0,0,0))
+
+        #this is quite a resource-consuming task, but hopefully it wont be too
+        #much of an issue...
+        self.mouse_vector = Vec3(0, 0, 0)
+        base.task_mgr.add(self.get_mouse_vector,
+                        f"mouse vector tracker of {self.name}")
+
+    def get_mouse_vector(self, event):
+        '''Task manager routine that tracks vector of mouse, relatively to player'''
+        if self.dead:
+            return
+
+        mouse_watcher = base.mouseWatcherNode
+
+        #safety check to avoid crash if mouse has got out of window
+        if not mouse_watcher.has_mouse():
+            return event.cont
+
+        #long story short, what happens there: we are getting mouse pointer's
+        #position, then trying to translate it to the ground via plane.
+        #this could probably be done faster and better, but for now it works
+        mouse_pos = mouse_watcher.get_mouse()
+
+        mouse_pos_3d = Point3()
+        near = Point3()
+        far = Point3()
+
+        base.camLens.extrude(mouse_pos, near, far)
+        self.ground_plane.intersects_line(mouse_pos_3d,
+                                     render.get_relative_point(base.camera, near),
+                                     render.get_relative_point(base.camera, far))
+
+        hit_vector = mouse_pos_3d - self.object.get_pos()
+        hit_vector.normalize()
+
+        #updating mouse vector
+        self.mouse_vector = hit_vector
+
+        return event.cont
+
 
     def controls_handler(self, event):
         '''
@@ -60,20 +101,6 @@ class Player(entity2d.Creature):
         #safety check to ensure that player isnt dead, otherwise it will crash
         if self.dead:
             return event.cont
-
-        #manipulating cooldowns on player's skills. It may be good idea to move
-        #it to separate routine and check cooldowns of all entities on screen
-        dt = globalClock.get_dt()
-
-        #this seem to work reasonably decent. Not to jinx tho
-        skills = self.skills
-        for skill in skills:
-            if skills[skill]['used']:
-                skills[skill]['cur_cd'] -= dt
-                if skills[skill]['cur_cd'] <= 0:
-                    log.debug(f"Player's {skills[skill]['name']} has been recharged")
-                    skills[skill]['used'] = False
-                    skills[skill]['cur_cd'] = skills[skill]['def_cd']
 
         if 'stun' in self.status_effects:
             return event.cont
@@ -119,34 +146,11 @@ class Player(entity2d.Creature):
             player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
-        #this is placeholder - its janky and spawns right above the player. #TODO
-        if base.level.controls_status["attack"] and not skills['atk_0']['used']:
-            skills['atk_0']['used'] = True
+        #using it like that, because due to requirement to somehow pass caster to
+        #skill, Im unable to set using_skill to be a normal variable
+        if base.level.controls_status["attack"] and not self.object.get_python_tag("using_skill"):
 
-            #make player impossible to move on cast. It make controls a bit janky,
-            #but remove that issue when player moving to some direction can catch
-            #its own projectile. I may reconsider the way it works in future
-            #self.status_effects['stun'] = skills['atk_0']['def_cd']/4
-            self.status_effects['stun'] = 0.1
-
-            #long story short, what happens there: we are getting mouse pointer's
-            #position, then trying to translate it to the ground via plane.
-            #this could probably be done faster and better, but for now it works
-            mouse_pos = mouse_watcher.get_mouse()
-
-            mouse_pos_3d = Point3()
-            near = Point3()
-            far = Point3()
-
-            base.camLens.extrude(mouse_pos, near, far)
-            self.ground_plane.intersects_line(mouse_pos_3d,
-                                         render.get_relative_point(base.camera, near),
-                                         render.get_relative_point(base.camera, far))
-
-            hit_vector = mouse_pos_3d - player_object.get_pos()
-            hit_vector.normalize()
-
-            hit_vector_x, hit_vector_y = hit_vector.get_xy()
+            hit_vector_x, hit_vector_y = self.mouse_vector.get_xy()
             #y has to be flipped if billboard_effect is active. Otherwise x has
             #to be flipped. Idk why its this way, probs coz first cam's num is 0
             #hit_vector_2D = hit_vector_x, -hit_vector_y
@@ -156,27 +160,17 @@ class Player(entity2d.Creature):
             angle = y_vec.signed_angle_deg(hit_vector_2D)
 
             pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
-            #this is a bit awkward with billboard effect, coz slashing below
-            #make projectile go into the ground. I should do something about it
-            #TODO
-            proj_pos = player_object.get_pos() + hit_vector*pos_diff
-            attack = entity2d.Projectile("attack",
-                                position = proj_pos,
-                                #position = player_object.get_pos(),
-                                direction = proj_pos,
-                                #object_size = (1.2, 1.2, 1.2),
-                                damage = self.stats['dmg'])
+            proj_pos = player_object.get_pos() + self.mouse_vector * pos_diff
+            self.skills['Slash'].cast(direction = proj_pos,
+                                      position = proj_pos,
+                                      angle = angle)
 
-            #rotating projectile around 2d axis to match the shooting angle
-            attack.object.set_r(angle)
-            base.level.projectiles.append(attack)
-
-        #this is kinda awkward coz its tied to cooldown and may look weird. I
-        #may do something about that later... Like add "skill_cast_time" or idk
-        if skills['atk_0']['used']:
-            action = "attack"
-
-        self.change_animation(f"{action}_{self.direction}")
+        #interrupting animation update tasks, in case we are in the middle of
+        #casting skill. Iirc there is some case when it may backfire, but I cant
+        #remember it. Wooops... #TODO
+        #if not self.using_skill:
+        if not self.object.get_python_tag("using_skill"):
+            self.change_animation(f"{action}_{self.direction}")
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want

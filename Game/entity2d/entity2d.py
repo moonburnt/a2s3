@@ -16,13 +16,11 @@
 
 import logging
 from panda3d.core import CollisionSphere, CollisionNode, BitMask32
-from Game import shared, spritesheet_cutter, animation
+from Game import shared, spritesheet_cutter, animation, skill
 
 log = logging.getLogger(__name__)
 
 #module with general classes used as parents for 2d entity objects
-
-SKILLS = shared.SKILLS
 
 class Entity2D:
     '''Main class, dedicated to creation of collideable 2D objects.'''
@@ -103,15 +101,6 @@ class Creature(Entity2D):
         super().__init__(name, category, spritesheet, animations, hitbox_size,
                          collision_mask, sprite_size,  position)
 
-        #this is probably not the best way, but whatever - temporary solution
-        #also this will crash if there are no skills, but that shouldnt happen
-        if skills:
-            entity_skills = {}
-            for item in skills:
-                if item in SKILLS:
-                    entity_skills[item] = SKILLS[item].copy()
-            self.skills = entity_skills
-
         if death_sound and (death_sound in base.assets.sfx):
             self.death_sound = base.assets.sfx[death_sound]
         else:
@@ -119,8 +108,7 @@ class Creature(Entity2D):
             self.death_sound = base.assets.sfx['default_death']
 
         self.direction = 'right'
-        #self.current_animation = f'idle_{self.direction}'
-        self.animation.switch(f'idle_{self.direction}')
+        self.change_animation(f'idle_{self.direction}')
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
         self.stats = stats.copy()
@@ -130,6 +118,27 @@ class Creature(Entity2D):
 
         self.object.set_python_tag("stats", self.stats)
         self.object.set_python_tag("get_damage", self.get_damage)
+
+        #shenanigans for skills
+        self.object.set_python_tag("dead", self.dead)
+        self.object.set_python_tag("direction", self.direction)
+        self.object.set_python_tag("change_animation", self.change_animation)
+        #self.using_skill = False
+        #setting it like that, because there doesnt seem to be the way to update
+        #variable linked to tag - only to override it. Or maybe I didnt find it
+        self.object.set_python_tag("using_skill", False)
+        self.object.set_python_tag("status_effects", self.status_effects)
+
+        if skills:
+            #I should probably rework this into list or idk
+            entity_skills = {}
+            for item in skills:
+                if item in base.assets.skills:
+                    skill_instance = skill.Skill(item, self.object)
+                    entity_skills[item] = skill_instance
+            self.skills = entity_skills
+        else:
+            self.skills = None
 
         #attaching our object's collisions to traverser
         #otherwise they wont be detected
