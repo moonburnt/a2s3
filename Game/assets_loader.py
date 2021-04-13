@@ -48,10 +48,10 @@ class AssetsLoader:
 
         self.load_all()
 
-    def get_files(self, pathtodir:str):
-        '''
-        Fetches and returns list of files in provided directory and its subdirectories
-        '''
+    def get_files(self, pathtodir: str, include_subdirs: bool = False,
+                        extension: str = None, case_insensitive: bool = True):
+        '''Fetches and returns list of files in provided directory. Optionally
+        may include subdirectories and seek for specific file extension'''
         files = []
 
         log.debug(f"Attempting to parse directory {pathtodir}")
@@ -62,20 +62,35 @@ class AssetsLoader:
             log.debug(f"Processing {item}")
             itempath = join(pathtodir, item)
             if isdir(itempath):
-                log.debug(f"{itempath} leads to directory, attempting "
+                if include_subdirs:
+                    log.debug(f"{itempath} leads to directory, attempting "
                            "to process its content")
-                files += self.get_files(itempath)
+                    files += self.get_files(itempath, include_subdirs, extension)
             else:
                 #assuming that everything that isnt directory is file
-                log.debug(f"{itempath} leads to file, adding to list")
-                files.append(itempath)
+                log.debug(f"{itempath} leads to file")
+                if extension:
+                    #there is probably a prettier way to do that
+                    if case_insensitive:
+                        file_ext = splitext(itempath)[-1].lower()
+                        ext = extension.lower()
+                    else:
+                        file_ext = splitext(itempath)[-1]
+                        ext = extension
+
+                    if file_ext == ext:
+                        log.debug(f"{itempath} has valid extension")
+                        files.append(itempath)
+
+                else:
+                    files.append(itempath)
 
         log.debug(f"Got following files in total: {files}")
         return files
 
-    def load_music(self, pathtodir:str):
+    def load_music(self, pathtodir: str, extension: str = ".ogg"):
         '''Load and update currently known music from provided directory and its subdirs'''
-        files = self.get_files(pathtodir)
+        files = self.get_files(pathtodir, extension = extension)
 
         data = {}
         for item in files:
@@ -86,9 +101,9 @@ class AssetsLoader:
         log.debug("Updating music storage")
         self.music = self.music | data
 
-    def load_sfx(self, pathtodir:str):
+    def load_sfx(self, pathtodir: str, extension: str = ".ogg"):
         '''Load and update currently known sfx from provided directory and its subdirs'''
-        files = self.get_files(pathtodir)
+        files = self.get_files(pathtodir, extension = extension)
 
         data = {}
         for item in files:
@@ -99,9 +114,9 @@ class AssetsLoader:
         log.debug("Updating sfx storage")
         self.sfx = self.sfx | data
 
-    def load_sprite(self, pathtodir:str):
+    def load_sprite(self, pathtodir: str, extension: str = ".png"):
         '''Load and update currently known sprites from provided directory and its subdirs'''
-        files = self.get_files(pathtodir)
+        files = self.get_files(pathtodir, extension = extension)
 
         data = {}
         for item in files:
@@ -115,9 +130,9 @@ class AssetsLoader:
         log.debug("Updating sprite storage")
         self.sprite = self.sprite | data
 
-    def _load_toml(self, pathtodir:str):
+    def _load_toml(self, pathtodir: str, extension: str = ".toml"):
         '''Load toml data from all .toml files in provided and return it as meta-dictionary'''
-        files = self.get_files(pathtodir)
+        files = self.get_files(pathtodir, extension = extension)
         data = {}
         for item in files:
             name_of_file = basename(item)
@@ -126,19 +141,19 @@ class AssetsLoader:
 
         return data
 
-    def load_classes(self, pathtodir:str):
+    def load_classes(self, pathtodir: str):
         '''Load and update currently known classes from provided directory and its subdirs'''
         data = self._load_toml(pathtodir)
         log.debug("Updating classes storage")
         self.classes = self.classes | data
 
-    def load_enemies(self, pathtodir:str):
+    def load_enemies(self, pathtodir: str):
         '''Load and update currently known enemies from provided directory and its subdirs'''
         data = self._load_toml(pathtodir)
         log.debug("Updating enemies storage")
         self.enemies = self.enemies | data
 
-    def load_skills(self, pathtodir:str):
+    def load_skills(self, pathtodir: str):
         '''Load and update currently known skills from provided directory and its subdirs'''
         data = self._load_toml(pathtodir)
         log.debug("Updating skills storage")
