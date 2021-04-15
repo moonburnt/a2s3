@@ -422,8 +422,10 @@ class LoadLevel:
         ds = hitter.get_python_tag("stats")
         damage = ds['dmg']
         damage_function = target.get_python_tag("get_damage")
+        effects = hitter.get_python_tag("effects")
+
         log.debug(f"Attempting to deal {damage} damage to player")
-        damage_function(damage)
+        damage_function(damage, effects)
 
     def damage_enemy(self, entry):
         '''Should be called from base.accept event handler when enemy collides
@@ -446,11 +448,12 @@ class LoadLevel:
 
         damage = hitter.get_python_tag("damage")
         damage_function = target.get_python_tag("get_damage")
+        effects = hitter.get_python_tag("effects")
 
         target_name = target.get_python_tag('name')
         target_id = target.get_python_tag('id')
         log.debug(f"Attempting to deal {damage} damage to {target_name} ({target_id})")
-        damage_function(damage)
+        damage_function(damage, effects)
 
     def on_wall_collision(self, entry):
         '''Function that triggers if player or enemy collides with wall and pushes

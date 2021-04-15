@@ -164,9 +164,15 @@ class Skill:
             change_func(f"{self.caster_animation}_{caster_direction}")
 
         if self.caster_effects:
-            caster_effects = self.caster.get_python_tag("status_effects")
+            # and self.buff_caster:
+            #This may not look like it, but it actually applies custom values
+            buff_caster = self.caster.get_python_tag("apply_effect")
+
             if self.caster_effects.stun:
-                caster_effects['stun'] = self.caster_effects.stun
+                #caster_effects['stun'] = self.caster_effects.stun
+                #print('stun', self.caster_effects.stun, self.buff_caster)
+                buff_caster('stun', self.caster_effects.stun)
+
 
         if self.cooldown:
             #there is no point to flip this switch if skill has no cd, I think
@@ -187,9 +193,11 @@ class Skill:
             projectile = entity2d.Projectile(self.projectile,
                                              position = position,
                                              direction = direction,
-                                             #this should do anything on None
+                                             #this shouldnt do anything on None
                                              object_size = self.projectile_size,
-                                             damage = dmg)
+                                             damage = dmg,
+                                             #same for effects
+                                             effects = self.target_effects)
 
             #rotating projectile around 2d axis to match the shooting angle
             #I should probably also move it to projectile itself. #TODO

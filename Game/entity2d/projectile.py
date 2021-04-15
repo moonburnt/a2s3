@@ -25,8 +25,8 @@ PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name:str, direction, damage = 0, object_size = None,
-                 hitbox_size = None, position = None):
+    def __init__(self, name:str, direction, damage = 0, effects = None,
+                 object_size = None, hitbox_size = None, position = None):
         #for now we are only adding these to player, so no need for other masks
         #todo: split this thing into 2 subclasses: for player's and enemy's stuff
         collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
@@ -50,6 +50,9 @@ class Projectile(entity2d.Entity2D):
 
         self.damage = damage
         self.object.set_python_tag("damage", self.damage)
+        if effects:
+            self.effects = effects
+            self.object.set_python_tag("effects", self.effects)
         self.change_animation('default')
         #todo: make this configurable from dictionary, idk
         self.lifetime = 0.1

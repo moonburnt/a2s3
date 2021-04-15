@@ -68,5 +68,5 @@ dmg_multiplier = 1
 # Length of effect
 stun = 0.1
 
-#[Effects.target]
-# This is commented out because slash doesnt stun anyone
+[Effects.target]
+stun = 0.3

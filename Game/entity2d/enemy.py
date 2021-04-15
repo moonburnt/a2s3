@@ -140,10 +140,10 @@ class Enemy(entity2d.Creature):
 
         return event.cont
 
-    def get_damage(self, amount = None):
+    def get_damage(self, amount = None, effects = None):
         if self.dead:
             return
-        super().get_damage(amount)
+        super().get_damage(amount, effects)
         #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
         #increase it based on amount of damage received. But thats #TODO in future
         base.level.increase_score_multiplier()

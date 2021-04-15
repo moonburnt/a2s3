@@ -79,7 +79,8 @@ class Entity2D:
         #to fly into left wall. So I moved it to Creature subclass
 
         #debug function to show collisions all time
-        #self.collision.show()
+        #if shared.SHOW_COLLISIONS:
+        #   self.collision.show()
 
     def change_animation(self, action):
         '''Proxy function that triggers self.animation's switch. Kept there for
@@ -95,7 +96,7 @@ class Entity2D:
 class Creature(Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name: str, category: str, spritesheet, animations: dict,
-                 stats: dict, skills: list, death_sound:str = None, hitbox_size: int = None,
+                 stats: dict, skills: list, death_sound: str = None, hitbox_size: int = None,
                  collision_mask = None, sprite_size: tuple = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
         super().__init__(name, category, spritesheet, animations, hitbox_size,
@@ -155,6 +156,10 @@ class Creature(Entity2D):
         self.last_collision_time = 0
         self.object.set_python_tag("last_collision_time", self.last_collision_time)
 
+        #proxifying self.apply_effect, so it will be possible for skills and
+        #projectiles to trigger this function
+        self.object.set_python_tag("apply_effect", self.apply_effect)
+
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
         status effects. When it reaches 0 - remove status effect'''
@@ -176,13 +181,30 @@ class Creature(Entity2D):
 
         return event.cont
 
-    def get_damage(self, amount = None):
-        '''Whatever stuff procs when target is about to get hurt'''
-        if not amount:
-            amount = 0
+    def apply_effect(self, effect: str, length):
+        '''Apply provided effect to creature'''
+        #there is probably a better way to do this
+        if effect in self.status_effects:
+            self.status_effects[effect] += length
+        else:
+            self.status_effects[effect] = length
 
+        log.info(f"{self.name} has got {effect} for {length} seconds")
+
+    def get_damage(self, amount: int = None, effects = None):
+        '''Whatever stuff procs when target is about to get hurt'''
         #not getting any damage in case we are invulnerable
         if 'immortal' in self.status_effects:
+            return
+
+        #for now I've found it to be the most flexible way to apply any effects
+        #to entity. But I may be wrong
+        if effects:
+            for effect, length in vars(effects).items():
+                self.apply_effect(effect, length)
+
+        #this is probably not right, but right now I find it correct
+        if not amount:
             return
 
         self.stats['hp'] -= amount
@@ -193,18 +215,16 @@ class Creature(Entity2D):
             self.die()
             return
 
-        #attempt to stun target for 0.5 seconds on taking damage. #TODO: make
-        #configurable from skill's stats
-        if 'stun' in self.status_effects:
-            self.status_effects['stun'] += 0.5
-        else:
-            self.status_effects['stun'] = 0.5
-
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
         base.assets.sfx['damage'].play()
 
-        self.change_animation(f"hurt_{self.direction}")
+        #disabled it, coz its broken if entity dont get stunned. Will replace with
+        #color scale, once I will figure out how to apply whiteness (since out of
+        #box its only possible to change color's rgba values down to darkness
+        #self.change_animation(f"hurt_{self.direction}")
+        #self.object.set_color_scale(0.9, 0.9, 0.9, 1)
+        #self.object.set_color(0, 0, 0, 1)
 
     def die(self):
         super().die()

@@ -176,10 +176,10 @@ class Player(entity2d.Creature):
         #then task will run just once and then stop, which we dont want
         return event.cont
 
-    def get_damage(self, amount = None):
+    def get_damage(self, amount = None, effects = None):
         #giving player invinsibility frames on received damage
         #these shouldnt stack... I think? May backfire in future, idk
-        super().get_damage(amount)
+        super().get_damage(amount, effects)
         #this check is there to avoid stacking up immortality
         if not 'immortal' in self.status_effects:
             #this is a bit longer than stun lengh, to let player escape
