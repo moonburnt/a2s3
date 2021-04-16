@@ -15,6 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 from .entity2d import *
+from .creature import *
 from .player import *
 from .enemy import *
 from .projectile import *
