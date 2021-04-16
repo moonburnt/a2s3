@@ -12,9 +12,15 @@ caster_animation = "attack"
 # Optional variable that specifies projectile to be casted. Cast always happen
 # from caster's center, based on caster's direction. I may change this in future
 # (say, to allow skills that auto-target enemies), but for now thats it
-projectile = "slash"
-# Optional variable that overrides default projectile size
-#projectile_size = 1.5
+projectile = "Slash"
+# Optional variable that overrides default scale of projectile's sprite
+#projectile_scale = 1.5
+# Optional variable that overrides default size of projectile's hitbox. Yep,
+# these are two different things. I may rework that later, idk
+#projectilile_hitbox = 16
+# Optional variable that sets projectile lifetime. If not set, projectile will
+#stay on screen forever
+projectile_lifetime = 0.1
 
 # Projectile knockback. Knocks target furter from caster on collision with projectile
 # Its optional too and I was tempting to put it onto stats, but for now that it

@@ -42,7 +42,6 @@ PLAYER_PROJECTILE_CATEGORY = "player_projectile"
 ENEMY_PROJECTILE_CATEGORY = "enemy_projectile"
 
 #WALLS_COLLISION_MASK = 0X28
-#ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
 #whatever below are variables that could be changed by user... potentially
 DEFAULT_WINDOW_SIZE = (1280, 720)
@@ -55,10 +54,6 @@ SFX_VOLUME = 0.75
 CONTROLS = {"move_up": "w", "move_down": "s",
             "move_left": "a", "move_right": "d",
             "attack": "mouse1"}
-
-#I have no idea why, but if 'loop' isnt set to True for single-sprite animations,
-#they just refuse to work. #TODO #NEEDFIX
-SPRITES = {'slash': {'default': {'sprites': (0, 3)}}}
 
 #it may be nice to add minimal allowed size check, but not today
 MAP_SIZE = (600, 300)

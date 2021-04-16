@@ -33,6 +33,7 @@ ENTITY_DIR = join(ASSETS_DIR, 'Entity')
 CLASSES_DIR = join(ENTITY_DIR, 'Classes')
 ENEMIES_DIR = join(ENTITY_DIR, 'Enemies')
 SKILLS_DIR = join(ENTITY_DIR, 'Skills')
+PROJECTILES_DIR = join(ENTITY_DIR, 'Projectiles')
 
 class AssetsLoader:
     def __init__(self):
@@ -45,6 +46,7 @@ class AssetsLoader:
         self.classes = {}
         self.enemies = {}
         self.skills = {}
+        self.projectiles = {}
 
         self.load_all()
 
@@ -159,6 +161,12 @@ class AssetsLoader:
         log.debug("Updating skills storage")
         self.skills = self.skills | data
 
+    def load_projectiles(self, pathtodir: str):
+        '''Load and update currently known projectiles from provided directory and its subdirs'''
+        data = self._load_toml(pathtodir)
+        log.debug("Updating skills storage")
+        self.projectiles = self.projectiles | data
+
     def load_all(self):
         '''Load all assets from default paths'''
         self.load_music(MUSIC_DIR)
@@ -167,6 +175,7 @@ class AssetsLoader:
         self.load_classes(CLASSES_DIR)
         self.load_enemies(ENEMIES_DIR)
         self.load_skills(SKILLS_DIR)
+        self.load_projectiles(PROJECTILES_DIR)
 
     def reset(self):
         '''Reset assets dictionaries to empty state'''

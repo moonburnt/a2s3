@@ -22,28 +22,40 @@ log = logging.getLogger(__name__)
 #module for 2d projectiles
 
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
+ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name:str, direction, damage = 0, effects = None,
-                 object_size = None, hitbox_size = None, position = None):
-        #for now we are only adding these to player, so no need for other masks
-        #todo: split this thing into 2 subclasses: for player's and enemy's stuff
-        collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        category = shared.PLAYER_PROJECTILE_CATEGORY
+    def __init__(self, name:str, category:str, direction, damage = 0,
+                 effects = None, projectile_scale = 0, hitbox_size = 0,
+                 lifetime = 0, position = None, angle = None):
 
-        #this stuff is just workaround for updated entity2d
-        #TODO: implement tomls for skills, made projectile data comfigurable
-        #from these (or also make separate tomls for projectiles, idk)
+        if category == shared.PLAYER_PROJECTILE_CATEGORY:
+            collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
+        elif category == shared.ENEMY_PROJECTILE_CATEGORY:
+            collision_mask = ENEMY_PROJECTILE_COLLISION_MASK
+        else:
+            #this shouldnt happen, but just in case
+            collision_mask = None
 
-        animations = shared.SPRITES[name]
-        spritesheet = base.assets.sprite[name]
+        self.name = name
+
+        #just like with other entities - no safety checks for now, will explode
+        #on invalid name
+        data = base.assets.projectiles[name]
+
+        #TODO: make this optional (require tweaking of entity2d)
+        spritesheet = data['Assets']['sprite']
+
+        #doing it like that, coz default value from projectile's config can be
+        #overriden on init. Say, by skill's values
+        projectilile_hitbox = hitbox_size or data['Main'].get('hitbox_size', 0)
 
         super().__init__(name = name,
                          category = category,
-                         spritesheet = spritesheet,
-                         animations = animations,
-                         hitbox_size = hitbox_size,
+                         spritesheet = base.assets.sprite[spritesheet],
+                         animations = data['Animations'],
+                         hitbox_size = projectilile_hitbox,
                          collision_mask = collision_mask,
                          #sprite_size = sprite_size,
                          position = position)
@@ -54,24 +66,35 @@ class Projectile(entity2d.Entity2D):
             self.effects = effects
             self.object.set_python_tag("effects", self.effects)
         self.change_animation('default')
-        #todo: make this configurable from dictionary, idk
-        self.lifetime = 0.1
         self.dead = False
 
         #Idk about numbers. These work if caster is player, but what s about enemies?
         one, two, _ = direction
         self.object.look_at(one, two, 1)
 
-        if object_size:
-            self.object.set_scale(object_size)
+        scale = projectile_scale or data['Main'].get('scale', 0)
+        if scale and scale != 1:
+            self.object.set_scale(scale)
 
-        #schedulging projectile to die in self.lifetime seconds after spawn
-        #I've heard this is not the best way to do that, coz do_method_later does
-        #things based on frames and not real time. But for now it will do
-        base.task_mgr.do_method_later(self.lifetime, self.die, "remove projectile")
+        if angle:
+            #rotating projectile around 2d axis to match the shooting angle
+            #I have no idea how if it will work for enemies tho
+            self.object.set_r(angle)
 
-    def die(self, event):
+        if lifetime:
+            self.lifetime = lifetime
+            #schedulging projectile to die in self.lifetime seconds after spawn
+            #I've heard this is not the best way to do that, coz do_method_later
+            #does things based on frames and not real time. But for now it will do
+            base.task_mgr.do_method_later(self.lifetime, self.dying_task,
+                                         f"dying task of projectile {self.name}")
+
+    def dying_task(self, event):
         super().die()
         #moved it there, because death of creature required it
         self.object.remove_node()
         return
+
+    def die(self):
+        #overriding self.dying_task's event to use it as normal function
+        self.dying_task(0)

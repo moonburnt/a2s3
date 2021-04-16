@@ -68,7 +68,9 @@ class Skill:
             #stuff below is located there, because for the time being it makes
             #no sense to load it if skill has no projectiles attached to it, as
             #these only affect projectile
-            self.projectile_size = main.get('projectile_size', 0)
+            self.projectile_scale = main.get('projectile_scale', 0)
+            self.projectile_hitbox = main.get('projectile_hitbox', 0)
+            self.projectile_lifetime = main.get('projectile_lifetime', 0)
             caster_category = self.caster.get_python_tag("category")
 
             if caster_category == shared.PLAYER_CATEGORY:
@@ -187,21 +189,21 @@ class Skill:
             #to the calculation function itself
             dmg = self.calculate_stat('dmg')
 
-            #TODO: also pass projectile category as argument
-            #TODO: add ability to pass status target effects to projectile as arg
             #TODO: add ability to pass knockbass to projectile
-            projectile = entity2d.Projectile(self.projectile,
+            projectile = entity2d.Projectile(name = self.projectile,
+                                             #this will explode on None, but it
+                                             #shouldnt happen... I guess
+                                             category = self.projectile_category,
                                              position = position,
                                              direction = direction,
-                                             #this shouldnt do anything on None
-                                             object_size = self.projectile_size,
+                                             #this shouldnt do anything on None or 0
+                                             projectile_scale = self.projectile_scale,
                                              damage = dmg,
-                                             #same for effects
-                                             effects = self.target_effects)
-
-            #rotating projectile around 2d axis to match the shooting angle
-            #I should probably also move it to projectile itself. #TODO
-            projectile.object.set_r(angle)
+                                             #same for all of these
+                                             hitbox_size = self.projectile_hitbox,
+                                             lifetime = self.projectile_lifetime,
+                                             effects = self.target_effects,
+                                             angle = angle)
 
             #maybe I should attach it to skill itself instead? or to caster? and
             #destroy together? Hmmm.... #TODO

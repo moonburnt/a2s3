@@ -1,0 +1,23 @@
+#Example projectile
+
+[Main]
+name = "Slash"
+#Optional. Specify projectile's default hitbox size
+hitbox_size = 12
+#Optional. Specify projectile's scale. Default = 1, if not set - using it.
+#Idk if I should rename this to "size" or not
+scale = 1
+#Maybe also add something for non-default animation playback speed
+
+[Assets]
+#Optional. Yep, setting up hitbox_size without it will create invisible projectile
+sprite = "slash"
+#I may attach something like optional sounds in future
+
+#In case sprite isnt set, this whole category will be ignored. Otherwise mandatory
+[Animations.default]
+sprites = [ 0, 3 ]
+loop = false
+
+#It may also be good to optionally attach some anim that plays on hit.
+#But for now I wont bother
