@@ -15,7 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
-from panda3d.core import CollisionSphere, CollisionNode, BitMask32
+from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode
 from Game import shared, animation
 
 log = logging.getLogger(__name__)
@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 class Entity2D:
     '''Main class, dedicated to creation of collideable 2D objects.'''
 
-    def __init__(self, name: str, category: str, spritesheet, animations,
+    def __init__(self, name: str, category: str,
+                 spritesheet = None, animations = None,
                  hitbox_size: int = None, collision_mask = None,
                  sprite_size: tuple = None, position = None):
         self.name = name
@@ -38,8 +39,26 @@ class Entity2D:
 
         self.category = category
 
-        self.animation = animation.AnimatedObject(name, spritesheet, animations, sprite_size)
-        self.object = self.animation.object
+        if spritesheet and animations:
+            self.animation = animation.AnimatedObject(name, spritesheet,
+                                                      animations, sprite_size)
+            self.object = self.animation.object
+            #legacy proxy function that turned to be kind of nicer way to
+            #update anims, than calling for switch manually
+            self.change_animation = self.animation.switch
+
+        else:
+            #if we didnt get valid sprite data - create placeholder invisible
+            #node to attach hitbox and other stuff to
+            placeholder_node = PandaNode(name)
+            self.object = render.attach_new_node(placeholder_node)
+
+            #dummy placeholder to avoid breakage in case some object tried to
+            #load invalid spritesheet and then toggle its anims
+            def placeholder_anim_changer(action):
+                pass
+
+            self.change_animation = placeholder_anim_changer
 
         #if no position has been received - wont set it up
         if position:
@@ -77,13 +96,8 @@ class Entity2D:
         #to fly into left wall. So I moved it to Creature subclass
 
         #debug function to show collisions all time
-        #if shared.SHOW_COLLISIONS:
-        #   self.collision.show()
-
-    def change_animation(self, action):
-        '''Proxy function that triggers self.animation's switch. Kept there for
-        backwards compatibility, also seems to be nicer way to call things'''
-        self.animation.switch(action)
+        if shared.SHOW_COLLISIONS:
+           self.collision.show()
 
     def die(self):
         '''Function that should be triggered when entity is about to die'''
