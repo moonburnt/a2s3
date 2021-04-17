@@ -195,14 +195,10 @@ class Creature(entity2d.Entity2D):
                                          )
             sequence.append(fade_out_effect)
         else:
-            def reset_color_scale():
-                self.object.set_color_scale(self.default_colorscheme)
-
-                return
-
             if not fade_in:
                 sequence.append(Wait(length))
-            sequence.append(Func(reset_color_scale))
+            sequence.append(Func(self.object.set_color_scale,
+                                 self.default_colorscheme))
 
         sequence.start()
 
