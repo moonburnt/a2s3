@@ -15,6 +15,8 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
+from direct.interval.LerpInterval import LerpColorScaleInterval
+from direct.interval.IntervalGlobal import Sequence, Func, Wait
 from Game import entity2d, skill
 
 log = logging.getLogger(__name__)
@@ -86,6 +88,9 @@ class Creature(entity2d.Entity2D):
         #projectiles to trigger this function
         self.object.set_python_tag("apply_effect", self.apply_effect)
 
+        #default rgba values. Saved on init, used in blinking
+        self.default_colorscheme = self.object.get_color_scale()
+
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
         status effects. When it reaches 0 - remove status effect'''
@@ -141,16 +146,65 @@ class Creature(entity2d.Entity2D):
             self.die()
             return
 
+        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5)
+        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5, fade_in = True)
+        self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5, fade_out = True)
+        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5,
+                            #fade_in = True, fade_out = True)
+
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
         base.assets.sfx['damage'].play()
 
-        #disabled it, coz its broken if entity dont get stunned. Will replace with
-        #color scale, once I will figure out how to apply whiteness (since out of
-        #box its only possible to change color's rgba values down to darkness
-        #self.change_animation(f"hurt_{self.direction}")
-        #self.object.set_color_scale(0.9, 0.9, 0.9, 1)
-        #self.object.set_color(0, 0, 0, 1)
+    def blink(self, rgba: tuple, length, fade_in: bool = False, fade_out: bool = False):
+        '''Make creature blink with provided rgba color for length amount of time.
+        Can be usefull to highlight various effects - getting healed, damage, etc'''
+
+        # TODO: add ability to set not just rgba, but also lightness
+        #right now its only possible to make object blink in darker shades, which
+        #is done by mixing rgb values. Its not possible to make object blink in
+        #white tones, which is one of (together with red) default ways to highlight
+        #getting damage with color in these types of games
+
+        if (rgba == self.default_colorscheme) or length <= 0:
+            #coz it wont do anything at this point anyway
+            return
+
+        sequence = Sequence(name = f"Blinking {self.name} with color {rgba}")
+
+        if fade_in and fade_out:
+            length = length / 2
+
+        if fade_in:
+            fade_in_effect = LerpColorScaleInterval(
+                                         nodePath = self.object,
+                                         duration = (length),
+                                         colorScale = rgba,
+                                         startColorScale = self.default_colorscheme
+                                         )
+            sequence.append(fade_in_effect)
+        else:
+            sequence.append(Func(self.object.set_color_scale, rgba))
+
+        if fade_out:
+            fade_out_effect = LerpColorScaleInterval(
+                                         nodePath = self.object,
+                                         duration = (length),
+                                         colorScale = self.default_colorscheme,
+                                         startColorScale = rgba
+                                         )
+            sequence.append(fade_out_effect)
+        else:
+            def reset_color_scale():
+                self.object.set_color_scale(self.default_colorscheme)
+
+                return
+
+            if not fade_in:
+                sequence.append(Wait(length))
+            sequence.append(Func(reset_color_scale))
+
+        sequence.start()
 
     def die(self):
         super().die()
