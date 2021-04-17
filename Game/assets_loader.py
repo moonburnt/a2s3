@@ -137,9 +137,18 @@ class AssetsLoader:
         files = self.get_files(pathtodir, extension = extension)
         data = {}
         for item in files:
-            name_of_file = basename(item)
-            name_without_extension = splitext(name_of_file)[0]
-            data[name_without_extension] = tomload(item)
+            #name_of_file = basename(item)
+            #name_without_extension = splitext(name_of_file)[0]
+
+            #data[name_without_extension] = tomload(item)
+            try:
+                toml_content = tomload(item)
+                internal_name = toml_content['Main']['name']
+            except:
+                log.warning(f"{item} has invalid format, wont import")
+                continue
+            else:
+                data[internal_name] = toml_content
 
         return data
 
