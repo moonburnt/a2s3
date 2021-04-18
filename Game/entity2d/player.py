@@ -16,6 +16,7 @@
 
 import logging
 from panda3d.core import Point3, Plane, Vec2, Vec3
+from math import sqrt
 from Game import shared, entity2d
 
 log = logging.getLogger(__name__)
@@ -133,6 +134,20 @@ class Player(entity2d.Creature):
 
         #In future, these speed values may be affected by some items
         player_object = self.object
+
+        #workaround for player moving faster diagonally than horizontally
+        #it can be probably do prettier by normalizing vectors we are setting pos
+        #to, but I was never able to achieve that without making player fly
+        if ((base.level.controls_status["move_up"] and
+             base.level.controls_status["move_left"]) or
+            ((base.level.controls_status["move_up"] and
+             base.level.controls_status["move_right"])) or
+            ((base.level.controls_status["move_down"] and
+             base.level.controls_status["move_left"])) or
+            ((base.level.controls_status["move_down"] and
+             base.level.controls_status["move_right"]))):
+                 mov_speed = mov_speed / sqrt(2)
+
         if base.level.controls_status["move_up"]:
             player_object.set_pos(player_object.get_pos() + (0, -mov_speed, 0))
             action = "move"
