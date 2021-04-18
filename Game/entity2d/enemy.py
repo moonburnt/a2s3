@@ -38,6 +38,20 @@ class Enemy(entity2d.Creature):
         data = base.assets.enemies[name]
         spritesheet = data['Assets']['sprite']
 
+        #this is hopefully temporary stuff, because it seems bad to call for that
+        #stuff twice
+        if affix == "Big":
+            self.affix = affix
+            scale = 2
+        elif affix == "Small":
+            self.affix = affix
+            scale = 0.5
+        else:
+            self.affix = "Normal"
+            #its 0 and not 1, coz there this way it will be passed as False and
+            #no actual rescale will occur (coz default scale is 1 anyway)
+            scale = 0
+
         super().__init__(name = data['Main']['name'],
                          category = category,
                          spritesheet = base.assets.sprite[spritesheet],
@@ -47,28 +61,24 @@ class Enemy(entity2d.Creature):
                          death_sound = data['Assets']['death_sound'],
                          hitbox_size = data['Main'].get('hitbox_size', None),
                          collision_mask = collision_mask,
+                         scale = scale,
                          position = position)
 
         self.rot_timer = ROT_TIMER
         self.can_be_removed = False
-
-        if affix in ("Normal", "Big", "Small"):
-            self.affix = affix
-        else:
-            self.affix = "Normal"
 
         if self.affix == "Big":
             #if enemy is big - reducing movement speed by 25%, but increasing
             #hp by 25% and size by x2
             self.stats['mov_spd'] = (self.stats['mov_spd']/100)*75
             self.stats['hp'] = (self.stats['hp']/100)*125
-            self.object.set_scale(2)
+            #self.object.set_scale(2)
         elif self.affix == "Small":
             #if enemy is small - increasing movement speed by 25%, but reducing
             #hp by 25% and size by x2
             self.stats['mov_spd'] = (self.stats['mov_spd']/100)*125
             self.stats['hp'] = (self.stats['hp']/100)*75
-            self.object.set_scale(0.5)
+            #self.object.set_scale(0.5)
         else:
             pass
 

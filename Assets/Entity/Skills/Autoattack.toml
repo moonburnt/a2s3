@@ -7,6 +7,7 @@ cooldown = 0.1
 [Projectile]
 name = "Invisible"
 #scale = 1.5
+scale_with_caster = true
 hitbox = 16
 lifetime = 0.1
 knockback = 0

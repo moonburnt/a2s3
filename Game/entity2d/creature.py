@@ -25,10 +25,10 @@ class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name: str, category: str, spritesheet, animations: dict,
                  stats: dict, skills: list, death_sound: str = None, hitbox_size: int = None,
-                 collision_mask = None, sprite_size: tuple = None, position = None):
+                 collision_mask = None, sprite_size: tuple = None, scale = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
         super().__init__(name, category, spritesheet, animations, hitbox_size,
-                         collision_mask, sprite_size,  position)
+                         collision_mask, sprite_size, scale, position)
 
         if death_sound and (death_sound in base.assets.sfx):
             self.death_sound = base.assets.sfx[death_sound]

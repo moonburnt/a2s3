@@ -78,6 +78,12 @@ class Skill:
             self.projectile.lifetime = projectile_data.get('lifetime', 0)
             self.projectile.knockback = projectile_data.get('knockback', 0)
 
+            if (projectile_data.get('scale_with_caster', False) and
+                                         self.caster.get_scale() != 1):
+                self.projectile.scale_modifier = self.caster.get_scale()[0]
+            else:
+                self.projectile.scale_modifier = 0
+
             caster_category = self.caster.get_python_tag("category")
 
             if caster_category == shared.PLAYER_CATEGORY:
@@ -147,7 +153,6 @@ class Skill:
         '''Casts the skill'''
         #TODO: maybe configure position and angle automatically, based on caster?
 
-        #if self.used:
         #if self.caster.get_python_tag("using_skill") or self.used:
         if self.used or self.caster.get_python_tag("using_skill"):
             return
@@ -202,12 +207,13 @@ class Skill:
                                              position = position,
                                              direction = direction,
                                              #this shouldnt do anything on None or 0
-                                             projectile_scale = self.projectile.scale,
+                                             scale = self.projectile.scale,
                                              damage = dmg,
                                              #same for all of these
                                              hitbox_size = self.projectile.hitbox,
                                              lifetime = self.projectile.lifetime,
                                              effects = self.target_effects,
+                                             scale_modifier = self.projectile.scale_modifier,
                                              angle = angle)
 
             #maybe I should attach it to skill itself instead? or to caster? and

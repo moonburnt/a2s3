@@ -27,8 +27,8 @@ ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name:str, category:str, direction, damage = 0,
-                 effects = None, projectile_scale = 0, hitbox_size = 0,
-                 lifetime = 0, position = None, angle = None):
+                 effects = None, scale = 0, hitbox_size = 0,
+                 lifetime = 0, position = None, scale_modifier = None, angle = None):
         self.name = name
 
         if category == shared.PLAYER_PROJECTILE_CATEGORY:
@@ -56,15 +56,21 @@ class Projectile(entity2d.Entity2D):
         #overriden on init. Say, by skill's values
         projectilile_hitbox = hitbox_size or data['Main'].get('hitbox_size', 0)
 
+        projectile_scale = scale or data['Main'].get('scale', 1)
+        #scale modifier is variable that tweaks raw scale value. Say, if we want
+        #to adjust default scale to match some other entity
+        if scale_modifier:
+            projectile_scale = projectile_scale*scale_modifier
+
         super().__init__(name = name,
                          category = category,
                          #spritesheet = base.assets.sprite[spritesheet],
                          spritesheet = base.assets.sprite.get(spritesheet, None),
                          animations = animations,
-                         #animations = data['Animations'],
                          hitbox_size = projectilile_hitbox,
                          collision_mask = collision_mask,
                          #sprite_size = sprite_size,
+                         scale = projectile_scale,
                          position = position)
 
         #due to addition of placeholder function that successfully does nothing
@@ -82,10 +88,6 @@ class Projectile(entity2d.Entity2D):
         #Idk about numbers. These work if caster is player, but what s about enemies?
         one, two, _ = direction
         self.object.look_at(one, two, 1)
-
-        scale = projectile_scale or data['Main'].get('scale', 0)
-        if scale and scale != 1:
-            self.object.set_scale(scale)
 
         if angle:
             #rotating projectile around 2d axis to match the shooting angle

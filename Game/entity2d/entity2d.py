@@ -26,7 +26,7 @@ class Entity2D:
     def __init__(self, name: str, category: str,
                  spritesheet = None, animations = None,
                  hitbox_size: int = None, collision_mask = None,
-                 sprite_size: tuple = None, position = None):
+                 sprite_size: tuple = None, scale: int = None, position = None):
         self.name = name
         log.debug(f"Initializing {self.name} object")
 
@@ -83,6 +83,9 @@ class Entity2D:
 
         entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
         self.collision = self.object.attach_new_node(entity_collider)
+
+        if scale:
+            self.object.set_scale(scale)
 
         #death status, that may be usefull during cleanup
         self.dead = False
