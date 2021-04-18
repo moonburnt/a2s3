@@ -68,15 +68,16 @@ class LoadLevel:
         #we dont need this one there
         #base.pusher.addOutPattern('%fn-out-%in')
 
-        #because in our current version we need to deal damage to player on collide
-        #regardless who started collided with whom - tracking all these events to
-        #run function that deals damage to player. I have no idea why, but passing
-        #things arguments to "damage target" function directly, like we did with
-        #controls, didnt work. So we are using kind of "proxy function" to do that
-        base.accept(f'{shared.PLAYER_CATEGORY}-into-{shared.ENEMY_CATEGORY}', self.damage_player)
-        base.accept(f'{shared.ENEMY_CATEGORY}-into-{shared.PLAYER_CATEGORY}', self.damage_player)
-        base.accept(f'{shared.PLAYER_CATEGORY}-again-{shared.ENEMY_CATEGORY}', self.damage_player)
-        base.accept(f'{shared.ENEMY_CATEGORY}-again-{shared.PLAYER_CATEGORY}', self.damage_player)
+        #tracking all the collision events related to instances of player colliding
+        #with enemy projectile and causing related function to trigger on these
+        base.accept(f'{shared.PLAYER_CATEGORY}-into-{shared.ENEMY_PROJECTILE_CATEGORY}',
+                                                                    self.damage_player)
+        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-into-{shared.PLAYER_CATEGORY}',
+                                                                    self.damage_player)
+        base.accept(f'{shared.PLAYER_CATEGORY}-again-{shared.ENEMY_PROJECTILE_CATEGORY}',
+                                                                    self.damage_player)
+        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-again-{shared.PLAYER_CATEGORY}',
+                                                                    self.damage_player)
 
         #also tracking collisions of enemy with player's attack projectile
         base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-into-{shared.ENEMY_CATEGORY}', self.damage_enemy)
@@ -406,7 +407,8 @@ class LoadLevel:
         with something that may hurt it. Checks if its possible to deal damage
         right now, then trigger player's "get_damage" function'''
 
-        colliders = self.sort_collision(entry, shared.ENEMY_CATEGORY)
+        #colliders = self.sort_collision(entry, shared.ENEMY_CATEGORY)
+        colliders = self.sort_collision(entry, shared.ENEMY_PROJECTILE_CATEGORY)
         if not colliders:
             #log.warning("Collision cant occur")
             return
@@ -419,8 +421,9 @@ class LoadLevel:
 
         target.set_python_tag("last_collision_time", time())
 
-        ds = hitter.get_python_tag("stats")
-        damage = ds['dmg']
+        #ds = hitter.get_python_tag("stats")
+        #damage = ds['dmg']
+        damage = hitter.get_python_tag("damage")
         damage_function = target.get_python_tag("get_damage")
         effects = hitter.get_python_tag("effects")
 

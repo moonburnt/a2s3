@@ -138,7 +138,7 @@ class Skill:
 
             return 0
 
-    def cast(self, direction, position, angle):
+    def cast(self, direction, position, angle = None):
         '''Casts the skill'''
         #TODO: maybe configure position and angle automatically, based on caster?
 

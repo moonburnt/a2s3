@@ -3,7 +3,7 @@
 [Main]
 name = "Cuboid"
 hitbox_size = 12
-#skills = [ "atk_0" ]
+skills = [ "Autoattack" ]
 
 [Stats]
 hp = 50

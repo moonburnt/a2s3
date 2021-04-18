@@ -127,7 +127,18 @@ class Enemy(entity2d.Creature):
         if distance_to_player > shared.DEFAULT_SPRITE_SIZE[0]*2:
             action = 'move'
         else:
-            action = 'attack'
+            #action = 'attack'
+            # self.skills['Autoattack'].cast(direction = enemy_position,
+                                           # position = enemy_position)
+                                           #angle = angle)
+
+            #cast the very first skill available. #TODO: add something to affect
+            #order of skills in self.skills
+            skill = self.get_available_skill()
+            if skill:
+                #direction and position are temporary
+                skill.cast(direction = enemy_position,
+                           position = enemy_position)
 
         #workaround for issue when enemy keeps running into player despite already
         #colliding with it, which cause enemy's animation to go wild.
@@ -136,9 +147,20 @@ class Enemy(entity2d.Creature):
         if distance_to_player > 6:
             self.object.set_pos(new_pos)
         #self.object.set_pos(new_pos)
-        self.change_animation(f'{action}_{self.direction}')
+
+        #it seems like enemy always cast skill to right, but I cant figure out why
+        #TODO
+        if not self.object.get_python_tag("using_skill"):
+            self.change_animation(f"{action}_{self.direction}")
+        #self.change_animation(f'{action}_{self.direction}')
 
         return event.cont
+
+    def get_available_skill(self):
+        '''Iterate thought all known skills and return first that has 0 cooldown'''
+        for skill in self.skills:
+            if not self.skills[skill].used:
+                return self.skills[skill]
 
     def get_damage(self, amount = None, effects = None):
         if self.dead:
