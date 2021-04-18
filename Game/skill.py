@@ -57,7 +57,12 @@ class Skill:
         self.cooldown = main.get('cooldown', 0)
 
         #Projectile spawned by skill, in case skill has that thing
-        self.projectile = main.get('projectile', None)
+        projectile_data = data.get('Projectile', None)
+        if projectile_data and projectile_data.get('name', None):
+            self.projectile = Storage()
+            self.projectile.name = projectile_data['name']
+        else:
+            self.projectile = None
 
         if 'Effects' in data:
             effects = data['Effects']
@@ -68,17 +73,17 @@ class Skill:
             #stuff below is located there, because for the time being it makes
             #no sense to load it if skill has no projectiles attached to it, as
             #these only affect projectile
-            self.projectile_scale = main.get('projectile_scale', 0)
-            self.projectile_hitbox = main.get('projectile_hitbox', 0)
-            self.projectile_lifetime = main.get('projectile_lifetime', 0)
+            self.projectile.scale = projectile_data.get('scale', 0)
+            self.projectile.hitbox = projectile_data.get('hitbox', 0)
+            self.projectile.lifetime = projectile_data.get('lifetime', 0)
+            self.projectile.knockback = projectile_data.get('knockback', 0)
+
             caster_category = self.caster.get_python_tag("category")
 
             if caster_category == shared.PLAYER_CATEGORY:
-                self.projectile_category = shared.PLAYER_PROJECTILE_CATEGORY
+                self.projectile.category = shared.PLAYER_PROJECTILE_CATEGORY
             else:
-                self.projectile_category = shared.ENEMY_PROJECTILE_CATEGORY
-
-            self.knockback = main.get('knockback', 0)
+                self.projectile.category = shared.ENEMY_PROJECTILE_CATEGORY
 
             #Idk about current format, but Im trying to make it easy to use below
             #without need to store useless variables in memory
@@ -190,18 +195,18 @@ class Skill:
             dmg = self.calculate_stat('dmg')
 
             #TODO: add ability to pass knockbass to projectile
-            projectile = entity2d.Projectile(name = self.projectile,
+            projectile = entity2d.Projectile(name = self.projectile.name,
                                              #this will explode on None, but it
                                              #shouldnt happen... I guess
-                                             category = self.projectile_category,
+                                             category = self.projectile.category,
                                              position = position,
                                              direction = direction,
                                              #this shouldnt do anything on None or 0
-                                             projectile_scale = self.projectile_scale,
+                                             projectile_scale = self.projectile.scale,
                                              damage = dmg,
                                              #same for all of these
-                                             hitbox_size = self.projectile_hitbox,
-                                             lifetime = self.projectile_lifetime,
+                                             hitbox_size = self.projectile.hitbox,
+                                             lifetime = self.projectile.lifetime,
                                              effects = self.target_effects,
                                              angle = angle)
 

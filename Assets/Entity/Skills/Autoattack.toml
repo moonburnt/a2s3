@@ -1,15 +1,15 @@
 [Main]
 name = "Autoattack"
-
 caster_animation = "attack"
-
-projectile = "Invisible"
-#projectile_scale = 1.5
-projectilile_hitbox = 16
-projectile_lifetime = 0.1
-knockback = 0
 cast_time = 0.1
 cooldown = 0.1
+
+[Projectile]
+name = "Invisible"
+#scale = 1.5
+hitbox = 16
+lifetime = 0.1
+knockback = 0
 
 [Stats]
 dmg = 0

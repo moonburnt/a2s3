@@ -9,23 +9,6 @@ caster_animation = "attack"
 # Idk if I should include it, to be fair
 #caster_animation_speed = 1
 
-# Optional variable that specifies projectile to be casted. Cast always happen
-# from caster's center, based on caster's direction. I may change this in future
-# (say, to allow skills that auto-target enemies), but for now thats it
-projectile = "Slash"
-# Optional variable that overrides default scale of projectile's sprite
-#projectile_scale = 1.5
-# Optional variable that overrides default size of projectile's hitbox. Yep,
-# these are two different things. I may rework that later, idk
-#projectilile_hitbox = 16
-# Optional variable that sets projectile lifetime. If not set, projectile will
-#stay on screen forever
-projectile_lifetime = 0.1
-
-# Projectile knockback. Knocks target furter from caster on collision with projectile
-# Its optional too and I was tempting to put it onto stats, but for now that it
-knockback = 0
-
 # Amount of time, required to cast skill. Yes, its a different thing from cooldown.
 # While active cooldown makes caster impossible to use skill again, cast_time timer
 # makes caster impossible to use ANY skill. Also enforces caster to play cast
@@ -35,6 +18,22 @@ cast_time = 0.5
 # Skill's cooldown. Yes, its optional too, coz some skill may be spammed with no
 # cd whatsoever. Or at least I think so... may change if it will break things
 cooldown = 0.5
+
+# Optional category that specifies projectile to be casted and its properties
+[Projectile]
+# Name of projectile. If doest exist, projectile wont be used
+name = "Slash"
+# Optional variable that overrides default scale of projectile's sprite
+#scale = 1.5
+# Optional variable that overrides default size of projectile's hitbox. Yep,
+# these are two different things. I may rework that later, idk
+#hitbox = 16
+# Optional variable that sets projectile lifetime. If not set, projectile will
+#stay on screen forever
+lifetime = 0.1
+# Projectile knockback. Knocks target furter from caster on collision with projectile
+# Its optional too and I was tempting to put it onto stats, but for now that it
+knockback = 0
 
 [Stats]
 # Optional category that define skill's stats. May not exist at all, if we are
