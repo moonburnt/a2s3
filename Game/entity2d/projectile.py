@@ -26,9 +26,9 @@ ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name:str, category:str, direction, damage = 0,
+    def __init__(self, name:str, category:str, position, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, target = None, speed = 0,
-                 lifetime = 0, position = None, scale_modifier = None, angle = None):
+                 lifetime = 0, direction = None, scale_modifier = None, angle = None):
         self.name = name
 
         if category == shared.PLAYER_PROJECTILE_CATEGORY:
@@ -62,6 +62,17 @@ class Projectile(entity2d.Entity2D):
         if scale_modifier:
             projectile_scale = projectile_scale*scale_modifier
 
+        #idk about this. Really. It will most likely break with introduction of
+        #new skill's projectile behaviours and need rework. Like, idk - add bool
+        #to init with "keep_distance: True/False" or something
+        if direction:
+            self.direction = direction
+            #setting projectile to already spawn with directional offset, because
+            #otherwise all the direction tracking will do no good on movement
+            position = position + self.direction
+        else:
+            self.direction = 0
+
         super().__init__(name = name,
                          category = category,
                          #spritesheet = base.assets.sprite[spritesheet],
@@ -86,7 +97,7 @@ class Projectile(entity2d.Entity2D):
         self.dead = False
 
         #Idk about numbers. These work if caster is player, but what s about enemies?
-        one, two, _ = direction
+        one, two, _ = position
         self.object.look_at(one, two, 1)
 
         if angle:
@@ -111,17 +122,14 @@ class Projectile(entity2d.Entity2D):
 
             base.task_mgr.add(self.follow_task, f"following task of {self.name}")
 
-    #current realisation doesnt take offsets in mind, which cause projectile to
-    #fly towards caster's core if its originally hasnt been casted from center.
-    ##TODO
     def follow_task(self, event):
         '''Taskmanager task that make projectile follow the target'''
         if self.dead or not self.object or not self.target:
             return
 
         projectile_position = self.object.get_pos()
-        #vector_to_target = projectile_position - self.target.get_pos()
-        vector_to_target = self.target.get_pos() - projectile_position
+
+        vector_to_target = (self.target.get_pos() + self.direction) - projectile_position
         distance_to_target = vector_to_target.length()
         vector_to_target.normalize()
 

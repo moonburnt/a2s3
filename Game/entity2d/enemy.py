@@ -137,18 +137,14 @@ class Enemy(entity2d.Creature):
         if distance_to_player > shared.DEFAULT_SPRITE_SIZE[0]*2:
             action = 'move'
         else:
-            #action = 'attack'
-            # self.skills['Autoattack'].cast(direction = enemy_position,
-                                           # position = enemy_position)
-                                           #angle = angle)
-
             #cast the very first skill available. #TODO: add something to affect
             #order of skills in self.skills
             skill = self.get_available_skill()
             if skill:
                 #direction and position are temporary
-                skill.cast(direction = enemy_position,
-                           position = enemy_position)
+                #skill.cast(direction = enemy_position,
+                #           position = enemy_position)
+                skill.cast()
 
         #workaround for issue when enemy keeps running into player despite already
         #colliding with it, which cause enemy's animation to go wild.

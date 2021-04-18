@@ -43,7 +43,7 @@ knockback = 0
 # - "follow_caster". Make projectile follow caster's position until death. Usefull
 # for skills that should stay "somewhat around" without need to stun caster
 ## - "follow_target". Make projectile go to selected coordinates. Not implemented
-#
+behavior = "follow_caster"
 # Optional variable that sets up projectile speed. Only used if projectile's
 # behavior is set to "follow_target" - otherwise either based on caster or 0
 #speed = 1
@@ -71,7 +71,7 @@ dmg = 0
 # Damage multiplier
 dmg_multiplier = 1
 
-[Effects.caster]
+#[Effects.caster]
 # Effects are optional category for buffs and debuffs
 # Its split into 2 subcategories with slightly different rules:
 #  - [Effects.caster]. For effects that apply to whoever used skill. Gets applied
@@ -84,7 +84,7 @@ dmg_multiplier = 1
 # listed there. I wanted to add something else, but forgot about it, lol
 
 # Length of effect
-stun = 0.1
+#stun = 0.1
 
 [Effects.target]
 stun = 0.3

@@ -160,7 +160,7 @@ class Skill:
 
             return 0
 
-    def cast(self, direction, position, angle = None):
+    def cast(self, position = None, direction = None, angle = None):
         '''Casts the skill'''
         #TODO: maybe configure position and angle automatically, based on caster?
 
@@ -210,14 +210,18 @@ class Skill:
             #to the calculation function itself
             dmg = self.calculate_stat('dmg')
 
+            if not position:
+                position = self.caster.get_pos()
+
             #TODO: add ability to pass knockbass to projectile
+
             projectile = entity2d.Projectile(name = self.projectile.name,
                                              #this will explode on None, but it
                                              #shouldnt happen... I guess
                                              category = self.projectile.category,
                                              position = position,
-                                             direction = direction,
                                              #this shouldnt do anything on None or 0
+                                             direction = direction,
                                              scale = self.projectile.scale,
                                              damage = dmg,
                                              #same for all of these
