@@ -23,7 +23,7 @@ cooldown = 0.5
 [Projectile]
 # Name of projectile. If doest exist, projectile wont be used
 name = "Slash"
-# Optional variable that overrides default scale of projectile's sprite
+# Optional variable that overrides default scale of projectile's object
 #scale = 1.5
 # Optional variable that overrides default size of projectile's hitbox. Yep,
 # these are two different things. I may rework that later, idk
@@ -37,6 +37,16 @@ knockback = 0
 # Optional variable that automatically rescale BOTH projectile's hitbox and sprite,
 # in case caster's scale is different from 1. Can be true or false (default = false)
 #scale_with_caster = true
+# Optional variable that sets up projectile behavior. Has following possible values:
+# - "stationary". Default, will be used as fallback on nonexistant-incorrect values.
+# Keep projectile in place after spawn. May be good for traps and similar stuff
+# - "follow_caster". Make projectile follow caster's position until death. Usefull
+# for skills that should stay "somewhat around" without need to stun caster
+## - "follow_target". Make projectile go to selected coordinates. Not implemented
+#
+# Optional variable that sets up projectile speed. Only used if projectile's
+# behavior is set to "follow_target" - otherwise either based on caster or 0
+#speed = 1
 
 [Stats]
 # Optional category that define skill's stats. May not exist at all, if we are

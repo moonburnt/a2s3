@@ -78,6 +78,17 @@ class Skill:
             self.projectile.lifetime = projectile_data.get('lifetime', 0)
             self.projectile.knockback = projectile_data.get('knockback', 0)
 
+            behavior = projectile_data.get('behavior', None)
+            #specify whatever correct variables there, except for "stationary",
+            #because stationary projectile doesnt move anywhere
+            if behavior == "follow_caster":
+                self.projectile.target = self.caster
+                #setting it there coz it should follow the caster with caster's spd
+                self.projectile.speed = self.caster_stats.get('mov_spd', 0)
+            else:
+                self.projectile.target = None
+                self.projectile.speed = projectile_data.get('speed', 0)
+
             if (projectile_data.get('scale_with_caster', False) and
                                          self.caster.get_scale() != 1):
                 self.projectile.scale_modifier = self.caster.get_scale()[0]
@@ -214,6 +225,8 @@ class Skill:
                                              lifetime = self.projectile.lifetime,
                                              effects = self.target_effects,
                                              scale_modifier = self.projectile.scale_modifier,
+                                             target = self.projectile.target,
+                                             speed = self.projectile.speed,
                                              angle = angle)
 
             #maybe I should attach it to skill itself instead? or to caster? and

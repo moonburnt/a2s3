@@ -1,20 +1,21 @@
 [Main]
 name = "Autoattack"
 caster_animation = "attack"
-cast_time = 0.1
-cooldown = 0.1
+cast_time = 0.5
+cooldown = 0.5
 
 [Projectile]
 name = "Invisible"
 #scale = 1.5
 scale_with_caster = true
 hitbox = 16
-lifetime = 0.1
+lifetime = 0.5
 knockback = 0
+behavior = "follow_caster"
 
 [Stats]
 dmg = 0
 dmg_multiplier = 1
 
 [Effects.caster]
-stun = 0.1
+#stun = 0.1

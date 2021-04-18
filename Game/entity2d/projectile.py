@@ -27,7 +27,7 @@ ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name:str, category:str, direction, damage = 0,
-                 effects = None, scale = 0, hitbox_size = 0,
+                 effects = None, scale = 0, hitbox_size = 0, target = None, speed = 0,
                  lifetime = 0, position = None, scale_modifier = None, angle = None):
         self.name = name
 
@@ -101,6 +101,36 @@ class Projectile(entity2d.Entity2D):
             #does things based on frames and not real time. But for now it will do
             base.task_mgr.do_method_later(self.lifetime, self.dying_task,
                                          f"dying task of projectile {self.name}")
+
+        if target:
+            self.target = target
+            if speed:
+                self.speed = speed
+            else:
+                self.speed = 1
+
+            base.task_mgr.add(self.follow_task, f"following task of {self.name}")
+
+    #current realisation doesnt take offsets in mind, which cause projectile to
+    #fly towards caster's core if its originally hasnt been casted from center.
+    ##TODO
+    def follow_task(self, event):
+        '''Taskmanager task that make projectile follow the target'''
+        if self.dead or not self.object or not self.target:
+            return
+
+        projectile_position = self.object.get_pos()
+        #vector_to_target = projectile_position - self.target.get_pos()
+        vector_to_target = self.target.get_pos() - projectile_position
+        distance_to_target = vector_to_target.length()
+        vector_to_target.normalize()
+
+        #workaround to ensure object will its stay on its original layer
+        vxy = vector_to_target.get_xy()
+        new_pos = projectile_position + (vxy*self.speed, 0)
+
+        self.object.set_pos(new_pos)
+        return event.cont
 
     def dying_task(self, event):
         super().die()
