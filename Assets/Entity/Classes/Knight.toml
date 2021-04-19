@@ -16,38 +16,20 @@ sprite = "player"
 #hurt_sound =
 death_sound = "player_death"
 
-[Animations.idle_right]
+[Animations.idle]
 sprites = [ 0, 0 ]
 loop = true
 
-[Animations.idle_left]
-sprites = [ 4, 4 ]
+[Animations.move]
+sprites = [ 4, 7 ]
 loop = true
 
-[Animations.move_right]
+[Animations.attack]
 sprites = [ 8, 11 ]
 loop = true
 
-[Animations.move_left]
+[Animations.hurt]
 sprites = [ 12, 15 ]
-loop = true
 
-[Animations.attack_right]
+[Animations.dying]
 sprites = [ 16, 19 ]
-loop = true
-
-[Animations.attack_left]
-sprites = [ 20, 23 ]
-loop = true
-
-[Animations.hurt_right]
-sprites = [ 24, 27 ]
-
-[Animations.hurt_left]
-sprites = [ 28, 31 ]
-
-[Animations.dying_left]
-sprites = [ 32, 35 ]
-
-[Animations.dying_right]
-sprites = [ 36, 39 ]

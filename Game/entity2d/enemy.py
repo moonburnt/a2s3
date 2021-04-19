@@ -125,11 +125,11 @@ class Enemy(entity2d.Creature):
         action = 'idle'
 
         #it may be good idea to also track camera angle, if I will decide
-        #to implement camera controls, at some point or another
+        #to implement camera controls, at some point or another. #TODO
         if pos_diff[0] > 0:
-            self.direction = 'right'
+            self.change_direction('right')
         else:
-            self.direction = 'left'
+            self.change_direction('left')
 
         #this thing basically makes enemy move till it hit player, than play
         #attack animation. May backfire if player's sprite size is not equal
@@ -154,11 +154,8 @@ class Enemy(entity2d.Creature):
             self.object.set_pos(new_pos)
         #self.object.set_pos(new_pos)
 
-        #it seems like enemy always cast skill to right, but I cant figure out why
-        #TODO
         if not self.object.get_python_tag("using_skill"):
-            self.change_animation(f"{action}_{self.direction}")
-        #self.change_animation(f'{action}_{self.direction}')
+            self.change_animation(action)
 
         return event.cont
 

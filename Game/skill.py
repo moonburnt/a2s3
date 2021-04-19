@@ -181,10 +181,7 @@ class Skill:
             #not worrying about speed at all
             #if self.caster_speed =
             change_func = self.caster.get_python_tag("change_animation")
-            caster_direction = self.caster.get_python_tag("direction")
-            #log.debug(f"changing {self.caster}'s anim to "
-            #           f"{self.caster_animation}_{caster_direction}")
-            change_func(f"{self.caster_animation}_{caster_direction}")
+            change_func(self.caster_animation)
 
         if self.caster_effects:
             # and self.buff_caster:

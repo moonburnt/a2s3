@@ -17,7 +17,7 @@
 #module dedicated to manage per-level stuff
 
 import logging
-from panda3d.core import CollisionTraverser, CollisionHandlerEvent
+from panda3d.core import CollisionTraverser, CollisionHandlerEvent, PandaNode
 from time import time
 from random import randint, choice
 from Game import entity2d, map_loader, shared, interface
@@ -148,6 +148,15 @@ class LoadLevel:
         self.controls_status[key_name] = key_status
         log.debug(f"{key_name} has been set to {key_status}")
 
+    def follow_player(self, event):
+        '''Taskmanager routine that updates self.player_follower and sets its
+        position to be the same as player. For as long as player is alive, ofc'''
+        if self.player.dead or not self.player.object:
+            return
+
+        self.player_follower.set_pos(self.player.object.get_pos())
+        return event.cont
+
     def setup_level(self):
         '''Set default level's variables'''
         log.debug("Generating the map")
@@ -199,8 +208,18 @@ class LoadLevel:
         #its variable and not len of enemy list, coz it doesnt clean up right away
         self.enemy_amount = 0
 
+        #its done there and not in init, otherwise self.cleanup() will break it
+        #setting up the node to which camera will be attached. Its goal is to
+        #be contantly updated with task that will always set its position to
+        #player's. Its done this way, because otherwise mirroring player's node
+        #will also mirror camera. But in future it may also allow for some funny
+        #stuff, like easy camera offsets and such.
+        player_follower = PandaNode("player follower")
+        self.player_follower = render.attach_new_node(player_follower)
+
         #making camera always follow character
-        base.camera.reparent_to(self.player.object)
+        #base.camera.reparent_to(self.player.object)
+        base.camera.reparent_to(self.player_follower)
 
         base.music_player.crossfade(base.assets.music['battle'])
 
@@ -211,6 +230,9 @@ class LoadLevel:
         interface.switch(self.player_hud)
 
         base.task_mgr.add(self.wave_changer, "wave changer")
+
+        #enabling self.player_follower to autoupdate
+        base.task_mgr.add(self.follow_player, "player follower routine for camera")
 
     def spawn_enemies(self, event):
         '''If amount of enemies is less than MAX_ENEMY_COUNT: spawns enemy each

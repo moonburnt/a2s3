@@ -15,9 +15,9 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
-log = logging.getLogger(__name__)
-
 from panda3d.core import Texture
+
+log = logging.getLogger(__name__)
 
 #idk if this thing deserve its own module, but at least it doesnt consume much space
 def cut_spritesheet(spritesheet, size):
@@ -25,8 +25,6 @@ def cut_spritesheet(spritesheet, size):
     on sprite size and size of spritesheet, make list of offsets for each sprite
     on the sheet, which can later be used to select, some particular sprite to use.
     Then returns said list to function that requested it'''
-
-    #todo: move this thing to assets loader
 
     #for now, this has 2 limitations:
     # 1. Spritesheet HAS TO DIVIDE TO PROVIDED SPRITE SIZE WITHOUT REMAINDER. If
@@ -67,23 +65,13 @@ def cut_spritesheet(spritesheet, size):
     #anything bigger than that
     for row in range(sprite_rows-1, -1, -1):
         log.debug(f"Processing row {row}")
-        #workaround to add negative values without breaking the order. This wont
-        #work if texture wrap mode isnt set to mirror. But otherwise it does
-        row_dict = []
-        mirrored_dict = []
         for column in range(0, sprite_columns):
             log.debug(f"Processing column {column}")
             horizontal_offset = column * horizontal_offset_step
             vertical_offset = row * vertical_offset_step
             log.debug(f"Got offsets: {horizontal_offset, vertical_offset}")
-            row_dict.append((horizontal_offset, vertical_offset))
-            #adding +1, coz of how texture wrap mode works
-            mirrored_dict.append((1+horizontal_offset, vertical_offset))
-        #reversing the order of items in mirrored dict, because otherwise it
-        #would count items from right side of mirrored image to left
-        mirrored_dict.reverse()
-        offsets.extend(row_dict)
-        offsets.extend(mirrored_dict)
+            offsets.append((horizontal_offset, vertical_offset))
+
     log.debug(f"Spritesheet contain following offsets: {offsets}")
 
     #maybe rename it into something more convenient?

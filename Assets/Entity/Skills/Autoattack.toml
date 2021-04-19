@@ -6,9 +6,8 @@ cooldown = 0.5
 
 [Projectile]
 name = "Invisible"
-#scale = 1.5
 scale_with_caster = true
-hitbox = 16
+hitbox = 15
 lifetime = 0.5
 knockback = 0
 behavior = "follow_caster"
@@ -16,6 +15,3 @@ behavior = "follow_caster"
 [Stats]
 dmg = 0
 dmg_multiplier = 1
-
-[Effects.caster]
-#stun = 0.1

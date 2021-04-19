@@ -124,10 +124,13 @@ class Player(entity2d.Creature):
         #ensuring that mouse pointer is part of game's window right now
         if mouse_watcher.has_mouse():
             mouse_x = mouse_watcher.get_mouse_x()
+            #independant direction change allows us to rotate node without resetting
+            #animation frame. May be bad on characters that have facial features
+            #only appearing on one side, but thats a minor annoyance
             if mouse_x > 0:
-                self.direction = 'right'
+                self.change_direction('right')
             else:
-                self.direction = 'left'
+                self.change_direction('left')
 
         #saving action to apply to our animation. Default is idle
         action = 'idle'
@@ -188,7 +191,7 @@ class Player(entity2d.Creature):
         #remember it. Wooops... #TODO
         #if not self.using_skill:
         if not self.object.get_python_tag("using_skill"):
-            self.change_animation(f"{action}_{self.direction}")
+            self.change_animation(action)
 
         #it works a bit weird, but if we wont return .cont of task we received,
         #then task will run just once and then stop, which we dont want

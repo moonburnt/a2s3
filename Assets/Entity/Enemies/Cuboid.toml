@@ -14,38 +14,20 @@ mov_spd = 2
 sprite = "cuboid"
 death_sound = "enemy_death"
 
-[Animations.idle_right]
+[Animations.idle]
 sprites = [ 0, 0 ]
 loop = true
 
-[Animations.idle_left]
-sprites = [ 4, 4 ]
-loop = true
-
-[Animations.move_right]
+[Animations.move]
 sprites = [ 0, 3 ]
 loop = true
 
-[Animations.move_left]
+[Animations.attack]
 sprites = [ 4, 7 ]
 loop = true
 
-[Animations.attack_right]
+[Animations.hurt]
 sprites = [ 8, 11 ]
-loop = true
 
-[Animations.attack_left]
+[Animations.dying]
 sprites = [ 12, 15 ]
-loop = true
-
-[Animations.hurt_right]
-sprites = [ 16, 19 ]
-
-[Animations.hurt_left]
-sprites = [ 20, 23 ]
-
-[Animations.dying_right]
-sprites = [ 23, 26 ]
-
-[Animations.dying_left]
-sprites = [ 27, 30 ]

@@ -21,6 +21,9 @@ from Game import entity2d, skill
 
 log = logging.getLogger(__name__)
 
+LOOK_RIGHT = 0
+LOOK_LEFT = 180
+
 class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name: str, category: str, spritesheet, animations: dict,
@@ -30,6 +33,11 @@ class Creature(entity2d.Entity2D):
         super().__init__(name, category, spritesheet, animations, hitbox_size,
                          collision_mask, sprite_size, scale, position)
 
+        #magic that allows for rotating node around its h without making it look
+        #invisible. Idk why its not enabled by default - guess its to save some
+        #resources, thus Im doing it there and not during base entity2d init
+        self.object.set_two_sided(True)
+
         if death_sound and (death_sound in base.assets.sfx):
             self.death_sound = base.assets.sfx[death_sound]
         else:
@@ -37,7 +45,7 @@ class Creature(entity2d.Entity2D):
             self.death_sound = base.assets.sfx['default_death']
 
         self.direction = 'right'
-        self.change_animation(f'idle_{self.direction}')
+        self.change_animation('idle')
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
         self.stats = stats.copy()
@@ -90,6 +98,16 @@ class Creature(entity2d.Entity2D):
 
         #default rgba values. Saved on init, used in blinking
         self.default_colorscheme = self.object.get_color_scale()
+
+    def change_direction(self, direction):
+        '''Change direction, creature face, in case it didnt face this way already'''
+        if direction != self.direction:
+            if direction == "right":
+                self.object.set_h(LOOK_RIGHT)
+            else:
+                self.object.set_h(LOOK_LEFT)
+            self.direction = direction
+            log.debug(f"{self.name} is now facing {self.direction}")
 
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
@@ -207,6 +225,7 @@ class Creature(entity2d.Entity2D):
         #Death of creature is a bit different than death of other entities, because
         #we dont remove object node itself right away, but keep it to rot. And
         #then, with some additional taskmanager task, clean things up
-        self.change_animation(f'dying_{self.direction}')
+        #self.change_animation(f'dying_{self.direction}')
+        self.change_animation(f'dying')
 
         self.death_sound.play()
