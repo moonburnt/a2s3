@@ -36,7 +36,7 @@ class Creature(entity2d.Entity2D):
         #magic that allows for rotating node around its h without making it look
         #invisible. Idk why its not enabled by default - guess its to save some
         #resources, thus Im doing it there and not during base entity2d init
-        self.object.set_two_sided(True)
+        self.node.set_two_sided(True)
 
         if death_sound and (death_sound in base.assets.sfx):
             self.death_sound = base.assets.sfx[death_sound]
@@ -53,59 +53,59 @@ class Creature(entity2d.Entity2D):
         #list with timed status effects. When any of these reach 0 - they get ignored
         self.status_effects = {}
 
-        self.object.set_python_tag("stats", self.stats)
-        self.object.set_python_tag("get_damage", self.get_damage)
+        self.node.set_python_tag("stats", self.stats)
+        self.node.set_python_tag("get_damage", self.get_damage)
 
         #shenanigans for skills
-        self.object.set_python_tag("dead", self.dead)
-        self.object.set_python_tag("direction", self.direction)
-        self.object.set_python_tag("change_animation", self.change_animation)
+        self.node.set_python_tag("dead", self.dead)
+        self.node.set_python_tag("direction", self.direction)
+        self.node.set_python_tag("change_animation", self.change_animation)
         #self.using_skill = False
         #setting it like that, because there doesnt seem to be the way to update
         #variable linked to tag - only to override it. Or maybe I didnt find it
-        self.object.set_python_tag("using_skill", False)
-        self.object.set_python_tag("status_effects", self.status_effects)
+        self.node.set_python_tag("using_skill", False)
+        self.node.set_python_tag("status_effects", self.status_effects)
 
         if skills:
             #I should probably rework this into list or idk
             entity_skills = {}
             for item in skills:
                 if item in base.assets.skills:
-                    skill_instance = skill.Skill(item, self.object)
+                    skill_instance = skill.Skill(item, self.node)
                     entity_skills[item] = skill_instance
             self.skills = entity_skills
         else:
             self.skills = None
 
-        #attaching our object's collisions to traverser
+        #attaching our node's collisions to traverser
         #otherwise they wont be detected
         base.cTrav.add_collider(self.collision, base.chandler)
 
-        #billboard is effect to ensure that object always face camera the same
+        #billboard is effect to ensure that node always face camera the same
         #e.g this is the key to achieve that "2.5D style" I aim for
-        self.object.set_billboard_point_eye()
+        self.node.set_billboard_point_eye()
 
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
         #used to avoid issue with getting multiple damage func calls per frame
         #see game_window's damage functions
         self.last_collision_time = 0
-        self.object.set_python_tag("last_collision_time", self.last_collision_time)
+        self.node.set_python_tag("last_collision_time", self.last_collision_time)
 
         #proxifying self.apply_effect, so it will be possible for skills and
         #projectiles to trigger this function
-        self.object.set_python_tag("apply_effect", self.apply_effect)
+        self.node.set_python_tag("apply_effect", self.apply_effect)
 
         #default rgba values. Saved on init, used in blinking
-        self.default_colorscheme = self.object.get_color_scale()
+        self.default_colorscheme = self.node.get_color_scale()
 
     def change_direction(self, direction):
         '''Change direction, creature face, in case it didnt face this way already'''
         if direction != self.direction:
             if direction == "right":
-                self.object.set_h(LOOK_RIGHT)
+                self.node.set_h(LOOK_RIGHT)
             else:
-                self.object.set_h(LOOK_LEFT)
+                self.node.set_h(LOOK_LEFT)
             self.direction = direction
             log.debug(f"{self.name} is now facing {self.direction}")
 
@@ -179,8 +179,8 @@ class Creature(entity2d.Entity2D):
         Can be usefull to highlight various effects - getting healed, damage, etc'''
 
         # TODO: add ability to set not just rgba, but also lightness
-        #right now its only possible to make object blink in darker shades, which
-        #is done by mixing rgb values. Its not possible to make object blink in
+        #right now its only possible to make node blink in darker shades, which
+        #is done by mixing rgb values. Its not possible to make node blink in
         #white tones, which is one of (together with red) default ways to highlight
         #getting damage with color in these types of games
 
@@ -195,18 +195,18 @@ class Creature(entity2d.Entity2D):
 
         if fade_in:
             fade_in_effect = LerpColorScaleInterval(
-                                         nodePath = self.object,
+                                         nodePath = self.node,
                                          duration = (length),
                                          colorScale = rgba,
                                          startColorScale = self.default_colorscheme
                                          )
             sequence.append(fade_in_effect)
         else:
-            sequence.append(Func(self.object.set_color_scale, rgba))
+            sequence.append(Func(self.node.set_color_scale, rgba))
 
         if fade_out:
             fade_out_effect = LerpColorScaleInterval(
-                                         nodePath = self.object,
+                                         nodePath = self.node,
                                          duration = (length),
                                          colorScale = self.default_colorscheme,
                                          startColorScale = rgba
@@ -215,16 +215,16 @@ class Creature(entity2d.Entity2D):
         else:
             if not fade_in:
                 sequence.append(Wait(length))
-            sequence.append(Func(self.object.set_color_scale,
+            sequence.append(Func(self.node.set_color_scale,
                                  self.default_colorscheme))
 
         sequence.start()
 
     def die(self):
         super().die()
-        #Death of creature is a bit different than death of other entities, because
-        #we dont remove object node itself right away, but keep it to rot. And
-        #then, with some additional taskmanager task, clean things up
+        #Death of creature is a bit different than death of other entities,
+        #because we dont remove creature's node itself right away, but keep it
+        #to rot. And then, with some additional taskmanager task, clean things up
         #self.change_animation(f'dying_{self.direction}')
         self.change_animation(f'dying')
 

@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 DEFAULT_ANIMATIONS_SPEED = 0.1
 
 class AnimatedObject:
-    '''Create 2D CardMaker object out of provided spritesheet and sprite data.
+    '''Create 2D CardMaker node out of provided spritesheet and sprite data.
     Can be then used to show various animations from provided sheet'''
     def __init__(self, name:str, spritesheet, sprites: list, sprite_size:int, default_sprite:int = 0):
         #name of animated object
@@ -58,8 +58,8 @@ class AnimatedObject:
         entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
         #settings this to base.render wont work - I tried
-        self.object = render.attach_new_node(entity_frame.generate())
-        self.object.set_texture(self.spritesheet)
+        self.node = render.attach_new_node(entity_frame.generate())
+        self.node.set_texture(self.spritesheet)
 
         #okay, this does the magic
         #basically, to show the very first sprite of 2 in row, we set tex scale
@@ -67,18 +67,18 @@ class AnimatedObject:
         #with sprites other than first - then we also should adjust offset accordingly
         #entity_object.set_tex_offset(TextureStage.getDefault(), 0.5, 0)
         #entity_object.set_tex_scale(TextureStage.getDefault(), 0.5, 1)
-        self.object.set_tex_scale(TextureStage.getDefault(),
+        self.node.set_tex_scale(TextureStage.getDefault(),
                                     horizontal_scale, vertical_scale)
 
         #now, to use the stuff from cut_spritesheet function.
         #lets say, we need to use second sprite from sheet. Just do:
         #entity_object.set_tex_offset(TextureStage.getDefault(), *offsets[1])
-        self.object.set_tex_offset(TextureStage.getDefault(),
+        self.node.set_tex_offset(TextureStage.getDefault(),
                                      *offsets[default_sprite])
 
         #enable support for alpha channel. This is a float, e.g making it non-100%
         #will require values between 0 and 1
-        self.object.set_transparency(1)
+        self.node.set_transparency(1)
 
         #setting this to None may cause crashes on few rare cases, but going
         #for "idle_right" wont work for projectiles... So I technically add it
@@ -92,13 +92,13 @@ class AnimatedObject:
             animation = Animation(name = sprite,
                                   sprites = offsets,
                                   animation_offsets = sprites[sprite]['sprites'],
-                                  parent = self.object,
+                                  parent = self.node,
                                   loop = sprites[sprite].get('loop', False),
                                   speed = sprites[sprite].get('speed', DEFAULT_ANIMATIONS_SPEED))
             self.animations[sprite] = animation
 
     def play(self, animation:str):
-        '''Make object play selected animation instead of whatever else plays'''
+        '''Make node play selected animation instead of whatever else plays'''
         #safety check to ensure that we wont crash everything with exception by
         #trying to play animation that doesnt exist
         if not animation in self.animations:

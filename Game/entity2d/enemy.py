@@ -104,10 +104,10 @@ class Enemy(entity2d.Creature):
         if 'stun' in self.status_effects:
             return event.cont
 
-        player_position = base.level.player.object.get_pos()
+        player_position = base.level.player.node.get_pos()
         mov_speed = self.stats['mov_spd']
 
-        enemy_position = self.object.get_pos()
+        enemy_position = self.node.get_pos()
         vector_to_player = player_position - enemy_position
         distance_to_player = vector_to_player.length()
         #normalizing vector is the key to avoid "flickering" effect, as its
@@ -141,9 +141,6 @@ class Enemy(entity2d.Creature):
             #order of skills in self.skills
             skill = self.get_available_skill()
             if skill:
-                #direction and position are temporary
-                #skill.cast(direction = enemy_position,
-                #           position = enemy_position)
                 skill.cast()
 
         #workaround for issue when enemy keeps running into player despite already
@@ -151,10 +148,10 @@ class Enemy(entity2d.Creature):
         #idk about the numbers yet. I think, ideally it should be calculated from
         #player's hitbox and enemy's hitbox... but for now this will do
         if distance_to_player > 6:
-            self.object.set_pos(new_pos)
+            self.node.set_pos(new_pos)
         #self.object.set_pos(new_pos)
 
-        if not self.object.get_python_tag("using_skill"):
+        if not self.node.get_python_tag("using_skill"):
             self.change_animation(action)
 
         return event.cont
@@ -175,7 +172,7 @@ class Enemy(entity2d.Creature):
         base.level.increase_score(HIT_SCORE)
 
     def mark_for_removal(self, event):
-        '''Taskmanager routine that remove object's node and marks instance for
+        '''Taskmanager routine that remove enemy node and marks instance for
         removal from enemies list'''
         dt = globalClock.get_dt()
         self.rot_timer -= dt
@@ -184,7 +181,7 @@ class Enemy(entity2d.Creature):
 
         self.can_be_removed = True
         self.animation = None
-        self.object.remove_node()
+        self.node.remove_node()
         return
 
     def die(self):

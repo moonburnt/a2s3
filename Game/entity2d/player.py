@@ -84,7 +84,7 @@ class Player(entity2d.Creature):
                                      render.get_relative_point(base.camera, near),
                                      render.get_relative_point(base.camera, far))
 
-        hit_vector = mouse_pos_3d - self.object.get_pos()
+        hit_vector = mouse_pos_3d - self.node.get_pos()
         hit_vector.normalize()
 
         #updating mouse vector
@@ -135,9 +135,6 @@ class Player(entity2d.Creature):
         #saving action to apply to our animation. Default is idle
         action = 'idle'
 
-        #In future, these speed values may be affected by some items
-        player_object = self.object
-
         #workaround for player moving faster diagonally than horizontally
         #it can be probably do prettier by normalizing vectors we are setting pos
         #to, but I was never able to achieve that without making player fly
@@ -152,21 +149,21 @@ class Player(entity2d.Creature):
                  mov_speed = mov_speed / sqrt(2)
 
         if base.level.controls_status["move_up"]:
-            player_object.set_pos(player_object.get_pos() + (0, -mov_speed, 0))
+            self.node.set_pos(self.node.get_pos() + (0, -mov_speed, 0))
             action = "move"
         if base.level.controls_status["move_down"]:
-            player_object.set_pos(player_object.get_pos() + (0, mov_speed, 0))
+            self.node.set_pos(self.node.get_pos() + (0, mov_speed, 0))
             action = "move"
         if base.level.controls_status["move_left"]:
-            player_object.set_pos(player_object.get_pos() + (mov_speed, 0, 0))
+            self.node.set_pos(self.node.get_pos() + (mov_speed, 0, 0))
             action = "move"
         if base.level.controls_status["move_right"]:
-            player_object.set_pos(player_object.get_pos() + (-mov_speed, 0, 0))
+            self.node.set_pos(self.node.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
         #using it like that, because due to requirement to somehow pass caster to
         #skill, Im unable to set using_skill to be a normal variable
-        if base.level.controls_status["attack"] and not self.object.get_python_tag("using_skill"):
+        if base.level.controls_status["attack"] and not self.node.get_python_tag("using_skill"):
 
             hit_vector_x, hit_vector_y = self.mouse_vector.get_xy()
             #y has to be flipped if billboard_effect is active. Otherwise x has
@@ -178,10 +175,6 @@ class Player(entity2d.Creature):
             angle = y_vec.signed_angle_deg(hit_vector_2D)
 
             pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
-            #proj_pos = player_object.get_pos() + self.mouse_vector * pos_diff
-            # self.skills['Slash'].cast(direction = proj_pos,
-                                      # position = proj_pos,
-                                      # angle = angle)
             proj_direction = self.mouse_vector * pos_diff
             self.skills['Slash'].cast(direction = proj_direction,
                                       angle = angle)
@@ -190,7 +183,7 @@ class Player(entity2d.Creature):
         #casting skill. Iirc there is some case when it may backfire, but I cant
         #remember it. Wooops... #TODO
         #if not self.using_skill:
-        if not self.object.get_python_tag("using_skill"):
+        if not self.node.get_python_tag("using_skill"):
             self.change_animation(action)
 
         #it works a bit weird, but if we wont return .cont of task we received,

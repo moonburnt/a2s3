@@ -90,20 +90,20 @@ class Projectile(entity2d.Entity2D):
         self.change_animation('default')
 
         self.damage = damage
-        self.object.set_python_tag("damage", self.damage)
+        self.node.set_python_tag("damage", self.damage)
         if effects:
             self.effects = effects
-            self.object.set_python_tag("effects", self.effects)
+            self.node.set_python_tag("effects", self.effects)
         self.dead = False
 
         #Idk about numbers. These work if caster is player, but what s about enemies?
         one, two, _ = position
-        self.object.look_at(one, two, 1)
+        self.node.look_at(one, two, 1)
 
         if angle:
             #rotating projectile around 2d axis to match the shooting angle
             #I have no idea how if it will work for enemies tho
-            self.object.set_r(angle)
+            self.node.set_r(angle)
 
         if lifetime:
             self.lifetime = lifetime
@@ -124,26 +124,26 @@ class Projectile(entity2d.Entity2D):
 
     def follow_task(self, event):
         '''Taskmanager task that make projectile follow the target'''
-        if self.dead or not self.object or not self.target:
+        if self.dead or not self.node or not self.target:
             return
 
-        projectile_position = self.object.get_pos()
+        projectile_position = self.node.get_pos()
 
         vector_to_target = (self.target.get_pos() + self.direction) - projectile_position
         distance_to_target = vector_to_target.length()
         vector_to_target.normalize()
 
-        #workaround to ensure object will its stay on its original layer
+        #workaround to ensure node will its stay on its original layer
         vxy = vector_to_target.get_xy()
         new_pos = projectile_position + (vxy*self.speed, 0)
 
-        self.object.set_pos(new_pos)
+        self.node.set_pos(new_pos)
         return event.cont
 
     def dying_task(self, event):
         super().die()
         #moved it there, because death of creature required it
-        self.object.remove_node()
+        self.node.remove_node()
         return
 
     def die(self):

@@ -151,10 +151,10 @@ class LoadLevel:
     def follow_player(self, event):
         '''Taskmanager routine that updates self.player_follower and sets its
         position to be the same as player. For as long as player is alive, ofc'''
-        if self.player.dead or not self.player.object:
+        if self.player.dead or not self.player.node:
             return
 
-        self.player_follower.set_pos(self.player.object.get_pos())
+        self.player_follower.set_pos(self.player.node.get_pos())
         return event.cont
 
     def setup_level(self):
@@ -268,7 +268,7 @@ class LoadLevel:
                 #not best behavior. But for now it will do, as it solves the issue
                 #with enemies spawning on top of player if player is sitting at
                 #map's very corner. #TODO: add more "pick spawnpoint" variations
-                player_position = self.player.object.get_pos()
+                player_position = self.player.node.get_pos()
 
                 spawns = []
                 for spawnpoint in self.map.enemy_spawnpoints:
@@ -307,7 +307,7 @@ class LoadLevel:
                                        position = spawn_position,
                                        affix = affix)
                 enemy.id = self.enemy_id
-                enemy.object.set_python_tag("id", enemy.id)
+                enemy.node.set_python_tag("id", enemy.id)
                 self.enemy_id += 1
                 self.enemy_amount += 1
                 self.enemies_this_wave -= 1
@@ -572,10 +572,6 @@ class LoadLevel:
         self.death_screen.update_death_message(self.score,
                                                self.wave_number,
                                                self.kill_counter)
-        #reparenting camera, to keep it above map's center
-        #todo: make camera follow not player, but some node above player's head
-        #so even if player's object get destroyed - camera remains on top of it
-        #base.camera.reparent_to(render)
 
         base.music_player.crossfade(base.assets.music['death'])
 
@@ -599,7 +595,7 @@ class LoadLevel:
         base.render.node().removeAllChildren()
 
         #JUST IN CASE, removing player object.
-        self.player.object.remove_node()
+        self.player.node.remove_node()
 
         self.player = None
         self.enemies = None

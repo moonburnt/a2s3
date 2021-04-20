@@ -42,7 +42,7 @@ class Entity2D:
         if spritesheet and animations:
             self.animation = animation.AnimatedObject(name, spritesheet,
                                                       animations, sprite_size)
-            self.object = self.animation.object
+            self.node = self.animation.node
             #legacy proxy function that turned to be kind of nicer way to
             #update anims, than calling for switch manually
             self.change_animation = self.animation.switch
@@ -51,7 +51,7 @@ class Entity2D:
             #if we didnt get valid sprite data - create placeholder invisible
             #node to attach hitbox and other stuff to
             placeholder_node = PandaNode(name)
-            self.object = render.attach_new_node(placeholder_node)
+            self.node = render.attach_new_node(placeholder_node)
 
             #dummy placeholder to avoid breakage in case some object tried to
             #load invalid spritesheet and then toggle its anims
@@ -62,7 +62,7 @@ class Entity2D:
 
         #if no position has been received - wont set it up
         if position:
-            self.object.set_pos(*position)
+            self.node.set_pos(*position)
 
         #setting character's collisions
         entity_collider = CollisionNode(self.category)
@@ -82,18 +82,18 @@ class Entity2D:
             self.hitbox_size = (sprite_size[1]/2)
 
         entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
-        self.collision = self.object.attach_new_node(entity_collider)
+        self.collision = self.node.attach_new_node(entity_collider)
 
         if scale:
-            self.object.set_scale(scale)
+            self.node.set_scale(scale)
 
         #death status, that may be usefull during cleanup
         self.dead = False
 
-        #attaching python tags to object node, so these will be accessible during
+        #attaching python tags to node, so these will be accessible during
         #collision events and similar stuff
-        self.object.set_python_tag("name", self.name)
-        self.object.set_python_tag("category", self.category)
+        self.node.set_python_tag("name", self.name)
+        self.node.set_python_tag("category", self.category)
 
         #I thought to put ctrav there, but for whatever reason it glitched projectile
         #to fly into left wall. So I moved it to Creature subclass
