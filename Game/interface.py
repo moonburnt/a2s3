@@ -294,7 +294,43 @@ class MapSettings(Menu):
         #this is extremely stupid, but this thing require strings, not ints
         self.map_scales = ["1", "2", "3", "4", "5"]
 
-        selection_title = DirectLabel(text = "Map Scale:",
+        #this will probably crash on no classes... but, like - you wont be able
+        #to play anyway at this point, so why bother?
+        self.player_class = list(base.assets.classes.keys())[0]
+        self.player_classes = list(base.assets.classes.keys())
+
+        #this is placeholder too. Maybe I should even move it to separate screen?
+        #it may be also good idea to right away check if class has all the necessary
+        #data (and wont crash the game) and only then allow it there. But idk if
+        #checks should be done there or during assets loading. Prolly second. #TODO
+        class_selection_title = DirectLabel(text = "Player Class:",
+                                      pos = (0, 0, 0.7),
+                                      scale = 0.1,
+                                      frameTexture = base.assets.sprite['frame'],
+                                      frameSize = (-3, 3, -0.5, 1),
+                                      parent = self.frame)
+
+        class_selection = DirectOptionMenu(
+                                    command = self.select_class,
+                                    items = self.player_classes,
+                                    initialitem = 0,
+                                    pos = (0, 0, 0.5),
+                                    #idk how to set align to this thing properly,
+                                    #coz the most obvious arg refuses to work.
+                                    #wont even bother, since its temporary ui
+                                    #anyway and should be replaced with proper
+                                    #self-made carousel later. #TODO
+                                    text_pos = (-2.5, 0, 0),
+                                    popupMarker_scale = 0.1,
+                                    scale = 0.1,
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-3, 3, -0.5, 1),
+                                    #clickSound = self.select_sfx,
+                                    clickSound = self.hover_sfx,
+                                    rolloverSound = self.hover_sfx,
+                                    parent = self.frame)
+
+        map_selection_title = DirectLabel(text = "Map Scale:",
                                       pos = (0, 0, 0.3),
                                       scale = 0.1,
                                       frameTexture = base.assets.sprite['frame'],
@@ -339,6 +375,14 @@ class MapSettings(Menu):
                                     rolloverSound = self.hover_sfx,
                                     parent = self.frame)
 
+    #TODO: add something like "reset:bool" flag that will set up reset policy in
+    #case we switch to other interface. Coz right now we need to do it manually
+    #(see options menu), and Im tired of it, thus wont bother adding there. For now
+
+    def select_class(self, classname):
+        self.player_class = classname
+        log.info(f"Player class has been set to {self.player_class}")
+
     def update_map_scale(self, scale):
         self.map_scale = scale
         log.info(f"Map scale has been set to {self.map_scale}")
@@ -347,7 +391,8 @@ class MapSettings(Menu):
         #this is done like that, because this stupid gui framework cant even
         #autopick updated self.map_scale value. Gross
         map_scale = int(self.map_scale)
-        self.play_command(map_scale)
+        self.play_command(player_class = self.player_class,
+                          map_scale = map_scale)
 
 class DeathScreen(Menu):
     '''Screen shown on player's death'''

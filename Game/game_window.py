@@ -104,15 +104,14 @@ class GameWindow(ShowBase):
     def show_menu(self):
         interface.switch(self.main_menu)
 
-    def start_game(self, map_scale):
+    def start_game(self, player_class, map_scale):
         '''Hide main menu frame and load up the level'''
         log.debug("Loading up the level")
         #when I will remake assets loader to only load data necessary for current
         #scene, it will be usefull to call switch here to show loading screen
         #self.main_menu.hide()
 
-        #todo: add all the configurable stuff there as init options, like map size and such
-        self.level = level_loader.LoadLevel(map_scale)
+        self.level = level_loader.LoadLevel(player_class, map_scale)
 
     def exit_game(self):
         '''Run whatever cleanup tasks and exit the game'''

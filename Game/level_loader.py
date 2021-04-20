@@ -46,8 +46,9 @@ ENEMY_SPAWN_TIME = 2
 UNIQUE_ENEMY_CHANCE = 25
 
 class LoadLevel:
-    def __init__(self, map_scale: int):
+    def __init__(self, player_class, map_scale: int):
         self.map_scale = map_scale
+        self.player_class = player_class
         #doing it there before everything else to avoid issues during generation
         #of walls and entity objects
         log.debug("Setting up collision processors")
@@ -169,7 +170,7 @@ class LoadLevel:
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
-        self.player = entity2d.Player("Knight", position = self.map.player_spawnpoint)
+        self.player = entity2d.Player(self.player_class, position = self.map.player_spawnpoint)
 
         self.wave_number = 0
         self.enemy_increase = 10

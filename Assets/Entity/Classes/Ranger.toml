@@ -1,0 +1,34 @@
+# Placeholder second class. For the time being, the only difference from knight
+#is unbalanced speed
+
+[Main]
+name = "Ranger"
+hitbox_size = 6
+skills = [ "Slash" ]
+
+[Stats]
+hp = 100
+dmg = 10
+mov_spd = 10
+
+[Assets]
+sprite = "player"
+death_sound = "player_death"
+
+[Animations.idle]
+sprites = [ 0, 0 ]
+loop = true
+
+[Animations.move]
+sprites = [ 4, 7 ]
+loop = true
+
+[Animations.attack]
+sprites = [ 8, 11 ]
+loop = true
+
+[Animations.hurt]
+sprites = [ 12, 15 ]
+
+[Animations.dying]
+sprites = [ 16, 19 ]
