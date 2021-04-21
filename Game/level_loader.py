@@ -508,17 +508,42 @@ class LoadLevel:
 
         vx, vy = vector.get_xy()
 
-        #TODO: move knockback to object's tags. This will make it possible to
-        #rework this function to use it in other collision cases too
-        knockback = 5
+        col_obj_stats = col_obj.get_python_tag("stats")
+        #this will be ideal knockback if we collide with wall right on its center
+        knockback = col_obj_stats['mov_spd']
+        #knockback = col_obj_spd
 
         #workaround to fix the issue with entity running into a wall getting
         #pushed to wall's center. This way it wont hapen anymore... I think
-        if wall_pos[1] != 0:
+        if wall_pos[1] < 0:
             vx = 0
-        if wall_pos[0] != 0:
-            vy = 0
+            vy = 1
+        elif wall_pos[1] > 0:
+            vx = 0
+            vy = -1
+        else:
+            pass
 
+        if wall_pos[0] < 0:
+            vx = 1
+            vy = 0
+        elif wall_pos[0] > 0:
+            vx = -1
+            vy = 0
+        else:
+            pass
+
+        #this works for entities with any movement speed. However, there are two
+        #old issues, I was unable to fix:
+        # - If you will keep trying to run into the wall diagonally, your screen
+        #will shake.
+        # - Character will get pushed back as far as its running speed is. Meaning
+        #creatures that move faster will get pushed closer to map's center. Its
+        #not an issue for enemies (I think), but it may get annoying for player.
+        #
+        # For now, I have no idea how to solve both of these. Maybe at some point
+        #I will re-implement collisionhandlerpusher for player, to deal with the
+        #most annoying part of it #TODO
         new_pos = col_pos - (vx*knockback, vy*knockback, 0)
 
         col_obj.set_pos(new_pos)
