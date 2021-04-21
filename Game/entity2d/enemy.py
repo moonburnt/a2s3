@@ -15,6 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
+from panda3d.core import Vec2
 from Game import entity2d, shared
 
 log = logging.getLogger(__name__)
@@ -124,6 +125,14 @@ class Enemy(entity2d.Creature):
 
         action = 'idle'
 
+        #trying to find angle that wont suck. Basically its the same thing, as
+        #with player. Really thinking about moving it to skill itself #TODO
+        hit_vector_x, hit_vector_y = vxy
+        hit_vector_2D = -hit_vector_x, hit_vector_y
+
+        y_vec = Vec2(0, 1)
+        angle = y_vec.signed_angle_deg(hit_vector_2D)
+
         #it may be good idea to also track camera angle, if I will decide
         #to implement camera controls, at some point or another. #TODO
         if pos_diff[0] > 0:
@@ -141,7 +150,9 @@ class Enemy(entity2d.Creature):
             #order of skills in self.skills
             skill = self.get_available_skill()
             if skill:
-                skill.cast()
+                #skill.cast(direction = (vector_to_player*(shared.DEFAULT_SPRITE_SIZE[0]/2)),
+                skill.cast(direction = vector_to_player,
+                           angle = angle)
 
         #workaround for issue when enemy keeps running into player despite already
         #colliding with it, which cause enemy's animation to go wild.

@@ -25,6 +25,8 @@ cooldown = 0.5
 name = "Slash"
 # Optional variable that overrides default scale of projectile's object
 #scale = 1.5
+# Optional. Sets offsets for projectile's spawnpoint. Formula is "direction * offset"
+spawn_offset = 16
 # Optional variable that overrides default size of projectile's hitbox. Yep,
 # these are two different things. I may rework that later, idk
 #hitbox = 16

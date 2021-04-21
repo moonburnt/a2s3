@@ -77,6 +77,7 @@ class Skill:
             self.projectile.hitbox = projectile_data.get('hitbox', 0)
             self.projectile.lifetime = projectile_data.get('lifetime', 0)
             self.projectile.knockback = projectile_data.get('knockback', 0)
+            self.projectile.spawn_offset = projectile_data.get('spawn_offset', 0)
 
             behavior = projectile_data.get('behavior', None)
             #specify whatever correct variables there, except for "stationary",
@@ -209,6 +210,11 @@ class Skill:
 
             if not position:
                 position = self.caster.get_pos()
+
+            #I could just import offsets with 1 being replacement value in case
+            #its not set, but I thought this will be better
+            if self.projectile.spawn_offset:
+                direction = direction * self.projectile.spawn_offset
 
             #TODO: add ability to pass knockbass to projectile
 

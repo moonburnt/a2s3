@@ -174,9 +174,9 @@ class Player(entity2d.Creature):
             y_vec = Vec2(0, 1)
             angle = y_vec.signed_angle_deg(hit_vector_2D)
 
-            pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
-            proj_direction = self.mouse_vector * pos_diff
-            self.skills['Slash'].cast(direction = proj_direction,
+            #pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
+            #proj_direction = self.mouse_vector * pos_diff
+            self.skills['Slash'].cast(direction = self.mouse_vector,
                                       angle = angle)
 
         #interrupting animation update tasks, in case we are in the middle of
