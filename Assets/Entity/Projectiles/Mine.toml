@@ -2,6 +2,9 @@
 name = "Mine"
 hitbox_size = 8
 scale = 0.5
+# Optional variable that specifies if projectile should always face camera,
+# regardless of its angle, or render in parallel to the floor. Default: false
+billboard = true
 
 [Assets]
 sprite = "mine"

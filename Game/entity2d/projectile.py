@@ -85,6 +85,17 @@ class Projectile(entity2d.Entity2D):
                          scale = projectile_scale,
                          position = position)
 
+        #optionally enabling billboard effect for projectile, in case it has such
+        #setting in config. I could probably pass it to entity2d directly, idk
+        if data['Main'].get('billboard', False):
+            self.node.set_billboard_point_eye()
+        else:
+            #idk about numbers and if it will explode on weird map angles, but
+            #for now it kinda works. Dropped it there, coz if its used together
+            #with billboard, node will never face camera like its invisible
+            one, two, _ = position
+            self.node.look_at(one, two, 1)
+
         #due to addition of placeholder function that successfully does nothing
         #in case anim doesnt exist, its not necessary anymore to check for
         #existance of spriteseet and animations in order to cast this function
@@ -97,10 +108,8 @@ class Projectile(entity2d.Entity2D):
             self.node.set_python_tag("effects", self.effects)
         self.dead = False
 
-        #Idk about numbers. These work if caster is player, but what s about enemies?
-        one, two, _ = position
-        self.node.look_at(one, two, 1)
-
+        #this will look kinda weird on projectiles with billboard, but for now
+        #Im not fixing it, because Im unsure of how it should work. #TODO
         if angle:
             #rotating projectile around 2d axis to match the shooting angle
             #I have no idea how if it will work for enemies tho
