@@ -174,10 +174,15 @@ class Player(entity2d.Creature):
             y_vec = Vec2(0, 1)
             angle = y_vec.signed_angle_deg(hit_vector_2D)
 
+            #placeholder that picks up first skill from dictionary.
+            #TODO: add some proper way to attach skills to buttons
+            skill = list(self.skills.keys())[0]
+
             #pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
             #proj_direction = self.mouse_vector * pos_diff
-            self.skills['Slash'].cast(direction = self.mouse_vector,
-                                      angle = angle)
+            #self.skills['Slash'].cast(direction = self.mouse_vector,
+            self.skills[skill].cast(direction = self.mouse_vector,
+                                    angle = angle)
 
         #interrupting animation update tasks, in case we are in the middle of
         #casting skill. Iirc there is some case when it may backfire, but I cant

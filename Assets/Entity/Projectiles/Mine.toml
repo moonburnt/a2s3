@@ -1,0 +1,17 @@
+[Main]
+name = "Mine"
+hitbox_size = 8
+scale = 0.5
+
+[Assets]
+sprite = "mine"
+
+#Because of how this one's nature, the need for explosion animation is obvious
+#however right now game doesnt support custom death anims for projectiles. #TODO
+[Animations.default]
+sprites = [ 0, 0 ]
+loop = false
+
+[Animations.dying]
+sprites = [ 4, 7 ]
+loop = false

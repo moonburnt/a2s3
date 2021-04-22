@@ -4,12 +4,13 @@
 [Main]
 name = "Ranger"
 hitbox_size = 6
-skills = [ "Slash" ]
+#skills = [ "Shoot" ]
+skills = [ "Plant Mine" ]
 
 [Stats]
 hp = 100
 dmg = 10
-mov_spd = 10
+mov_spd = 4
 
 [Assets]
 sprite = "player"

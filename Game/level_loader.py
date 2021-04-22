@@ -453,6 +453,10 @@ class LoadLevel:
         log.debug(f"Attempting to deal {damage} damage to player")
         damage_function(damage, effects)
 
+        kill_hitter = hitter.get_python_tag("die_command")
+        if kill_hitter:
+            kill_hitter()
+
     def damage_enemy(self, entry):
         '''Should be called from base.accept event handler when enemy collides
         with something that may hurt it. Checks if its possible to deal damage
@@ -480,6 +484,13 @@ class LoadLevel:
         target_id = target.get_python_tag('id')
         log.debug(f"Attempting to deal {damage} damage to {target_name} ({target_id})")
         damage_function(damage, effects)
+
+        #now solving the case when projectile needs to die on collision
+        #this tag only exists on projectiles that can die and thus isnt bool but
+        #link to an actual function that will kill hitter
+        kill_hitter = hitter.get_python_tag("die_command")
+        if kill_hitter:
+            kill_hitter()
 
     def on_wall_collision(self, entry):
         '''Function that triggers if player or enemy collides with wall and pushes

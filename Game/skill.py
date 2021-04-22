@@ -78,6 +78,7 @@ class Skill:
             self.projectile.lifetime = projectile_data.get('lifetime', 0)
             self.projectile.knockback = projectile_data.get('knockback', 0)
             self.projectile.spawn_offset = projectile_data.get('spawn_offset', 0)
+            self.projectile.die_on_collision = projectile_data.get('die_on_collision', False)
 
             behavior = projectile_data.get('behavior', None)
             #specify whatever correct variables there, except for "stationary",
@@ -234,7 +235,8 @@ class Skill:
                                              scale_modifier = self.projectile.scale_modifier,
                                              target = self.projectile.target,
                                              speed = self.projectile.speed,
-                                             angle = angle)
+                                             angle = angle,
+                                             die_on_collision = self.projectile.die_on_collision)
 
             #maybe I should attach it to skill itself instead? or to caster? and
             #destroy together? Hmmm.... #TODO

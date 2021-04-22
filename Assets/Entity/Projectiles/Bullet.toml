@@ -1,0 +1,11 @@
+[Main]
+name = "Bullet"
+hitbox_size = 6
+scale = 1
+
+[Assets]
+sprite = "bullet"
+
+[Animations.default]
+sprites = [ 0, 0 ]
+loop = false

@@ -1,0 +1,62 @@
+[Main]
+name = "Plant Mine"
+caster_animation = "attack"
+#caster_animation_speed = 1
+cast_time = 0.5
+cooldown = 16
+
+[Projectile]
+name = "Mine"
+#spawn_offset = 16
+lifetime = 10
+# Projectile knockback. Knocks target furter from caster on collision with projectile
+# Its optional too and I was tempting to put it onto stats, but for now that it
+knockback = 0
+
+# Optional variable that destroys projectile if it collides with something.
+# Default - false. Overrides lifetime
+die_on_collision = true
+# Optional variable that sets up projectile speed. Only used if projectile's
+# behavior is set to "follow_target" - otherwise either based on caster or 0
+#speed = 3
+
+[Stats]
+# Optional category that define skill's stats. May not exist at all, if we are
+# setting up a buff (for example).
+# Just like category itself, all of the stats are optional, because, say, it
+# makes no sense for buff to deal some damage, right?
+#
+# Skill's stats usually have following calculation formula:
+#   int((stat + caster's stat) * multiplier)
+# E.g, say, for skill with base dmg 5 and dmg multiplier 1.5, casted by character
+# with dmg 10, damage will be (5+10)*1.5, rounded to int. E.g 22
+#
+# If stat isnt there, it gets threated as 0. HOWEVER, stat's MULTIPLIER has default
+# of 1, UNLESS both multiplier and its stat are absent. Meaning:
+#  - Skill with dmg of 1 and no dmg_multiplier will deal (1 + caster_dmg) * 1 dmg
+#  - Skill with no dmg but dmg_multiplier set to ANYTHING (even the same 1), will
+# deal (0 + caster_dmg) * 1 dmg
+#  - Skill with both no dmg and no dmg_multiplier set will deal no damage at all
+
+# Skill's damage
+dmg = 10
+# Damage multiplier
+dmg_multiplier = 1
+
+#[Effects.caster]
+# Effects are optional category for buffs and debuffs
+# Its split into 2 subcategories with slightly different rules:
+#  - [Effects.caster]. For effects that apply to whoever used skill. Gets applied
+# right away, unless caster already have such effect active
+#  - [Effects.target]. For effects that apply on whoever got affected by skill.
+# Unlike above, this affects ONLY THOSE WHO TOUCH CASTER'S PROJECTILE. Meaning
+# setting this without setting skill's projectile will have no effect
+
+# Because right now I only have 'stun' being a thing, this is the only effect
+# listed there. I wanted to add something else, but forgot about it, lol
+
+# Length of effect
+#stun = 0.1
+
+#[Effects.target]
+#stun = 0.3

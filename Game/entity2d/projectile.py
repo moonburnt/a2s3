@@ -28,7 +28,8 @@ class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name:str, category:str, position, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, target = None, speed = 0,
-                 lifetime = 0, direction = None, scale_modifier = None, angle = None):
+                 lifetime = 0, direction = None, scale_modifier = None, angle = None,
+                 die_on_collision:bool = False):
         self.name = name
 
         if category == shared.PLAYER_PROJECTILE_CATEGORY:
@@ -110,8 +111,9 @@ class Projectile(entity2d.Entity2D):
             #schedulging projectile to die in self.lifetime seconds after spawn
             #I've heard this is not the best way to do that, coz do_method_later
             #does things based on frames and not real time. But for now it will do
-            base.task_mgr.do_method_later(self.lifetime, self.dying_task,
-                                         f"dying task of projectile {self.name}")
+            #base.task_mgr.do_method_later(self.lifetime, self.dying_task,
+            base.task_mgr.add(self.dying_task,
+                            f"dying task of projectile {self.name}")
 
         if target:
             self.target = target
@@ -121,6 +123,10 @@ class Projectile(entity2d.Entity2D):
                 self.speed = 1
 
             base.task_mgr.add(self.follow_task, f"following task of {self.name}")
+
+        if die_on_collision:
+            #self.node.set_python_tag("die_on_collision", True)
+            self.node.set_python_tag("die_command", self.die)
 
     def follow_task(self, event):
         '''Taskmanager task that make projectile follow the target'''
@@ -141,11 +147,29 @@ class Projectile(entity2d.Entity2D):
         return event.cont
 
     def dying_task(self, event):
-        super().die()
+        #ensuring that projectile didnt die already
+        if self.dead or not self.node:
+            return
+
+        dt = globalClock.get_dt()
+        self.lifetime -= dt
+
+        if self.lifetime > 0:
+            return event.cont
+
+        self.die()
+        #super().die()
         #moved it there, because death of creature required it
-        self.node.remove_node()
+        #self.node.remove_node()
         return
 
     def die(self):
-        #overriding self.dying_task's event to use it as normal function
-        self.dying_task(0)
+        super().die()
+
+        #TODO: add ability to play death animation and only then remove node
+        #Right now its impossible, because we dont know the exact lengh of that
+        #anim. Maybe I should add something like optional "length" setting into
+        #projectile's config file?
+
+        self.node.remove_node()
+        #self.dying_task(0)
