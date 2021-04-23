@@ -181,7 +181,13 @@ class Player(entity2d.Creature):
             #pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
             #proj_direction = self.mouse_vector * pos_diff
             #self.skills['Slash'].cast(direction = self.mouse_vector,
-            self.skills[skill].cast(direction = self.mouse_vector,
+
+            #this should solve the issue with projectile not spawning if cursor
+            #is located directly on top of player's head. However, the problem
+            #with projectile spawning closer to player's center (in the very same
+            #case) still remains - I have no idea how to solve it yet. #TODO
+            direction = Vec3(self.mouse_vector[0], self.mouse_vector[1], 0)
+            self.skills[skill].cast(direction = direction,
                                     angle = angle)
 
         #interrupting animation update tasks, in case we are in the middle of
