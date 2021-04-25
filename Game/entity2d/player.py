@@ -205,10 +205,12 @@ class Player(entity2d.Creature):
         #giving player invinsibility frames on received damage
         #these shouldnt stack... I think? May backfire in future, idk
         super().get_damage(amount, effects)
+        #commented immortality stuff out, coz its most likely will be removed
+
         #this check is there to avoid stacking up immortality
-        if not 'immortal' in self.status_effects:
+        #if not 'immortal' in self.status_effects:
             #this is a bit longer than stun lengh, to let player escape
-            self.status_effects['immortal'] = 0.7
+        #    self.status_effects['immortal'] = 0.7
         #updating the value on player's hp gui
         base.level.player_hud.update_hp(self.stats['hp'])
         base.level.reset_score_multiplier()

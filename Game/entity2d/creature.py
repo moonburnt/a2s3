@@ -140,9 +140,11 @@ class Creature(entity2d.Entity2D):
 
         log.info(f"{self.name} has got {effect} for {length} seconds")
 
-    def get_damage(self, amount: int = None, effects = None):
+    def get_damage(self, amount: int = 0, effects = None):
         '''Whatever stuff procs when target is about to get hurt'''
-        #not getting any damage in case we are invulnerable
+        #not getting any damage in case we are invulnerable. I should probably
+        #move this below effects. Or add separate stat that will check if its
+        #possible to apply effects right now. #TODO
         if 'immortal' in self.status_effects:
             return
 
@@ -152,9 +154,19 @@ class Creature(entity2d.Entity2D):
             for effect, length in vars(effects).items():
                 self.apply_effect(effect, length)
 
-        #this is probably not right, but right now I find it correct
+        #Ensuring that in case skill casted on us is just effects spell, we wont
+        #get any damage calculations done. Idk if I should move blinking above
         if not amount:
             return
+
+        #TODO: maybe crease empty defence stat on stats import? Thus there wont
+        #be need in that check
+        defence = self.stats.get('defence', 0)
+        if defence:
+            amount = amount - defence
+
+        #ensuring that regardless of our defence we will always get at least 1 dmg
+        amount = max(1, amount)
 
         self.stats['hp'] -= amount
         log.debug(f"{self.name} has received {amount} damage "

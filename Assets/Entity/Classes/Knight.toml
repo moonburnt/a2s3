@@ -8,6 +8,9 @@ skills = [ "Slash" ]
 [Stats]
 hp = 100
 dmg = 10
+# Basic defence, that reduce any direct damage received to (dmg - defence) but
+# never below 1
+defence = 5
 mov_spd = 3
 
 [Assets]
