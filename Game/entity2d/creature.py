@@ -17,12 +17,17 @@
 import logging
 from direct.interval.LerpInterval import LerpColorScaleInterval
 from direct.interval.IntervalGlobal import Sequence, Func, Wait
+from random import randint
 from Game import entity2d, skill
 
 log = logging.getLogger(__name__)
 
 LOOK_RIGHT = 0
 LOOK_LEFT = 180
+
+MINIMUM_ALLOWED_DAMAGE = 1
+DODGE_CHANCE_RANGE = (0, 100)
+MAX_DODGE_CHANCE = 75
 
 class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
@@ -148,6 +153,22 @@ class Creature(entity2d.Entity2D):
         if 'immortal' in self.status_effects:
             return
 
+        #idk if it should be there or below effects :/
+        #this also doesnt check for hit chance yet. Idk if I will add that stat,
+        #will see #TODO
+        dodge = self.stats.get('dodge', 0)
+        #ensuring that we dont have negative dodge value right now, due to debuff
+        #or some other shenanigans
+        if dodge > 0:
+            #ensuring that chance to dodge will never be more than MAX_DODGE_CHANCE
+            dodge = min(MAX_DODGE_CHANCE, dodge)
+            hit_chance = randint(*DODGE_CHANCE_RANGE)
+            #idk if it should be just "<" instead
+            if hit_chance <= dodge:
+                log.info(f"{self.name} has dodged attack "
+                         f"({hit_chance} hit, {dodge} dodge chance)")
+                return
+
         #for now I've found it to be the most flexible way to apply any effects
         #to entity. But I may be wrong
         if effects:
@@ -162,11 +183,12 @@ class Creature(entity2d.Entity2D):
         #TODO: maybe crease empty defence stat on stats import? Thus there wont
         #be need in that check
         defence = self.stats.get('defence', 0)
-        if defence:
+        #ensuring that we wont get more damage on negative def values
+        if defence > 0:
             amount = amount - defence
-
-        #ensuring that regardless of our defence we will always get at least 1 dmg
-        amount = max(1, amount)
+            #ensuring that regardless of our defence we will always get at least
+            #hardcoded minimum of damage
+            amount = max(MINIMUM_ALLOWED_DAMAGE, amount)
 
         self.stats['hp'] -= amount
         log.debug(f"{self.name} has received {amount} damage "

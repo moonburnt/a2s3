@@ -11,6 +11,8 @@ dmg = 10
 # Basic defence, that reduce any direct damage received to (dmg - defence) but
 # never below 1
 defence = 5
+# Dodge chance, that makes it possible to avoid getting hit completely - up to 75%
+dodge = 0
 mov_spd = 3
 
 [Assets]
