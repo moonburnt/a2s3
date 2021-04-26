@@ -80,10 +80,10 @@ class Skill:
             self.projectile.spawn_offset = projectile_data.get('spawn_offset', 0)
             self.projectile.die_on_collision = projectile_data.get('die_on_collision', False)
 
-            behavior = projectile_data.get('behavior', None)
+            self.projectile.behavior = projectile_data.get('behavior', None)
             #specify whatever correct variables there, except for "stationary",
             #because stationary projectile doesnt move anywhere
-            if behavior == "follow_caster":
+            if self.projectile.behavior == "follow_caster":
                 self.projectile.target = self.caster
                 #setting it there coz it should follow the caster with caster's spd
                 self.projectile.speed = self.caster_stats.get('mov_spd', 0)
@@ -219,7 +219,8 @@ class Skill:
 
             #TODO: add ability to pass knockbass to projectile
 
-            if self.projectile.target:
+            #if self.projectile.target:
+            if self.projectile.behavior == "follow_caster":
                 projectile = entity2d.ChasingProjectile(name = self.projectile.name,
                                              #this will explode on None, but it
                                              #shouldnt happen... I guess
@@ -236,6 +237,21 @@ class Skill:
                                              effects = self.target_effects,
                                              scale_modifier = self.projectile.scale_modifier,
                                              speed = self.projectile.speed,
+                                             angle = angle,
+                                             die_on_collision = self.projectile.die_on_collision)
+
+            elif self.projectile.behavior == "move_towards_direction":
+                projectile = entity2d.MovingProjectile(name = self.projectile.name,
+                                             category = self.projectile.category,
+                                             position = position,
+                                             direction = direction,
+                                             speed = self.projectile.speed,
+                                             scale = self.projectile.scale,
+                                             damage = dmg,
+                                             hitbox_size = self.projectile.hitbox,
+                                             lifetime = self.projectile.lifetime,
+                                             effects = self.target_effects,
+                                             scale_modifier = self.projectile.scale_modifier,
                                              angle = angle,
                                              die_on_collision = self.projectile.die_on_collision)
             else:

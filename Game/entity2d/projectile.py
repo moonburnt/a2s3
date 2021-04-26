@@ -194,7 +194,6 @@ class ChasingProjectile(Projectile):
         projectile_position = self.node.get_pos()
 
         vector_to_target = (self.target.get_pos() + self.direction) - projectile_position
-        distance_to_target = vector_to_target.length()
         vector_to_target.normalize()
 
         #workaround to ensure node will its stay on its original layer
@@ -202,4 +201,45 @@ class ChasingProjectile(Projectile):
         new_pos = projectile_position + (vxy*self.speed, 0)
 
         self.node.set_pos(new_pos)
+        return event.cont
+
+class MovingProjectile(Projectile):
+    '''Projectile that moves into specified direction with provided speed'''
+    def __init__(self, name:str, category:str, position, direction, speed,
+                 damage = 0, effects = None, scale = 0, hitbox_size = 0,
+                 lifetime = 0, scale_modifier = None, angle = 0,
+                 die_on_collision:bool = False):
+
+        #I could probably move direction there too, since its mandatory anyway
+        self.speed = speed
+
+        super().__init__(name = name,
+                         category = category,
+                         position = position,
+                         damage = damage,
+                         effects = effects,
+                         scale = scale,
+                         hitbox_size = hitbox_size,
+                         #I dont think speed should be there
+                         #speed = speed
+                         lifetime = lifetime,
+                         direction = direction,
+                         scale_modifier = scale_modifier,
+                         angle = angle,
+                         die_on_collision = die_on_collision)
+
+        #normalizing direction, to fix issue with projectile moving too fast
+        #It has to be done after init, coz original direction is needed there
+        self.direction.normalize()
+
+        base.task_mgr.add(self.move_task, f"moving task of {self.name}")
+
+    def move_task(self, event):
+        '''Taskmanager task that make projectile fly in specified direction'''
+        if self.dead or not self.node:
+            return
+
+        new_position = self.node.get_pos() + self.direction*self.speed
+
+        self.node.set_pos(new_position)
         return event.cont
