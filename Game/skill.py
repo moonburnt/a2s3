@@ -219,11 +219,13 @@ class Skill:
 
             #TODO: add ability to pass knockbass to projectile
 
-            projectile = entity2d.Projectile(name = self.projectile.name,
+            if self.projectile.target:
+                projectile = entity2d.ChasingProjectile(name = self.projectile.name,
                                              #this will explode on None, but it
                                              #shouldnt happen... I guess
                                              category = self.projectile.category,
                                              position = position,
+                                             target = self.projectile.target,
                                              #this shouldnt do anything on None or 0
                                              direction = direction,
                                              scale = self.projectile.scale,
@@ -233,8 +235,20 @@ class Skill:
                                              lifetime = self.projectile.lifetime,
                                              effects = self.target_effects,
                                              scale_modifier = self.projectile.scale_modifier,
-                                             target = self.projectile.target,
                                              speed = self.projectile.speed,
+                                             angle = angle,
+                                             die_on_collision = self.projectile.die_on_collision)
+            else:
+                projectile = entity2d.Projectile(name = self.projectile.name,
+                                             category = self.projectile.category,
+                                             position = position,
+                                             direction = direction,
+                                             scale = self.projectile.scale,
+                                             damage = dmg,
+                                             hitbox_size = self.projectile.hitbox,
+                                             lifetime = self.projectile.lifetime,
+                                             effects = self.target_effects,
+                                             scale_modifier = self.projectile.scale_modifier,
                                              angle = angle,
                                              die_on_collision = self.projectile.die_on_collision)
 

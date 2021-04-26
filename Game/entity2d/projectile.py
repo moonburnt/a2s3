@@ -27,7 +27,7 @@ ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name:str, category:str, position, damage = 0,
-                 effects = None, scale = 0, hitbox_size = 0, target = None, speed = 0,
+                 effects = None, scale = 0, hitbox_size = 0, target = None, #speed = 0,
                  lifetime = 0, direction = None, scale_modifier = None, angle = None,
                  die_on_collision:bool = False):
         self.name = name
@@ -118,42 +118,12 @@ class Projectile(entity2d.Entity2D):
         if lifetime:
             self.lifetime = lifetime
             #schedulging projectile to die in self.lifetime seconds after spawn
-            #I've heard this is not the best way to do that, coz do_method_later
-            #does things based on frames and not real time. But for now it will do
-            #base.task_mgr.do_method_later(self.lifetime, self.dying_task,
             base.task_mgr.add(self.dying_task,
                             f"dying task of projectile {self.name}")
-
-        if target:
-            self.target = target
-            if speed:
-                self.speed = speed
-            else:
-                self.speed = 1
-
-            base.task_mgr.add(self.follow_task, f"following task of {self.name}")
 
         if die_on_collision:
             #self.node.set_python_tag("die_on_collision", True)
             self.node.set_python_tag("die_command", self.die)
-
-    def follow_task(self, event):
-        '''Taskmanager task that make projectile follow the target'''
-        if self.dead or not self.node or not self.target:
-            return
-
-        projectile_position = self.node.get_pos()
-
-        vector_to_target = (self.target.get_pos() + self.direction) - projectile_position
-        distance_to_target = vector_to_target.length()
-        vector_to_target.normalize()
-
-        #workaround to ensure node will its stay on its original layer
-        vxy = vector_to_target.get_xy()
-        new_pos = projectile_position + (vxy*self.speed, 0)
-
-        self.node.set_pos(new_pos)
-        return event.cont
 
     def dying_task(self, event):
         #ensuring that projectile didnt die already
@@ -182,3 +152,52 @@ class Projectile(entity2d.Entity2D):
 
         self.node.remove_node()
         #self.dying_task(0)
+
+class ChasingProjectile(Projectile):
+    '''Projectile that always follows its target. Aside from usual projectile's
+    stuff, receive "target" variable, which should be NodePath'''
+    def __init__(self, name:str, category:str, position, target, damage = 0,
+                 effects = None, scale = 0, hitbox_size = 0, speed = 0,
+                 lifetime = 0, direction = None, scale_modifier = None, angle = None,
+                 die_on_collision:bool = False):
+
+        self.target = target
+        if speed:
+            self.speed = speed
+        else:
+            self.speed = 1
+
+        super().__init__(name = name,
+                         category = category,
+                         position = position,
+                         damage = damage,
+                         effects = effects,
+                         scale = scale,
+                         hitbox_size = hitbox_size,
+                         #I dont think speed should be there
+                         #speed = speed
+                         lifetime = lifetime,
+                         direction = direction,
+                         scale_modifier = scale_modifier,
+                         angle = angle,
+                         die_on_collision = die_on_collision)
+
+        base.task_mgr.add(self.follow_task, f"following task of {self.name}")
+
+    def follow_task(self, event):
+        '''Taskmanager task that make projectile follow the target'''
+        if self.dead or not self.node or not self.target:
+            return
+
+        projectile_position = self.node.get_pos()
+
+        vector_to_target = (self.target.get_pos() + self.direction) - projectile_position
+        distance_to_target = vector_to_target.length()
+        vector_to_target.normalize()
+
+        #workaround to ensure node will its stay on its original layer
+        vxy = vector_to_target.get_xy()
+        new_pos = projectile_position + (vxy*self.speed, 0)
+
+        self.node.set_pos(new_pos)
+        return event.cont
