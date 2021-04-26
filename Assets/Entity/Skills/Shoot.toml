@@ -15,6 +15,7 @@ knockback = 0
 # Optional variable that sets up projectile speed. Only used if projectile's
 # behavior is set to "follow_target" - otherwise either based on caster or 0
 speed = 3
+die_on_collision = true
 
 [Stats]
 # Optional category that define skill's stats. May not exist at all, if we are

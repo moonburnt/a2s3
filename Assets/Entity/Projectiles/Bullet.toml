@@ -1,7 +1,9 @@
 [Main]
 name = "Bullet"
 hitbox_size = 6
-scale = 1
+scale = 0.5
+# Default angle. Usefull in case we need to rotate our thing right away
+angle = 90
 
 [Assets]
 sprite = "bullet"

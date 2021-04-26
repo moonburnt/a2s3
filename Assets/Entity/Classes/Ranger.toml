@@ -4,8 +4,8 @@
 [Main]
 name = "Ranger"
 hitbox_size = 6
-#skills = [ "Shoot" ]
-skills = [ "Plant Mine" ]
+skills = [ "Shoot" ]
+#skills = [ "Plant Mine" ]
 
 [Stats]
 hp = 100

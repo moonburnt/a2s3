@@ -28,7 +28,7 @@ class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
     def __init__(self, name:str, category:str, position, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, target = None, #speed = 0,
-                 lifetime = 0, direction = None, scale_modifier = None, angle = None,
+                 lifetime = 0, direction = None, scale_modifier = None, angle = 0,
                  die_on_collision:bool = False):
         self.name = name
 
@@ -108,9 +108,11 @@ class Projectile(entity2d.Entity2D):
             self.node.set_python_tag("effects", self.effects)
         self.dead = False
 
+        default_angle = data['Main'].get('angle', 0)
         #this will look kinda weird on projectiles with billboard, but for now
         #Im not fixing it, because Im unsure of how it should work. #TODO
-        if angle:
+        if angle or default_angle:
+            angle += default_angle
             #rotating projectile around 2d axis to match the shooting angle
             #I have no idea how if it will work for enemies tho
             self.node.set_r(angle)
@@ -158,7 +160,7 @@ class ChasingProjectile(Projectile):
     stuff, receive "target" variable, which should be NodePath'''
     def __init__(self, name:str, category:str, position, target, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, speed = 0,
-                 lifetime = 0, direction = None, scale_modifier = None, angle = None,
+                 lifetime = 0, direction = None, scale_modifier = None, angle = 0,
                  die_on_collision:bool = False):
 
         self.target = target
