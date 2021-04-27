@@ -40,7 +40,7 @@ class Entity2D:
         self.category = category
 
         if spritesheet and animations:
-            self.animation = animation.AnimatedObject(name, spritesheet,
+            self.animation = animation.SpritesheetObject(name, spritesheet,
                                                       animations, sprite_size)
             self.node = self.animation.node
             #legacy proxy function that turned to be kind of nicer way to

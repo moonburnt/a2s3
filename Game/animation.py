@@ -27,10 +27,14 @@ log = logging.getLogger(__name__)
 
 DEFAULT_ANIMATIONS_SPEED = 0.1
 
-class AnimatedObject:
-    '''Create 2D CardMaker node out of provided spritesheet and sprite data.
-    Can be then used to show various animations from provided sheet'''
-    def __init__(self, name:str, spritesheet, sprites: list, sprite_size:int, default_sprite:int = 0):
+class SpritesheetObject:
+    '''Create 2D CardMaker node out of provided spritesheet and sprite data. Can
+    be then used to show various animations and static sprites from provided sheet'''
+    def __init__(self, name:str, spritesheet, sprites: list, sprite_size:int,
+                 parent = None, default_sprite:int = 0):
+
+        if not parent:
+            parent = render
         #name of animated object
         self.name = name
         self.size = sprite_size
@@ -58,7 +62,7 @@ class AnimatedObject:
         entity_frame.set_frame(-(size_x/2), (size_x/2), -(size_y/2), (size_y/2))
 
         #settings this to base.render wont work - I tried
-        self.node = render.attach_new_node(entity_frame.generate())
+        self.node = parent.attach_new_node(entity_frame.generate())
         self.node.set_texture(self.spritesheet)
 
         #okay, this does the magic
@@ -83,49 +87,66 @@ class AnimatedObject:
         #setting this to None may cause crashes on few rare cases, but going
         #for "idle_right" wont work for projectiles... So I technically add it
         #there for anims updater, but its meant to be overwritten at 100% cases
-        self.current_animation = None
+        self.currently_shown = None
 
-        self.animations = {}
+        self.items = {}
         #this can be a bit complicated to tweak later, because sprites become
         #offsets and offsets become sprites... Idk what Im typing anymore lol
         for sprite in sprites:
-            animation = Animation(name = sprite,
-                                  sprites = offsets,
-                                  animation_offsets = sprites[sprite]['sprites'],
-                                  parent = self.node,
-                                  loop = sprites[sprite].get('loop', False),
-                                  speed = sprites[sprite].get('speed', DEFAULT_ANIMATIONS_SPEED))
-            self.animations[sprite] = animation
+            #this may crash on incorrect length
+            if isinstance(sprites[sprite]['sprites'], int):
+                data = Sprite(name = sprite,
+                              sprites = offsets,
+                              offset = sprites[sprite]['sprites'],
+                              parent = self.node)
 
-    def play(self, animation:str):
-        '''Make node play selected animation instead of whatever else plays'''
+            elif ((len(sprites[sprite]['sprites']) == 1) or
+                (sprites[sprite]['sprites'][0] == sprites[sprite]['sprites'][1])):
+                data = Sprite(name = sprite,
+                              sprites = offsets,
+                              offset = sprites[sprite]['sprites'][0],
+                              parent = self.node)
+
+            else:
+                data = Animation(name = sprite,
+                              sprites = offsets,
+                              animation_offsets = sprites[sprite]['sprites'],
+                              parent = self.node,
+                              loop = sprites[sprite].get('loop', False),
+                              speed = sprites[sprite].get('speed', DEFAULT_ANIMATIONS_SPEED))
+
+            self.items[sprite] = data
+
+    def show(self, item_name:str):
+        '''Make node switch to showcase of selected spritesheet's item instead
+        of whatever else plays'''
         #safety check to ensure that we wont crash everything with exception by
         #trying to play animation that doesnt exist
-        if not animation in self.animations:
-            log.warning(f"{self.name} has no animation named {animation}!")
+        if not item_name in self.items:
+            log.warning(f"{self.name} has no item named {item_name}!")
             return
 
         self.stop()
 
-        self.current_animation = self.animations[animation]
-        self.current_animation.play()
-        log.debug(f"{self.name} currently playing {self.current_animation.name}")
+        self.currently_shown = self.items[item_name]
+        self.currently_shown.show()
+        log.debug(f"{self.name} currently playing {self.currently_shown.name}")
 
-    def switch(self, animation: str):
-        '''Play new animation, but only if its different from current one'''
-        if not self.current_animation or self.current_animation.name != animation:
-            self.play(animation)
+    def switch(self, item_name: str):
+        '''Play new item, but only if its different from current one'''
+        if not self.currently_shown or self.currently_shown.name != item_name:
+            self.show(item_name)
 
     def stop(self):
-        '''Stops current animation from playing'''
-        if self.current_animation:
-            self.current_animation.stop()
-            log.debug(f"{self.name} has stopped playback of {self.current_animation.name}")
+        '''Stops current animation from playing. Wont do anything to single sprite'''
+        if self.currently_shown and isinstance(self.currently_shown, Animation):
+            self.currently_shown.stop()
+            log.debug(f"{self.name} has stopped playback of {self.currently_shown.name}")
 
 #idk if I should begin its name it with _, since it shouldnt be called manually,
 #but only from AnimatedObject's sprite initialization
 class Animation:
-    '''Animation node. Meant to be initalized from AnimatedObject. Holds one
+    '''Animation node. Meant to be initalized from SpritesheetObject. Holds one
     animation from spritesheet with provided playback settings'''
     def __init__(self, name:str, sprites: list, animation_offsets:tuple,
                  parent, loop: bool, speed:float = DEFAULT_ANIMATIONS_SPEED):
@@ -151,10 +172,15 @@ class Animation:
         self.offsets = animation_offsets
         self.current_frame = self.offsets[0]
 
-    #maybe add ability to override speed and loop policies for once?
-    def play(self):
+    #idk if current name is okay, but keeping is as "play" would be weird for
+    #static sprite
+    def show(self):
         '''Plays the animation'''
+        #maybe add ability to override speed and loop policies for once?
 
+        #there was some rare bug that cause animation to glitch out in case two
+        #"show" functions has been casted at once. It shouldnt happen anymore,
+        #but this wasnt fixed properly - just avoided #TODO #NEEDFIX
         def update_animation(event):
             if not self.parent or not self.playing:
                 return
@@ -169,9 +195,6 @@ class Animation:
             #resetting anims timer, so countdown above will start again
             self.timer = self.speed
 
-            #Right now there is a bug that breaks playback of single-sprite
-            #actions. I didnt find any good workaround yet, maybe will make
-            #separate function for these. #TODO
             if self.current_frame < self.offsets[1]:
                 self.current_frame += 1
             else:
@@ -197,3 +220,19 @@ class Animation:
         '''Stops animation playback'''
         #unless I've messed up, this should stop the task from above
         self.playing = False
+
+class Sprite:
+    '''Single-sprite node. Used if you need to get part of spritesheet to be displayed'''
+    def __init__(self, name:str, sprites: list, offset:int, parent):
+        # Sprites are still list and not str, to make it keep the same format as
+        # animation. Just use list with single str inside if you need just one
+        # sprite from the whole sheet, idk
+        self.name = name
+        self.parent = parent
+        self.sprites = sprites
+        self.offset = offset
+
+    def show(self):
+        '''Shows the current sprite'''
+        self.parent.set_tex_offset(TextureStage.getDefault(),
+                                   *self.sprites[self.offset])

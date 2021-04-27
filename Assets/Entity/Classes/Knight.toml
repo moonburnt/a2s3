@@ -22,8 +22,9 @@ sprite = "player"
 death_sound = "player_death"
 
 [Animations.idle]
-sprites = [ 0, 0 ]
-loop = true
+sprites = 0
+#sprites = [ 0, 0 ]
+#loop = true
 
 [Animations.move]
 sprites = [ 4, 7 ]

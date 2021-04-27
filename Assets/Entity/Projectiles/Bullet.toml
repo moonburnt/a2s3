@@ -9,5 +9,4 @@ angle = 90
 sprite = "bullet"
 
 [Animations.default]
-sprites = [ 0, 0 ]
-loop = false
+sprites = 0
