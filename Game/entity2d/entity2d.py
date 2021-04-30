@@ -16,7 +16,8 @@
 
 import logging
 from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode
-from Game import shared, animation
+import p3dss
+from Game import shared
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class Entity2D:
         self.category = category
 
         if spritesheet and animations:
-            self.animation = animation.SpritesheetObject(name, spritesheet,
+            self.animation = p3dss.SpritesheetObject(name, spritesheet,
                                                       animations, sprite_size)
             self.node = self.animation.node
             #legacy proxy function that turned to be kind of nicer way to

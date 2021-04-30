@@ -20,10 +20,8 @@ from .shared import *
 from .map_loader import *
 from .assets_loader import *
 from .level_loader import *
-from .spritesheet_cutter import *
 from .interface import *
 from .music_player import *
-from .animation import *
 from .skill import *
 
 import logging

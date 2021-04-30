@@ -26,6 +26,7 @@ keep these two things in mind and do it accordingly.
 - python 3.9+
 - panda3d 1.10.8
 - toml 0.10.2
+- [p3dss](https://github.com/moonburnt/p3dss)
 
 ## How to Play:
 
