@@ -21,6 +21,8 @@ log = logging.getLogger(__name__)
 
 #module for 2d projectiles
 
+#PLAYER_PROJECTILE_COLLISION_MASK = 0X09
+#ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
@@ -29,7 +31,8 @@ class Projectile(entity2d.Entity2D):
     def __init__(self, name:str, category:str, position, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, target = None, #speed = 0,
                  lifetime = 0, direction = None, scale_modifier = None, angle = 0,
-                 die_on_collision:bool = False):
+                 die_on_object_collision:bool = False,
+                 die_on_creature_collision:bool = False):
         self.name = name
 
         if category == shared.PLAYER_PROJECTILE_CATEGORY:
@@ -55,7 +58,7 @@ class Projectile(entity2d.Entity2D):
 
         #doing it like that, coz default value from projectile's config can be
         #overriden on init. Say, by skill's values
-        projectilile_hitbox = hitbox_size or data['Main'].get('hitbox_size', 0)
+        projectile_hitbox = hitbox_size or data['Main'].get('hitbox_size', 0)
 
         projectile_scale = scale or data['Main'].get('scale', 1)
         #scale modifier is variable that tweaks raw scale value. Say, if we want
@@ -79,7 +82,7 @@ class Projectile(entity2d.Entity2D):
                          #spritesheet = base.assets.sprite[spritesheet],
                          spritesheet = base.assets.sprite.get(spritesheet, None),
                          animations = animations,
-                         hitbox_size = projectilile_hitbox,
+                         hitbox_size = projectile_hitbox,
                          collision_mask = collision_mask,
                          #sprite_size = sprite_size,
                          scale = projectile_scale,
@@ -123,9 +126,17 @@ class Projectile(entity2d.Entity2D):
             base.task_mgr.add(self.dying_task,
                             f"dying task of projectile {self.name}")
 
-        if die_on_collision:
-            #self.node.set_python_tag("die_on_collision", True)
+        #its probably possible to do it in less ugly way
+        if die_on_object_collision or die_on_creature_collision:
+            #coz there is no point in traversing projectile itself otherwise
+            base.cTrav.add_collider(self.collision, base.chandler)
             self.node.set_python_tag("die_command", self.die)
+
+        if die_on_creature_collision:
+            self.node.set_python_tag("die_on_creature_collision", True)
+
+        if die_on_object_collision:
+            self.node.set_python_tag("die_on_object_collision", True)
 
     def dying_task(self, event):
         #ensuring that projectile didnt die already
@@ -161,7 +172,8 @@ class ChasingProjectile(Projectile):
     def __init__(self, name:str, category:str, position, target, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, speed = 0,
                  lifetime = 0, direction = None, scale_modifier = None, angle = 0,
-                 die_on_collision:bool = False):
+                 die_on_object_collision:bool = False,
+                 die_on_creature_collision:bool = False):
 
         self.target = target
         if speed:
@@ -182,7 +194,8 @@ class ChasingProjectile(Projectile):
                          direction = direction,
                          scale_modifier = scale_modifier,
                          angle = angle,
-                         die_on_collision = die_on_collision)
+                         die_on_object_collision = die_on_object_collision,
+                         die_on_creature_collision = die_on_creature_collision)
 
         base.task_mgr.add(self.follow_task, f"following task of {self.name}")
 
@@ -208,7 +221,8 @@ class MovingProjectile(Projectile):
     def __init__(self, name:str, category:str, position, direction, speed,
                  damage = 0, effects = None, scale = 0, hitbox_size = 0,
                  lifetime = 0, scale_modifier = None, angle = 0,
-                 die_on_collision:bool = False):
+                 die_on_object_collision:bool = False,
+                 die_on_creature_collision:bool = False):
 
         #I could probably move direction there too, since its mandatory anyway
         self.speed = speed
@@ -226,7 +240,8 @@ class MovingProjectile(Projectile):
                          direction = direction,
                          scale_modifier = scale_modifier,
                          angle = angle,
-                         die_on_collision = die_on_collision)
+                         die_on_object_collision = die_on_object_collision,
+                         die_on_creature_collision = die_on_creature_collision)
 
         #normalizing direction, to fix issue with projectile moving too fast
         #It has to be done after init, coz original direction is needed there

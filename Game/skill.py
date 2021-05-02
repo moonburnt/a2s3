@@ -78,7 +78,8 @@ class Skill:
             self.projectile.lifetime = projectile_data.get('lifetime', 0)
             self.projectile.knockback = projectile_data.get('knockback', 0)
             self.projectile.spawn_offset = projectile_data.get('spawn_offset', 0)
-            self.projectile.die_on_collision = projectile_data.get('die_on_collision', False)
+            self.projectile.die_on_object_collision = projectile_data.get('die_on_object_collision', False)
+            self.projectile.die_on_creature_collision = projectile_data.get('die_on_creature_collision', False)
 
             self.projectile.behavior = projectile_data.get('behavior', None)
             #specify whatever correct variables there, except for "stationary",
@@ -221,52 +222,61 @@ class Skill:
 
             #if self.projectile.target:
             if self.projectile.behavior == "follow_caster":
-                projectile = entity2d.ChasingProjectile(name = self.projectile.name,
-                                             #this will explode on None, but it
-                                             #shouldnt happen... I guess
-                                             category = self.projectile.category,
-                                             position = position,
-                                             target = self.projectile.target,
-                                             #this shouldnt do anything on None or 0
-                                             direction = direction,
-                                             scale = self.projectile.scale,
-                                             damage = dmg,
-                                             #same for all of these
-                                             hitbox_size = self.projectile.hitbox,
-                                             lifetime = self.projectile.lifetime,
-                                             effects = self.target_effects,
-                                             scale_modifier = self.projectile.scale_modifier,
-                                             speed = self.projectile.speed,
-                                             angle = angle,
-                                             die_on_collision = self.projectile.die_on_collision)
+                projectile = entity2d.ChasingProjectile(
+                    name = self.projectile.name,
+                    #this will explode on None, but it
+                    #shouldnt happen... I guess
+                    category = self.projectile.category,
+                    position = position,
+                    target = self.projectile.target,
+                    #this shouldnt do anything on None or 0
+                    direction = direction,
+                    scale = self.projectile.scale,
+                    damage = dmg,
+                    #same for all of these
+                    hitbox_size = self.projectile.hitbox,
+                    lifetime = self.projectile.lifetime,
+                    effects = self.target_effects,
+                    scale_modifier = self.projectile.scale_modifier,
+                    speed = self.projectile.speed,
+                    angle = angle,
+                    die_on_object_collision = self.projectile.die_on_object_collision,
+                    die_on_creature_collision = self.projectile.die_on_creature_collision,
+                    )
 
             elif self.projectile.behavior == "move_towards_direction":
-                projectile = entity2d.MovingProjectile(name = self.projectile.name,
-                                             category = self.projectile.category,
-                                             position = position,
-                                             direction = direction,
-                                             speed = self.projectile.speed,
-                                             scale = self.projectile.scale,
-                                             damage = dmg,
-                                             hitbox_size = self.projectile.hitbox,
-                                             lifetime = self.projectile.lifetime,
-                                             effects = self.target_effects,
-                                             scale_modifier = self.projectile.scale_modifier,
-                                             angle = angle,
-                                             die_on_collision = self.projectile.die_on_collision)
+                projectile = entity2d.MovingProjectile(
+                    name = self.projectile.name,
+                    category = self.projectile.category,
+                    position = position,
+                    direction = direction,
+                    speed = self.projectile.speed,
+                    scale = self.projectile.scale,
+                    damage = dmg,
+                    hitbox_size = self.projectile.hitbox,
+                    lifetime = self.projectile.lifetime,
+                    effects = self.target_effects,
+                    scale_modifier = self.projectile.scale_modifier,
+                    angle = angle,
+                    die_on_object_collision = self.projectile.die_on_object_collision,
+                    die_on_creature_collision = self.projectile.die_on_creature_collision,
+                    )
             else:
-                projectile = entity2d.Projectile(name = self.projectile.name,
-                                             category = self.projectile.category,
-                                             position = position,
-                                             direction = direction,
-                                             scale = self.projectile.scale,
-                                             damage = dmg,
-                                             hitbox_size = self.projectile.hitbox,
-                                             lifetime = self.projectile.lifetime,
-                                             effects = self.target_effects,
-                                             scale_modifier = self.projectile.scale_modifier,
-                                             angle = angle,
-                                             die_on_collision = self.projectile.die_on_collision)
+                projectile = entity2d.Projectile(
+                    name = self.projectile.name,
+                    category = self.projectile.category,
+                    position = position,
+                    direction = direction,
+                    scale = self.projectile.scale,
+                    damage = dmg,
+                    hitbox_size = self.projectile.hitbox,
+                    lifetime = self.projectile.lifetime,
+                    effects = self.target_effects,
+                    scale_modifier = self.projectile.scale_modifier,
+                    angle = angle,
+                    die_on_object_collision = self.projectile.die_on_object_collision,
+                    die_on_creature_collision = self.projectile.die_on_creature_collision,
+                    )
 
             #maybe I should attach it to skill itself instead? or to caster? and
             #destroy together? Hmmm.... #TODO

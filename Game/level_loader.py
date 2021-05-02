@@ -93,6 +93,13 @@ class LoadLevel:
         base.accept(f'{shared.ENEMY_CATEGORY}-into-wall', self.on_wall_collision)
         base.accept(f'{shared.ENEMY_CATEGORY}-again-wall', self.on_wall_collision)
 
+        #temporary solution for tracking collision of projectiles with objects
+        #TODO: find a better name for function, add support for non-wall objects
+        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-into-wall', self.on_object_collision)
+        #base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-again-wall', self.on_object_collision)
+        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-into-wall', self.on_object_collision)
+        #base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-again-wall', self.on_object_collision)
+
         log.debug("Setting up camera")
         #this will set camera to be right above card.
         #changing first value will rotate the floor
@@ -453,6 +460,9 @@ class LoadLevel:
         log.debug(f"Attempting to deal {damage} damage to player")
         damage_function(damage, effects)
 
+        if not hitter.get_python_tag("die_on_creature_collision"):
+            return
+
         kill_hitter = hitter.get_python_tag("die_command")
         if kill_hitter:
             kill_hitter()
@@ -485,9 +495,10 @@ class LoadLevel:
         log.debug(f"Attempting to deal {damage} damage to {target_name} ({target_id})")
         damage_function(damage, effects)
 
-        #now solving the case when projectile needs to die on collision
-        #this tag only exists on projectiles that can die and thus isnt bool but
-        #link to an actual function that will kill hitter
+        #now solving the case when projectile needs to die on collision with creature
+        if not hitter.get_python_tag("die_on_creature_collision"):
+            return
+
         kill_hitter = hitter.get_python_tag("die_command")
         if kill_hitter:
             kill_hitter()
@@ -558,6 +569,20 @@ class LoadLevel:
         new_pos = col_pos - (vx*knockback, vy*knockback, 0)
 
         col_obj.set_pos(new_pos)
+
+    def on_object_collision(self, entry):
+        '''Function that triggers if projectile collides with non-creature objects
+        (walls and such)'''
+        #It may need rework if I will ever implement ability to push objects
+        col = entry.get_from_node_path()
+        col_obj = col.get_parent()
+
+        if not col_obj.get_python_tag("die_on_object_collision"):
+            return
+
+        kill_hitter = col_obj.get_python_tag("die_command")
+        if kill_hitter:
+            kill_hitter()
 
     def increase_score(self, amount):
         '''Increase score variable and displayed score amount by int(amount * self.score_multiplier)'''

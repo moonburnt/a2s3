@@ -16,8 +16,12 @@ knockback = 0
 # behavior is set to "follow_target" or "move_towards_direction" - otherwise
 # either based on caster's movement speed or 0
 speed = 6
-die_on_collision = true
 behavior = "move_towards_direction"
+# Optional variable that specifies if projectile should die on collision with enemy.
+# If not set - will use default, which is "false"
+die_on_creature_collision = true
+# Same as above, but for collision with walls
+die_on_object_collision = true
 
 [Stats]
 # Skill's damage
