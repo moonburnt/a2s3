@@ -22,6 +22,13 @@ behavior = "move_towards_direction"
 die_on_creature_collision = true
 # Same as above, but for collision with walls
 die_on_object_collision = true
+# Optional variable that specify default amount of ricochets. Default - 0. If set
+# to anything greater - will ricochet from walls for specified amount of times.
+# OVERRIDES "die_on_object_collision" above - meaning if both are set and lifetime
+# timer is big enough or non-existing - projectile will bounce for specified amount
+# of times and ONLY THEN die.
+# ONLY WORKS FOR BEHAVIOR "move_towards_direction"
+#ricochets_amount = 3
 
 [Stats]
 # Skill's damage

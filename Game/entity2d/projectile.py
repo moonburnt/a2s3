@@ -20,9 +20,6 @@ from Game import entity2d, shared
 log = logging.getLogger(__name__)
 
 #module for 2d projectiles
-
-#PLAYER_PROJECTILE_COLLISION_MASK = 0X09
-#ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 PLAYER_PROJECTILE_COLLISION_MASK = 0X09
 ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
@@ -221,6 +218,7 @@ class MovingProjectile(Projectile):
     def __init__(self, name:str, category:str, position, direction, speed,
                  damage = 0, effects = None, scale = 0, hitbox_size = 0,
                  lifetime = 0, scale_modifier = None, angle = 0,
+                 ricochets_amount:int = 0,
                  die_on_object_collision:bool = False,
                  die_on_creature_collision:bool = False):
 
@@ -247,6 +245,13 @@ class MovingProjectile(Projectile):
         #It has to be done after init, coz original direction is needed there
         self.direction.normalize()
 
+        #it makes no sense to ricochet chasing or static projectile, thus its there
+        if ricochets_amount:
+            self.node.set_python_tag("ricochets_amount", ricochets_amount)
+
+        #doing so to enable support for ricochets
+        self.node.set_python_tag("direction", self.direction)
+
         base.task_mgr.add(self.move_task, f"moving task of {self.name}")
 
     def move_task(self, event):
@@ -254,7 +259,9 @@ class MovingProjectile(Projectile):
         if self.dead or not self.node:
             return
 
-        new_position = self.node.get_pos() + self.direction*self.speed
+        #new_position = self.node.get_pos() + self.direction*self.speed
+        direction = self.node.get_python_tag("direction")
+        new_position = self.node.get_pos() + direction * self.speed
 
         self.node.set_pos(new_position)
         return event.cont

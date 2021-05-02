@@ -80,6 +80,8 @@ class Skill:
             self.projectile.spawn_offset = projectile_data.get('spawn_offset', 0)
             self.projectile.die_on_object_collision = projectile_data.get('die_on_object_collision', False)
             self.projectile.die_on_creature_collision = projectile_data.get('die_on_creature_collision', False)
+            #max is there to ensure that no negative ricochet values can be attached
+            self.projectile.ricochets_amount = max(0, projectile_data.get('ricochets_amount', 0))
 
             self.projectile.behavior = projectile_data.get('behavior', None)
             #specify whatever correct variables there, except for "stationary",
@@ -260,6 +262,7 @@ class Skill:
                     angle = angle,
                     die_on_object_collision = self.projectile.die_on_object_collision,
                     die_on_creature_collision = self.projectile.die_on_creature_collision,
+                    ricochets_amount = self.projectile.ricochets_amount,
                     )
             else:
                 projectile = entity2d.Projectile(

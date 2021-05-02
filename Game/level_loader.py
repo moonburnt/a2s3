@@ -17,7 +17,7 @@
 #module dedicated to manage per-level stuff
 
 import logging
-from panda3d.core import CollisionTraverser, CollisionHandlerEvent, PandaNode
+from panda3d.core import CollisionTraverser, CollisionHandlerEvent, PandaNode, Vec3
 from time import time
 from random import randint, choice
 from Game import entity2d, map_loader, shared, interface
@@ -576,6 +576,35 @@ class LoadLevel:
         #It may need rework if I will ever implement ability to push objects
         col = entry.get_from_node_path()
         col_obj = col.get_parent()
+
+        ricochets_amount = col_obj.get_python_tag("ricochets_amount")
+        direction = col_obj.get_python_tag("direction")
+        #this will break on negative ricochets_amount, but it shouldnt happen
+        if ricochets_amount and direction:
+            col_obj.set_python_tag("ricochets_amount", (ricochets_amount - 1))
+
+            #this workaround obviously wont work for non-wall objects
+            #but for now it will do #TODO
+            wall = entry.get_into_node_path()
+            wall_pos = wall.get_python_tag("position")[0]
+
+            x, y, h = direction
+
+            if wall_pos[0]:
+                x = -x
+                #dont ask me why and how rotation works, because "it just works"
+                col_obj.set_h(180)
+
+            if wall_pos[1]:
+                y = -y
+
+            col_obj.set_python_tag("direction", Vec3(x, y, h))
+            #see comment above. I have no idea why it works and it will probably
+            #break on billboard projectiles #TODO
+            col_obj.set_r(-(col_obj.get_r()))
+
+            #returning right there, because ricochets override whatever below
+            return
 
         if not col_obj.get_python_tag("die_on_object_collision"):
             return
