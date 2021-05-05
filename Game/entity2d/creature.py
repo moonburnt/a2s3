@@ -17,8 +17,10 @@
 import logging
 from direct.interval.LerpInterval import LerpColorScaleInterval
 from direct.interval.IntervalGlobal import Sequence, Func, Wait
+from panda3d.core import Vec3
+import p3dss
 from random import randint
-from Game import entity2d, skill
+from Game import entity2d, skill, shared
 
 log = logging.getLogger(__name__)
 
@@ -28,11 +30,13 @@ LOOK_LEFT = 180
 MINIMUM_ALLOWED_DAMAGE = 1
 DODGE_CHANCE_RANGE = (0, 100)
 MAX_DODGE_CHANCE = 75
+HEAD_HEIGHT = 0.2 #relatively to player height, not scene
 
 class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name: str, category: str, spritesheet, animations: dict,
-                 stats: dict, skills: list, death_sound: str = None, hitbox_size: int = None,
+                 stats: dict, skills: list, head: dict = None,
+                 death_sound: str = None, hitbox_size: int = None,
                  collision_mask = None, sprite_size: tuple = None, scale = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
         super().__init__(name = name,
@@ -56,6 +60,46 @@ class Creature(entity2d.Entity2D):
         else:
             log.warning(f"{name} has no custom death sound, using fallback")
             self.death_sound = base.assets.sfx['default_death']
+
+        #placeholder code that implements support for attachable heads
+        #not really efficient, I should probably do it somewhere else
+        if head and head.get('spritesheet', None) and head.get('head', None):
+            if not head.get('size', None):
+                size = shared.DEFAULT_SPRITE_SIZE
+            else:
+                size = head['size']
+
+            self.head = p3dss.SpritesheetObject(
+                                    name = f"{name}_head",
+                                    spritesheet = head['spritesheet'],
+                                    sprites = head['head'],
+                                    sprite_size = (head.get('size', None) or
+                                                   shared.DEFAULT_SPRITE_SIZE),
+                                    parent = self.visuals,
+                                    )
+            #it would make sense to add both pos and dic received from player
+            #into configuration toml, for default values (and to enable support
+            #of these for enemies, who dont have player-configurable hats) #TODO
+
+            #Depending on values, sprite may render slightly different. Been told
+            #that it happens because of lack of antialiasing #TODO
+            #self.head.node.set_pos(0.2, 0, 5)
+            self.head.node.set_pos(0.2, 0, 4.4)
+
+            #I need to fix rendering order of head, to appear above body.
+            #It could be done like that, but sometimes it glitch out
+            #head.node.reparent_to(self.visuals, sort = -1)
+            #It could also be sone like that, but then head always renders on top
+            #of the all bodies on screen
+            #head.node.set_bin("fixed", 0)
+            #head.node.set_depth_test(False)
+            #head.node.set_depth_write(False)
+            #Thus Im going for not-so-flexible solution that will involve altering
+            #head's pos on direction change.
+            #its set to -, coz default direction is "right"
+            self.head.node.set_y(-HEAD_HEIGHT)
+        else:
+            self.head = None
 
         self.direction = 'right'
         self.change_animation('idle')
@@ -122,9 +166,13 @@ class Creature(entity2d.Entity2D):
             if direction == "right":
                 #self.node.set_h(LOOK_RIGHT)
                 self.visuals.set_h(LOOK_RIGHT)
+                if self.head:
+                    self.head.node.set_y(-HEAD_HEIGHT)
             else:
                 #self.node.set_h(LOOK_LEFT)
                 self.visuals.set_h(LOOK_LEFT)
+                if self.head:
+                    self.head.node.set_y(HEAD_HEIGHT)
             self.direction = direction
             log.debug(f"{self.name} is now facing {self.direction}")
 
@@ -275,5 +323,10 @@ class Creature(entity2d.Entity2D):
         #to rot. And then, with some additional taskmanager task, clean things up
         #self.change_animation(f'dying_{self.direction}')
         self.change_animation(f'dying')
+
+        #for now we dont have anything special to do with heads on death, so we
+        #just remove them right away. #TODO: add something like head's death anim
+        if self.head:
+            self.head.node.remove_node()
 
         self.death_sound.play()
