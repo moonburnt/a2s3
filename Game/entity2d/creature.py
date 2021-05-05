@@ -35,8 +35,16 @@ class Creature(entity2d.Entity2D):
                  stats: dict, skills: list, death_sound: str = None, hitbox_size: int = None,
                  collision_mask = None, sprite_size: tuple = None, scale = None, position = None):
         #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name, category, spritesheet, animations, hitbox_size,
-                         collision_mask, sprite_size, scale, position)
+        super().__init__(name = name,
+                         category = category,
+                         spritesheet = spritesheet,
+                         animations = animations,
+                         visuals_node = True,
+                         hitbox_size = hitbox_size,
+                         collision_mask = collision_mask,
+                         sprite_size = sprite_size,
+                         scale = scale,
+                         position = position)
 
         #magic that allows for rotating node around its h without making it look
         #invisible. Idk why its not enabled by default - guess its to save some
@@ -106,11 +114,17 @@ class Creature(entity2d.Entity2D):
 
     def change_direction(self, direction):
         '''Change direction, creature face, in case it didnt face this way already'''
+        #ensuring that object has visible parts to rotate
+        if not self.visuals:
+            return
+
         if direction != self.direction:
             if direction == "right":
-                self.node.set_h(LOOK_RIGHT)
+                #self.node.set_h(LOOK_RIGHT)
+                self.visuals.set_h(LOOK_RIGHT)
             else:
-                self.node.set_h(LOOK_LEFT)
+                #self.node.set_h(LOOK_LEFT)
+                self.visuals.set_h(LOOK_LEFT)
             self.direction = direction
             log.debug(f"{self.name} is now facing {self.direction}")
 

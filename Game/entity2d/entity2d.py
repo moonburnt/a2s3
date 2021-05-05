@@ -25,7 +25,7 @@ class Entity2D:
     '''Main class, dedicated to creation of collideable 2D objects.'''
 
     def __init__(self, name: str, category: str,
-                 spritesheet = None, animations = None,
+                 spritesheet = None, animations = None, visuals_node:bool = False,
                  hitbox_size: int = None, collision_mask = None,
                  sprite_size: tuple = None, scale: int = None, position = None):
         self.name = name
@@ -40,10 +40,36 @@ class Entity2D:
 
         self.category = category
 
+        #creating empty node to attach everything to. This way it will be easier
+        #to attach other objects (like floating text and such), coz offset trickery
+        #from animation wont affect other items attached to node (since its not
+        #a parent anymore, but just another child)
+        entity_node = PandaNode(name)
+        self.node = render.attach_new_node(entity_node)
+
         if spritesheet and animations:
-            self.animation = p3dss.SpritesheetObject(name, spritesheet,
-                                                      animations, sprite_size)
-            self.node = self.animation.node
+            #so, what is it and why is it a thing:
+            #basically, we are making YET ANOTHER node to hold all visuals.
+            #why so? Coz it will be easier this way to rotate all of these together.
+            #But we dont need it for projectiles, since these dont have anything
+            #attached to them... at least right now. Thus its an option, not
+            #something enabled out of box
+            if visuals_node:
+                vn = PandaNode(f"{name}_visuals")
+                #hopefully Im doing this correctly
+                visuals = self.node.attach_new_node(vn)
+            else:
+                visuals = self.node
+
+            self.animation = p3dss.SpritesheetObject(name = f"{name}_body",
+                                                     spritesheet = spritesheet,
+                                                     sprites = animations,
+                                                     sprite_size = sprite_size,
+                                                     parent = visuals)
+                                                     #parent = self.node)
+
+            #self.node = self.animation.node
+            self.visuals = visuals
             #legacy proxy function that turned to be kind of nicer way to
             #update anims, than calling for switch manually
             self.change_animation = self.animation.switch
@@ -51,9 +77,10 @@ class Entity2D:
         else:
             #if we didnt get valid sprite data - create placeholder invisible
             #node to attach hitbox and other stuff to
-            placeholder_node = PandaNode(name)
-            self.node = render.attach_new_node(placeholder_node)
+            # placeholder_node = PandaNode(name)
+            # self.node = render.attach_new_node(placeholder_node)
 
+            self.visuals = None
             #dummy placeholder to avoid breakage in case some object tried to
             #load invalid spritesheet and then toggle its anims
             def placeholder_anim_changer(action):

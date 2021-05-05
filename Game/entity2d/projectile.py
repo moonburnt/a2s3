@@ -79,6 +79,7 @@ class Projectile(entity2d.Entity2D):
                          #spritesheet = base.assets.sprite[spritesheet],
                          spritesheet = base.assets.sprite.get(spritesheet, None),
                          animations = animations,
+                         visuals_node = False,
                          hitbox_size = projectile_hitbox,
                          collision_mask = collision_mask,
                          #sprite_size = sprite_size,
