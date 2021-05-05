@@ -481,7 +481,7 @@ class PlayerHUD(Menu):
         #create white-colored text with player's hp above player's head
         #TODO: maybe move it to top left, add some image on background
         self.player_hp = OnscreenText(text = str(0),
-                                      pos = (0, 0.01),
+                                      pos = (0, 0.05),
                                       scale = 0.05,
                                       fg = (1,1,1,1),
                                       parent = self.frame,
