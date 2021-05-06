@@ -16,26 +16,15 @@ dodge = 0
 mov_spd = 3
 
 [Assets]
-sprite = "player"
+# Internal names of ".head" and ".body" config files, that will be used by player
+head = "Player Heads"
+# Optional value that overrides default head. If not set - will use what s set as
+# default in config file. Or the very first key in heads list
+#default_head = "Emo"
+# Positional offset from creature's center
+body = "Knight Body"
+
+[Assets.Sounds]
 #TODO: add some sound that will be played on getting hit
-#hurt_sound =
-death_sound = "player_death"
-
-[Animations.idle]
-sprites = 0
-#sprites = [ 0, 0 ]
-#loop = true
-
-[Animations.move]
-sprites = [ 4, 7 ]
-loop = true
-
-[Animations.attack]
-sprites = [ 8, 11 ]
-loop = true
-
-[Animations.hurt]
-sprites = [ 12, 15 ]
-
-[Animations.dying]
-sprites = [ 16, 19 ]
+#hurt =
+death = "player_death"

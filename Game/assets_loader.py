@@ -25,15 +25,17 @@ import logging
 log = logging.getLogger(__name__)
 
 GAME_DIR = '.'
-ASSETS_DIR = join(GAME_DIR, 'Assets')
-SPRITE_DIR = join(ASSETS_DIR, 'Sprites')
-MUSIC_DIR = join(ASSETS_DIR, 'BGM')
-SFX_DIR = join(ASSETS_DIR, 'SFX')
-ENTITY_DIR = join(ASSETS_DIR, 'Entity')
-CLASSES_DIR = join(ENTITY_DIR, 'Classes')
-ENEMIES_DIR = join(ENTITY_DIR, 'Enemies')
-SKILLS_DIR = join(ENTITY_DIR, 'Skills')
-PROJECTILES_DIR = join(ENTITY_DIR, 'Projectiles')
+ASSETS_DIR = join(GAME_DIR, "Assets")
+SPRITE_DIR = join(ASSETS_DIR, "Sprites")
+MUSIC_DIR = join(ASSETS_DIR, "BGM")
+SFX_DIR = join(ASSETS_DIR, "SFX")
+ENTITY_DIR = join(ASSETS_DIR, "Entity")
+CLASSES_DIR = join(ENTITY_DIR, "Classes")
+ENEMIES_DIR = join(ENTITY_DIR, "Enemies")
+SKILLS_DIR = join(ENTITY_DIR, "Skills")
+PROJECTILES_DIR = join(ENTITY_DIR, "Projectiles")
+HEADS_DIR = join(ENTITY_DIR, "Heads")
+BODIES_DIR = join(ENTITY_DIR, "Bodies")
 
 class AssetsLoader:
     def __init__(self):
@@ -47,6 +49,8 @@ class AssetsLoader:
         self.enemies = {}
         self.skills = {}
         self.projectiles = {}
+        self.heads = {}
+        self.bodies = {}
 
         self.load_all()
 
@@ -144,8 +148,8 @@ class AssetsLoader:
             try:
                 toml_content = tomload(item)
                 internal_name = toml_content['Main']['name']
-            except:
-                log.warning(f"{item} has invalid format, wont import")
+            except Exception as e:
+                log.warning(f"{item} has invalid format: {e}. Wont import")
                 continue
             else:
                 data[internal_name] = toml_content
@@ -153,28 +157,46 @@ class AssetsLoader:
         return data
 
     def load_classes(self, pathtodir: str):
-        '''Load and update currently known classes from provided directory and its subdirs'''
-        data = self._load_toml(pathtodir)
-        log.debug("Updating classes storage")
+        '''Load and update configuration files of player classes from provided
+        directory and its subdirs'''
+        data = self._load_toml(pathtodir, ".player")
+        log.debug("Updating player classes storage")
         self.classes = self.classes | data
 
     def load_enemies(self, pathtodir: str):
-        '''Load and update currently known enemies from provided directory and its subdirs'''
-        data = self._load_toml(pathtodir)
+        '''Load and update enemy configuration files from provided directory
+        and its subdirs'''
+        data = self._load_toml(pathtodir, ".enemy")
         log.debug("Updating enemies storage")
         self.enemies = self.enemies | data
 
     def load_skills(self, pathtodir: str):
-        '''Load and update currently known skills from provided directory and its subdirs'''
-        data = self._load_toml(pathtodir)
+        '''Load and update skill configuration files from provided directory
+        and its subdirs'''
+        data = self._load_toml(pathtodir, ".skill")
         log.debug("Updating skills storage")
         self.skills = self.skills | data
 
     def load_projectiles(self, pathtodir: str):
-        '''Load and update currently known projectiles from provided directory and its subdirs'''
-        data = self._load_toml(pathtodir)
-        log.debug("Updating skills storage")
+        '''Load and update projectile configuration files from provided directory
+        and its subdirs'''
+        data = self._load_toml(pathtodir, ".projectile")
+        log.debug("Updating projectiles storage")
         self.projectiles = self.projectiles | data
+
+    def load_heads(self, pathtodir:str):
+        '''Load and update head configuration files from provided directory
+        and its subdirs'''
+        data = self._load_toml(pathtodir, ".head")
+        log.debug("Updating heads storage")
+        self.heads = self.heads | data
+
+    def load_bodies(self, pathtodir:str):
+        '''Load and update body configuration files from provided directory
+        and its subdirs'''
+        data = self._load_toml(pathtodir, ".body")
+        log.debug("Updating bodies storage")
+        self.bodies = self.bodies | data
 
     def load_all(self):
         '''Load all assets from default paths'''
@@ -185,6 +207,8 @@ class AssetsLoader:
         self.load_enemies(ENEMIES_DIR)
         self.load_skills(SKILLS_DIR)
         self.load_projectiles(PROJECTILES_DIR)
+        self.load_heads(HEADS_DIR)
+        self.load_bodies(BODIES_DIR)
 
     def reset(self):
         '''Reset assets dictionaries to empty state'''
@@ -194,6 +218,9 @@ class AssetsLoader:
         self.classes = {}
         self.enemies = {}
         self.skills = {}
+        self.projectiles = {}
+        self.heads = {}
+        self.bodies = {}
 
     def reload(self):
         '''Reset assets dictionaries to be empty, then load defaults'''

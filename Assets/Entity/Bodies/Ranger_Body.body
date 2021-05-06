@@ -1,19 +1,6 @@
 [Main]
-name = "Ranger"
-hitbox_size = 6
-skills = [ "Shoot" ]
-#skills = [ "Plant Mine" ]
-
-[Stats]
-hp = 100
-dmg = 10
-mov_spd = 4
-defence = 0
-dodge = 10
-
-[Assets]
-sprite = "ranger"
-death_sound = "player_death"
+name = "Ranger Body"
+spritesheet = "ranger"
 
 [Animations.idle]
 sprites = [ 0, 0 ]

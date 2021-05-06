@@ -1,18 +1,6 @@
-#Example enemy
-
 [Main]
-name = "Cuboid"
-hitbox_size = 12
-skills = [ "Autoattack" ]
-
-[Stats]
-hp = 50
-dmg = 10
-mov_spd = 2
-
-[Assets]
-sprite = "cuboid"
-death_sound = "enemy_death"
+name = "Cuboid Body"
+spritesheet = "cuboid"
 
 [Animations.idle]
 sprites = [ 0, 0 ]

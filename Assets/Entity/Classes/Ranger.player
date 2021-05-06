@@ -1,0 +1,21 @@
+[Main]
+name = "Ranger"
+hitbox_size = 6
+skills = [ "Shoot" ]
+#skills = [ "Plant Mine" ]
+
+[Stats]
+hp = 100
+dmg = 10
+mov_spd = 4
+defence = 0
+dodge = 10
+
+[Assets]
+head = "Player Heads"
+default_head = "Emo"
+# Positional offset from creature's center
+body = "Ranger Body"
+
+[Assets.Sounds]
+death = "player_death"

@@ -33,23 +33,10 @@ class Player(entity2d.Creature):
 
         #this will crash on invalid, no safety checks for now
         data = base.assets.classes[name]
-        spritesheet = data['Assets']['sprite']
 
-        #placeholder code that should hardcode player's head to the very first
-        #on heads spritesheet. #TODO: make it configurable
-        head = {'spritesheet': base.assets.sprite['player_heads'],
-                'head': {'default':{'sprites': 0}},
-                'size': (16, 16)}
-
-        super().__init__(name = data['Main']['name'],
+        super().__init__(name = name,
                          category = category,
-                         spritesheet = base.assets.sprite[spritesheet],
-                         animations = data['Animations'],
-                         stats = data['Stats'],
-                         skills = data['Main']['skills'],
-                         head = head,
-                         death_sound = data['Assets']['death_sound'],
-                         hitbox_size = data['Main'].get('hitbox_size', None),
+                         data = data,
                          collision_mask = collision_mask,
                          position = position)
 

@@ -34,10 +34,58 @@ HEAD_HEIGHT = 0.2 #relatively to player height, not scene
 
 class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
-    def __init__(self, name: str, category: str, spritesheet, animations: dict,
-                 stats: dict, skills: list, head: dict = None,
-                 death_sound: str = None, hitbox_size: int = None,
-                 collision_mask = None, sprite_size: tuple = None, scale = None, position = None):
+    def __init__(self, name: str, category: str, data:dict,
+                 # spritesheet, animations: dict,
+                 # stats: dict, skills: list, head: dict = None,
+                 # death_sound: str = None, hitbox_size: int = None, sprite_size: tuple = None,
+                 collision_mask = None, scale = None, position = None):
+
+        #First, lets extract all data unified for all creatures from our dict.
+        #Safety checks are all over the place - some instances are secured, others
+        #will cause crash on invalid/non-existing data
+        stats = data['Stats']
+        skills = data['Main'].get('skills', None)
+        hitbox_size = data['Main'].get('hitbox_size', None)
+
+        if data.get('Assets', None):
+            head = data['Assets'].get('head', None)
+            if head:
+                default_head = data['Assets'].get('default_head', None)
+                #there should be parsing of head config
+                head_data = base.assets.heads.get(head, None)
+            else:
+                head_data = None
+
+            body = data['Assets'].get('body', None)
+            if body and (body in base.assets.bodies):
+                body_data = base.assets.bodies[body]
+                #not checking if "main" exists, coz it should be already filtered
+                #out by assets loader
+                spritesheet_name = body_data['Main'].get('spritesheet', None)
+                if spritesheet_name and (spritesheet_name in base.assets.sprite):
+                    spritesheet = base.assets.sprite[spritesheet_name]
+                    #idk if this will break at some point
+                    sprite_size = body_data['Main'].get('size', None)
+                    animations = body_data.get('Animations', None)
+                else:
+                    spritesheet = None,
+                    animations = None,
+                    sprite_size = None
+            else:
+                spritesheet = None,
+                animations = None,
+                sprite_size = None
+
+            if data['Assets'].get('Sounds', None):
+                death_sound = data['Assets']['Sounds'].get('death', None)
+            else:
+                death_sound = None
+        else:
+            spritesheet = None,
+            animations = None,
+            sprite_size = None,
+            death_sound = None
+
         #Initializing all the stuff from parent class'es init to be done
         super().__init__(name = name,
                          category = category,
@@ -63,18 +111,45 @@ class Creature(entity2d.Entity2D):
 
         #placeholder code that implements support for attachable heads
         #not really efficient, I should probably do it somewhere else
-        if head and head.get('spritesheet', None) and head.get('head', None):
-            if not head.get('size', None):
+        #if head_data
+        #if head and head.get('spritesheet', None) and head.get('head', None):
+        if (head_data and
+            head_data['Main'].get('spritesheet', None) and
+            (head_data['Main']['spritesheet'] in base.assets.sprite) and
+            head_data.get('Animations')):
+            if not head_data.get('size', None):
                 size = shared.DEFAULT_SPRITE_SIZE
             else:
-                size = head['size']
+                size = head_data['size']
+
+            #if no head has been set to start with, or head doesnt exist - setting
+            #up the very first one to be shown instead
+            starting_head = default_head or head_data['Main'].get('default_head', None)
+            if starting_head and head_data['Animations'].get(starting_head, None):
+                sprites = head_data['Animations'][starting_head]
+            else:
+                head_name = list(head_data['Animations'].keys())[0]
+                sprites = head_data['Animations'][head_name]
+
+            default_action = list(sprites.keys())[0]
+            #if default action's sprite isnt single - it should be tuple or list
+            if isinstance(sprites[default_action]['sprites'], int):
+                default_sprite = sprites[default_action]['sprites']
+            else:
+                default_sprite = sprites[default_action]['sprites'][0]
+
+            spritesheet_name = head_data['Main']['spritesheet']
+            spritesheet = base.assets.sprite[spritesheet_name]
 
             self.head = p3dss.SpritesheetObject(
                                     name = f"{name}_head",
-                                    spritesheet = head['spritesheet'],
-                                    sprites = head['head'],
-                                    sprite_size = (head.get('size', None) or
+                                    #spritesheet = head_data['Main']['spritesheet'],
+                                    spritesheet = spritesheet,
+                                    #sprites = head['head'],
+                                    sprites = sprites,
+                                    sprite_size = (head_data['Main'].get('size', None) or
                                                    shared.DEFAULT_SPRITE_SIZE),
+                                    default_sprite = default_sprite,
                                     parent = self.visuals,
                                     )
             #it would make sense to add both pos and dic received from player
@@ -84,7 +159,10 @@ class Creature(entity2d.Entity2D):
             #Depending on values, sprite may render slightly different. Been told
             #that it happens because of lack of antialiasing #TODO
             #self.head.node.set_pos(0.2, 0, 5)
-            self.head.node.set_pos(0.2, 0, 4.4)
+            position = head_data['Main'].get('position', None)
+            if position:
+               self.head.node.set_pos(*position)
+            #self.head.node.set_pos(0.2, 0, 4.4)
 
             #I need to fix rendering order of head, to appear above body.
             #It could be done like that, but sometimes it glitch out

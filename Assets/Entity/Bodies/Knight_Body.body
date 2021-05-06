@@ -1,0 +1,25 @@
+[Main]
+name = "Knight Body"
+spritesheet = "player"
+# Optional variable that sets up custom size of each sprite in sheet
+#size = [ 32, 32 ]
+
+#Body's animations
+[Animations.idle]
+sprites = 0
+#sprites = [ 0, 0 ]
+#loop = true
+
+[Animations.move]
+sprites = [ 4, 7 ]
+loop = true
+
+[Animations.attack]
+sprites = [ 8, 11 ]
+loop = true
+
+[Animations.hurt]
+sprites = [ 12, 15 ]
+
+[Animations.dying]
+sprites = [ 16, 19 ]

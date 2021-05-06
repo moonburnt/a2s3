@@ -37,7 +37,7 @@ class Enemy(entity2d.Creature):
         category = shared.ENEMY_CATEGORY
 
         data = base.assets.enemies[name]
-        spritesheet = data['Assets']['sprite']
+        #spritesheet = data['Assets']['sprite']
 
         #this is hopefully temporary stuff, because it seems bad to call for that
         #stuff twice
@@ -53,14 +53,9 @@ class Enemy(entity2d.Creature):
             #no actual rescale will occur (coz default scale is 1 anyway)
             scale = 0
 
-        super().__init__(name = data['Main']['name'],
+        super().__init__(name = name,
                          category = category,
-                         spritesheet = base.assets.sprite[spritesheet],
-                         animations = data['Animations'],
-                         stats = data['Stats'],
-                         skills = data['Main'].get('skills', None),
-                         death_sound = data['Assets']['death_sound'],
-                         hitbox_size = data['Main'].get('hitbox_size', None),
+                         data = data,
                          collision_mask = collision_mask,
                          scale = scale,
                          position = position)

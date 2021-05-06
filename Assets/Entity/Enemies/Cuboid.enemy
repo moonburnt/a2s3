@@ -1,0 +1,17 @@
+#Example enemy
+
+[Main]
+name = "Cuboid"
+hitbox_size = 12
+skills = [ "Autoattack" ]
+
+[Stats]
+hp = 50
+dmg = 10
+mov_spd = 2
+
+[Assets]
+body = "Cuboid Body"
+
+[Assets.Sounds]
+death = "enemy_death"

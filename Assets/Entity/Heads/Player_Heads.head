@@ -1,0 +1,29 @@
+[Main]
+name = "Player Heads"
+spritesheet = "player_heads"
+# Size of sprite. Not a scale, but actual sprite's x, y. The only optional thing
+# there - if not set, will be using default sprite's size
+size = [ 16, 16 ]
+# Positional offset from creature's center. Because of how toml parsing library
+# works, we cant mix ints and floats in one array. Thus 0 is passed as 0.0
+position = [ 0.2, 0.0, 4.4 ]
+
+# Default head to be chosen, if creature its attached to dont have "default_head"
+# preference or (in case its player) didnt set default head manually
+default_head = "Ushanka"
+
+# Main category is name of each head on spritesheet that will be displayed in game.
+# "default" is default sprite that will be displayed right away. If head isnt
+# static but animated - animations should come after and be named the same way
+# as body's animations
+[Animations.Ushanka.default]
+sprites = 0
+
+[Animations.Punk.default]
+sprites = 1
+
+[Animations.Emo.default]
+sprites = 2
+
+[Animations.Afro.default]
+sprites = 3
