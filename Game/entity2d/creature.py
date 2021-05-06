@@ -24,6 +24,11 @@ from Game import entity2d, skill, shared
 
 log = logging.getLogger(__name__)
 
+#silencing p3dss logger from printing everything below ERROR level, coz otherwise
+#it will return too much warnings, related to missing head's animations
+p3dss_logger = logging.getLogger('p3dss')
+p3dss_logger.setLevel(logging.ERROR)
+
 LOOK_RIGHT = 0
 LOOK_LEFT = 180
 
@@ -151,6 +156,7 @@ class Creature(entity2d.Entity2D):
                                                    shared.DEFAULT_SPRITE_SIZE),
                                     default_sprite = default_sprite,
                                     parent = self.visuals,
+                                    default_action = default_action,
                                     )
             #it would make sense to add both pos and dic received from player
             #into configuration toml, for default values (and to enable support
@@ -176,6 +182,19 @@ class Creature(entity2d.Entity2D):
             #head's pos on direction change.
             #its set to -, coz default direction is "right"
             self.head.node.set_y(-HEAD_HEIGHT)
+
+            #enabling support for animated head, in case we have more than one
+            #sprite in our hair style's config
+            if len(sprites) > 1:
+                #its done a bit funky, because I couldnt figure out how to make
+                #it work with super from here, lol
+                super_anim_changer = self.change_animation
+                def change_animation(*args):
+                    self.head.switch(*args)
+                    super_anim_changer(*args)
+
+                self.change_animation = change_animation
+
         else:
             self.head = None
 

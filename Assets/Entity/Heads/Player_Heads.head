@@ -13,17 +13,39 @@ position = [ 0.2, 0.0, 4.4 ]
 default_head = "Ushanka"
 
 # Main category is name of each head on spritesheet that will be displayed in game.
-# "default" is default sprite that will be displayed right away. If head isnt
+# "idle" is default sprite that will be displayed right away. If head isnt
 # static but animated - animations should come after and be named the same way
 # as body's animations
-[Animations.Ushanka.default]
+[Animations.Ushanka.idle]
 sprites = 0
 
-[Animations.Punk.default]
+[Animations.Ushanka.attack]
 sprites = 1
+length = 0.4
+reset_on_complete = true
 
-[Animations.Emo.default]
+[Animations.Punk.idle]
 sprites = 2
 
-[Animations.Afro.default]
+[Animations.Punk.attack]
 sprites = 3
+length = 0.4
+reset_on_complete = true
+
+[Animations.Emo.idle]
+sprites = 4
+length = 0.4
+reset_on_complete = true
+
+[Animations.Emo.attack]
+sprites = 5
+length = 0.4
+reset_on_complete = true
+
+[Animations.Afro.idle]
+sprites = 6
+
+[Animations.Afro.attack]
+sprites = 7
+length = 0.4
+reset_on_complete = true
