@@ -14,17 +14,16 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-#module dedicated for playing BGM
+#module dedicated to playing BGM
 
+import p3dae
 import logging
-from direct.interval.LerpInterval import LerpFunctionInterval
-from direct.interval.IntervalGlobal import *
 
 log = logging.getLogger(__name__)
 
 class MusicPlayer:
-    '''Main class dedicated to music operations. For now, means to be initialized
-    from ShowBase or its derivatives'''
+    '''Main class dedicated to music operations. For now, meant to be initialized
+    from ShowBase or its derivatives, due to usage of "base" global'''
     def __init__(self):
         log.debug("Initializing music player")
         #stuff that currently plays
@@ -35,6 +34,7 @@ class MusicPlayer:
         self.default_loop_policy = True
 
         self.music_manager = base.musicManager
+        self.music_player = p3dae.AudioEffects()
         #increasing amount of songs allowed to play at once to 2. This will allow to
         #perform crossfade, but this is also the reason why we track what plays
         self.set_concurrent_songs_limit(2)
@@ -53,18 +53,19 @@ class MusicPlayer:
         log.debug(f"Music player's concurrent songs limit has been set to {value}")
 
     def set_default_loop_policy(self, toggle: bool):
-        '''Yet another way to override default loop policy'''
+        '''Override default loop policy'''
         self.default_loop_policy = toggle
         log.debug(f"Default loop policy has been set to {toggle}")
 
     def play(self, song, loop = None, reset_volume = True, stop_current = True, fade_speed = 0):
-        '''Play the song normally. Meant to be used instead of default "play"
-        command, as it also overwrites what currently plays. If reset_volume = True,
-        also set song's volume to default'''
+        '''Play the song. Meant to be used instead of default "play" command, as
+        it also adds song to self.currently_playing. If reset_volume = True, set
+        song's volume to default before playback. If stop_current - also reset
+        self.currently_playing and stop all the songs that already play'''
         if stop_current and self.currently_playing:
             for item in self.currently_playing:
                 item.stop()
-            self.currently_playing = {}
+            self.currently_playing = set()
 
         #I tried to pass this directly, but it didnt work
         if not loop:
@@ -75,17 +76,26 @@ class MusicPlayer:
             self.reset_volume(song)
 
         if fade_speed:
-            self._fade_in(song, speed = fade_speed)
+            self.currently_playing.add(song)
+            self.music_player.fade_in(song = song,
+                                volume = self.default_song_volume,
+                                speed = fade_speed)
+        else:
+            song.play()
 
-        song.play()
         self.currently_playing.add(song)
         log.debug(f"Playing {song}")
 
     def stop(self, song, fade_speed = 0):
-        '''Stop the song and remove it from what currently plays'''
+        '''Stop the song and remove it from self.currently_playing'''
         if fade_speed:
-            self._fade_out(song, speed = fade_speed)
-        song.stop()
+            self.music_player.fade_out(song = song,
+                                 speed = fade_speed,
+                                 stop = True,
+                                 reset_volume = True)
+        else:
+           song.stop()
+
         if song in self.currently_playing:
             self.currently_playing.remove(song)
 
@@ -109,37 +119,28 @@ class MusicPlayer:
         song.set_volume(self.default_song_volume)
         log.debug(f"{song}'s volume has been reset to default")
 
-    def _fade_out(self, song, speed = 0.5):
-        '''Slowly decrease song's volume within 'speed' amount of seconds, then stop it'''
-        fade_out_interval = LerpFunctionInterval(song.set_volume,
-                                                 duration = speed,
-                                                 fromData = song.get_volume(),
-                                                 toData = 0)
+    def crossfade(self, song, loop:bool = None, speed = 0.5):
+        '''Fade in provided song, while silencing and then stopping and removing
+        from self.currently_playing what currently plays'''
+        active_songs = self.currently_playing.copy()
 
-        log.debug(f"Fading out {song}")
-        fade_out_interval.start()
-
-    def _fade_in(self, song, speed = 0.5):
-        fade_in_interval = LerpFunctionInterval(song.set_volume,
-                                                duration = speed,
-                                                fromData = 0,
-                                                toData = self.default_song_volume)
-
-        log.debug(f"Fading in {song}")
-        fade_in_interval.start()
-
-    def crossfade(self, song, loop = None, speed = 10):
         if not loop:
             loop = self.default_loop_policy
 
-        parallel = Parallel()
+        if not speed:
+            self.play(song = song,
+                      loop = loop)
+            return
 
-        if self.currently_playing:
-            songs = self.currently_playing.copy()
-            for item in self.currently_playing:
-                parallel.append(Func(self.stop, song = item, fade_speed = speed))
+        self.music_player.crossfade(song = song,
+                              active_songs = active_songs,
+                              stop_active = True,
+                              fade_in_volume = self.default_song_volume,
+                              reset_volume = True,
+                              fade_out_speed = speed,
+                              fade_in_speed = speed,
+                              )
 
-        parallel.append(Func(self.play, song = song, loop = loop,
-                             fade_speed = speed, stop_current = False))
-        log.debug(f"Crossfading {song}")
-        parallel.start()
+        #resettings list of active tracks
+        self.currently_playing = set()
+        self.currently_playing.add(song)
