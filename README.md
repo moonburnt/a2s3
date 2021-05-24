@@ -27,6 +27,7 @@ keep these two things in mind and do it accordingly.
 - panda3d 1.10.8
 - toml 0.10.2
 - [p3dss](https://github.com/moonburnt/p3dss)
+- [p3dae](https://github.com/moonburnt/p3dae)
 
 ## How to Play:
 
