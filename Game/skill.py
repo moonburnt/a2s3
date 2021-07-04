@@ -36,7 +36,7 @@ class Skill:
         self.caster_stats = self.caster.get_python_tag("stats")
 
         #No safety checks rn, will crash if skill has no config file
-        data = base.assets.skills[self.name]
+        data = shared.assets.skills[self.name]
         main = data['Main']
 
         #data storage class, which we will instance and attach optional variables to
@@ -283,7 +283,7 @@ class Skill:
 
             #maybe I should attach it to skill itself instead? or to caster? and
             #destroy together? Hmmm.... #TODO
-            base.level.projectiles.append(projectile)
+            shared.level.projectiles.append(projectile)
 
     def cast_time_handler(self, event):
         '''Same as cooldown handler, but for self.cast_time'''

@@ -57,18 +57,18 @@ class Creature(entity2d.Entity2D):
             if head:
                 default_head = data['Assets'].get('default_head', None)
                 #there should be parsing of head config
-                head_data = base.assets.heads.get(head, None)
+                head_data = shared.assets.heads.get(head, None)
             else:
                 head_data = None
 
             body = data['Assets'].get('body', None)
-            if body and (body in base.assets.bodies):
-                body_data = base.assets.bodies[body]
+            if body and (body in shared.assets.bodies):
+                body_data = shared.assets.bodies[body]
                 #not checking if "main" exists, coz it should be already filtered
                 #out by assets loader
                 spritesheet_name = body_data['Main'].get('spritesheet', None)
-                if spritesheet_name and (spritesheet_name in base.assets.sprite):
-                    spritesheet = base.assets.sprite[spritesheet_name]
+                if spritesheet_name and (spritesheet_name in shared.assets.sprite):
+                    spritesheet = shared.assets.sprite[spritesheet_name]
                     #idk if this will break at some point
                     sprite_size = body_data['Main'].get('size', None)
                     animations = body_data.get('Animations', None)
@@ -108,11 +108,11 @@ class Creature(entity2d.Entity2D):
         #resources, thus Im doing it there and not during base entity2d init
         self.node.set_two_sided(True)
 
-        if death_sound and (death_sound in base.assets.sfx):
-            self.death_sound = base.assets.sfx[death_sound]
+        if death_sound and (death_sound in shared.assets.sfx):
+            self.death_sound = shared.assets.sfx[death_sound]
         else:
             log.warning(f"{name} has no custom death sound, using fallback")
-            self.death_sound = base.assets.sfx['default_death']
+            self.death_sound = shared.assets.sfx['default_death']
 
         #placeholder code that implements support for attachable heads
         #not really efficient, I should probably do it somewhere else
@@ -120,7 +120,7 @@ class Creature(entity2d.Entity2D):
         #if head and head.get('spritesheet', None) and head.get('head', None):
         if (head_data and
             head_data['Main'].get('spritesheet', None) and
-            (head_data['Main']['spritesheet'] in base.assets.sprite) and
+            (head_data['Main']['spritesheet'] in shared.assets.sprite) and
             head_data.get('Animations')):
             if not head_data.get('size', None):
                 size = shared.DEFAULT_SPRITE_SIZE
@@ -144,7 +144,7 @@ class Creature(entity2d.Entity2D):
                 default_sprite = sprites[default_action]['sprites'][0]
 
             spritesheet_name = head_data['Main']['spritesheet']
-            spritesheet = base.assets.sprite[spritesheet_name]
+            spritesheet = shared.assets.sprite[spritesheet_name]
 
             self.head = p3dss.SpritesheetObject(
                                     name = f"{name}_head",
@@ -224,7 +224,7 @@ class Creature(entity2d.Entity2D):
             #I should probably rework this into list or idk
             entity_skills = {}
             for item in skills:
-                if item in base.assets.skills:
+                if item in shared.assets.skills:
                     skill_instance = skill.Skill(item, self.node)
                     entity_skills[item] = skill_instance
             self.skills = entity_skills
@@ -365,7 +365,7 @@ class Creature(entity2d.Entity2D):
 
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
-        base.assets.sfx['damage'].play()
+        shared.assets.sfx['damage'].play()
 
     def blink(self, rgba: tuple, length, fade_in: bool = False, fade_out: bool = False):
         '''Make creature blink with provided rgba color for length amount of time.

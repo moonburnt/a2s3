@@ -26,20 +26,6 @@ from Game import shared
 
 log = logging.getLogger(__name__)
 
-CURRENT_INTERFACE = None
-
-def switch(menu):
-    '''Switch CURRENT_INTERFACE menu to one passed as argument'''
-    #this is kind of nasty thing. But if used correctly, it should allow to easily
-    #switch active interfaces from one to another, in case only one can exist at
-    #given time. Manual usage of hide/show functions still make sense, in case
-    #some guis need to coexist
-    global CURRENT_INTERFACE
-    if CURRENT_INTERFACE:
-        CURRENT_INTERFACE.hide()
-    CURRENT_INTERFACE = menu
-    menu.show()
-
 class Popup:
     '''Meta class for messages that appear on certain actions and disappear into nowhere'''
     def __init__(self, text = None, pos = (0, 0), align = TextNode.ACenter, scale = 1,
@@ -109,12 +95,12 @@ class Menu:
         #basically, the thing is - directgui can automatically assign multiple
         #textures to different button's events, if they are passed as list or
         #tuple in correct order. And thats what we are doing there
-        self.button_textures = (base.assets.sprite['button'],
-                                base.assets.sprite['button_active'],
-                                base.assets.sprite['button_selected'])
+        self.button_textures = (shared.assets.sprite['button'],
+                                shared.assets.sprite['button_active'],
+                                shared.assets.sprite['button_selected'])
 
-        self.hover_sfx = base.assets.sfx['menu_hover']
-        self.select_sfx = base.assets.sfx['menu_select']
+        self.hover_sfx = shared.assets.sfx['menu_hover']
+        self.select_sfx = shared.assets.sfx['menu_select']
 
         #this will change the default behavior of menus, but to me it will make
         #things more convenient. E.g if you need to show something - do it manually
@@ -141,7 +127,7 @@ class MainMenu(Menu):
         # self.main_menu.reparent_to(pixel2d)
         # self.main_menu.show()
 
-        self.game_logo = OnscreenImage(image = base.assets.sprite['logo'],
+        self.game_logo = OnscreenImage(image = shared.assets.sprite['logo'],
                                        scale = (122, 1, 53),
                                        pos = (150, 1, -100),
                                        parent = self.frame)
@@ -200,14 +186,14 @@ class OptionsMenu(Menu):
         options_label = DirectLabel(text = "Options",
                                     pos = (0, 0, 0.8),
                                     scale = 0.1,
-                                    frameTexture = base.assets.sprite["frame"],
+                                    frameTexture = shared.assets.sprite["frame"],
                                     frameSize = (-3, 3, -0.5, 1),
                                     parent = self.frame)
 
         music_label = DirectLabel(text = "Music",
                                   pos = (-0.5, 0, 0.5),
                                   scale = 0.1,
-                                  frameTexture = base.assets.sprite["frame"],
+                                  frameTexture = shared.assets.sprite["frame"],
                                   frameSize = (-3, 3, -0.5, 1),
                                   parent = self.frame)
 
@@ -220,7 +206,7 @@ class OptionsMenu(Menu):
         sfx_label = DirectLabel(text = "SFX",
                                 pos = (-0.5, 0, 0.2),
                                 scale = 0.1,
-                                frameTexture = base.assets.sprite["frame"],
+                                frameTexture = shared.assets.sprite["frame"],
                                 frameSize = (-3, 3, -0.5, 1),
                                 parent = self.frame)
 
@@ -265,8 +251,11 @@ class OptionsMenu(Menu):
     def restore_and_close(self):
         '''Restore previous options' values and return to parent menu.'''
 
-        base.music_player.set_player_volume(self.old_music_volume)
-        base.sfx_manager.set_volume(self.old_sfx_volume)
+        #base.music_player.set_player_volume(self.old_music_volume)
+        #base.sfx_manager.set_volume(self.old_sfx_volume)
+        shared.game_data.music_player.set_player_volume(self.old_music_volume)
+        shared.game_data.sfx_manager.set_volume(self.old_sfx_volume)
+        #base.sfx_manager.set_volume(self.old_sfx_volume)
         self.music_slider.setValue(self.old_music_volume)
         self.sfx_slider.setValue(self.old_sfx_volume)
 
@@ -274,13 +263,13 @@ class OptionsMenu(Menu):
 
     def update_music_volume(self):
         self.music_volume = self.music_slider["value"]
-        base.music_player.set_player_volume(self.music_volume)
+        #base.music_player.set_player_volume(self.music_volume)
+        shared.game_data.music_player.set_player_volume(self.music_volume)
 
     def update_sfx_volume(self):
         self.sfx_volume = self.sfx_slider["value"]
-        base.sfx_manager.set_volume(self.sfx_volume)
-
-
+        #base.sfx_manager.set_volume(self.sfx_volume)
+        shared.game_data.sfx_manager.set_volume(self.sfx_volume)
 
 class MapSettings(Menu):
     '''Menu where player can change map scale and other things'''
@@ -296,8 +285,8 @@ class MapSettings(Menu):
 
         #this will probably crash on no classes... but, like - you wont be able
         #to play anyway at this point, so why bother?
-        self.player_class = list(base.assets.classes.keys())[0]
-        self.player_classes = list(base.assets.classes.keys())
+        self.player_class = list(shared.assets.classes.keys())[0]
+        self.player_classes = list(shared.assets.classes.keys())
 
         #this is placeholder too. Maybe I should even move it to separate screen?
         #it may be also good idea to right away check if class has all the necessary
@@ -306,7 +295,7 @@ class MapSettings(Menu):
         class_selection_title = DirectLabel(text = "Player Class:",
                                       pos = (0, 0, 0.7),
                                       scale = 0.1,
-                                      frameTexture = base.assets.sprite['frame'],
+                                      frameTexture = shared.assets.sprite['frame'],
                                       frameSize = (-3, 3, -0.5, 1),
                                       parent = self.frame)
 
@@ -333,7 +322,7 @@ class MapSettings(Menu):
         map_selection_title = DirectLabel(text = "Map Scale:",
                                       pos = (0, 0, 0.3),
                                       scale = 0.1,
-                                      frameTexture = base.assets.sprite['frame'],
+                                      frameTexture = shared.assets.sprite['frame'],
                                       frameSize = (-3, 3, -0.5, 1),
                                       parent = self.frame)
 
@@ -407,7 +396,7 @@ class DeathScreen(Menu):
         self.death_message = DirectLabel(
                                       pos = (0, 0, 0.3),
                                       scale = 0.1,
-                                      frameTexture = base.assets.sprite['frame'],
+                                      frameTexture = shared.assets.sprite['frame'],
                                       frameSize = (-4.5, 4.5, -2.5, 1),
                                       parent = self.frame)
 

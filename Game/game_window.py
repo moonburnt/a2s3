@@ -32,7 +32,9 @@ class GameWindow(ShowBase):
         self.disable_mouse()
 
         log.debug("Loading assets")
-        self.assets = assets_loader.AssetsLoader()
+        #self.assets = assets_loader.AssetsLoader()
+        #shared.game_data.assets = assets_loader.AssetsLoader()
+        shared.assets.load_all()
 
         log.debug("Configuring game's window")
         #setting up resolution
@@ -69,14 +71,19 @@ class GameWindow(ShowBase):
 
         log.debug("Setting up the sound")
         #setting volume so it should apply to all music tracks
-        self.music_player = music_player.MusicPlayer()
-        self.music_player.set_player_volume(shared.MUSIC_VOLUME)
+        #self.music_player = music_player.MusicPlayer()
+        #self.music_player.set_player_volume(shared.MUSIC_VOLUME)
+        shared.game_data.music_player = music_player.MusicPlayer()
+        shared.game_data.music_player.set_player_volume(shared.MUSIC_VOLUME)
 
         #same goes for sfx manager, which is a separate thing
-        self.sfx_manager = base.sfxManagerList[0]
-        self.sfx_manager.set_volume(shared.SFX_VOLUME)
+        #self.sfx_manager = base.sfxManagerList[0]
+        #self.sfx_manager.set_volume(shared.SFX_VOLUME)
+        shared.game_data.sfx_manager = base.sfxManagerList[0]
+        shared.game_data.sfx_manager.set_volume(shared.SFX_VOLUME)
 
-        self.music_player.crossfade(self.assets.music['menu_theme'])
+        #self.music_player.crossfade(self.assets.music['menu_theme'])
+        shared.game_data.music_player.crossfade(shared.assets.music['menu_theme'])
 
         #turning on fps meter, in case its enabled in settings
         base.setFrameRateMeter(shared.FPS_METER)
@@ -85,24 +92,38 @@ class GameWindow(ShowBase):
         #make it possible to set to other values, aswell as pictures
         self.win.set_clear_color((0,0,0,1))
 
-        self.main_menu = interface.MainMenu(play_command = self.set_map,
-                                            options_command = self.options,
-                                            exit_command = self.exit_game)
-        self.show_menu()
+        #TODO: create separate storage for scenes
 
-        self.options_menu = interface.OptionsMenu(back_command = self.show_menu)
+        #these need to be this way, coz menu buttons dont accept activated funcs
+        def set_map():
+            shared.ui.switch("map settings")
 
-        self.map_settings = interface.MapSettings(play_command = self.start_game,
-                                                  back_command = self.show_menu)
+        def options():
+            shared.ui.switch("options")
 
-    def set_map(self):
-        interface.switch(self.map_settings)
+        def show_menu():
+            shared.ui.switch("main")
 
-    def options(self):
-        interface.switch(self.options_menu)
+        main_menu = interface.MainMenu(
+                                play_command = set_map,
+                                options_command = options,
+                                exit_command = self.exit_game,
+                                )
 
-    def show_menu(self):
-        interface.switch(self.main_menu)
+        options_menu = interface.OptionsMenu(
+                                back_command = show_menu,
+                                )
+
+        map_settings = interface.MapSettings(
+                                play_command = self.start_game,
+                                back_command = show_menu,
+                                            )
+
+        shared.ui.add(main_menu, "main")
+        shared.ui.add(options_menu, "options")
+        shared.ui.add(map_settings, "map settings")
+
+        shared.ui.switch("main")
 
     def start_game(self, player_class, map_scale):
         '''Hide main menu frame and load up the level'''
@@ -111,12 +132,12 @@ class GameWindow(ShowBase):
         #scene, it will be usefull to call switch here to show loading screen
         #self.main_menu.hide()
 
-        self.level = level_loader.LoadLevel(player_class, map_scale)
+        shared.level = level_loader.LoadLevel(player_class, map_scale)
 
     def exit_game(self):
         '''Run whatever cleanup tasks and exit the game'''
         #TODO: maybe save up some stuff and remove unused garbage from memory?
         log.info("Exiting the game... Bye :(")
-        self.music_player.stop_all()
+        shared.game_data.music_player.stop_all()
         #this doesnt have the snek case version
         base.userExit()

@@ -42,7 +42,7 @@ class Projectile(entity2d.Entity2D):
 
         #just like with other entities - no safety checks for now, will explode
         #on invalid name
-        data = base.assets.projectiles[name]
+        data = shared.assets.projectiles[name]
 
         #its probably possible to do this in less ugly way, but whatever
         assets = data.get('Assets', None)
@@ -76,8 +76,7 @@ class Projectile(entity2d.Entity2D):
 
         super().__init__(name = name,
                          category = category,
-                         #spritesheet = base.assets.sprite[spritesheet],
-                         spritesheet = base.assets.sprite.get(spritesheet, None),
+                         spritesheet = shared.assets.sprite.get(spritesheet, None),
                          animations = animations,
                          visuals_node = False,
                          hitbox_size = projectile_hitbox,

@@ -52,7 +52,7 @@ class AssetsLoader:
         self.heads = {}
         self.bodies = {}
 
-        self.load_all()
+        #self.load_all()
 
     def get_files(self, pathtodir: str, include_subdirs: bool = False,
                         extension: str = None, case_insensitive: bool = True):

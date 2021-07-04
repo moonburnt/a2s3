@@ -112,9 +112,14 @@ class LoadLevel:
         log.debug("Initializing UI")
         self.player_hud = interface.PlayerHUD()
         #initializing death screen
-        self.death_screen = interface.DeathScreen(restart_command = self.restart_level,
-                                                  exit_level_command = self.exit_level,
-                                                  exit_game_command = base.exit_game)
+        self.death_screen = interface.DeathScreen(
+                                        restart_command = self.restart_level,
+                                        exit_level_command = self.exit_level,
+                                        exit_game_command = base.exit_game,
+                                        )
+
+        shared.ui.add(self.player_hud, "player hud")
+        shared.ui.add(self.death_screen, "death screen")
 
         log.debug("Initializing handlers")
         #task manager is function that runs on background each frame and execute
@@ -148,6 +153,7 @@ class LoadLevel:
         base.accept(f"{shared.CONTROLS['attack']}-up",
                     self.change_key_state, ["attack", False])
 
+        #TODO: dont autoload it, let loading screen handle this
         self.setup_level()
 
     def change_key_state(self, key_name, key_status):
@@ -168,7 +174,7 @@ class LoadLevel:
     def setup_level(self):
         '''Set default level's variables'''
         log.debug("Generating the map")
-        self.map = map_loader.FlatMap(base.assets.sprite['floor'],
+        self.map = map_loader.FlatMap(shared.assets.sprite['floor'],
                                       size = shared.MAP_SIZE,
                                       scale = self.map_scale)
 
@@ -177,7 +183,8 @@ class LoadLevel:
         #setting this lower may cause glitches, as below lies the FLOOR_LAYER
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
-        self.player = entity2d.Player(self.player_class, position = self.map.player_spawnpoint)
+        self.player = entity2d.Player(self.player_class,
+                                      position = self.map.player_spawnpoint)
 
         self.wave_number = 0
         self.enemy_increase = 10
@@ -229,13 +236,13 @@ class LoadLevel:
         #base.camera.reparent_to(self.player.object)
         base.camera.reparent_to(self.player_follower)
 
-        base.music_player.crossfade(base.assets.music['battle'])
+        shared.game_data.music_player.crossfade(shared.assets.music['battle'])
 
         #its important to sync items there, otherwise they will show incorrect
         #values before related event occurs for first time
         #self.update_player_hud()
         base.task_mgr.add(self.update_player_hud, "player hud autoupdater")
-        interface.switch(self.player_hud)
+        shared.ui.switch("player hud")
 
         base.task_mgr.add(self.wave_changer, "wave changer")
 
@@ -664,9 +671,10 @@ class LoadLevel:
                                                self.wave_number,
                                                self.kill_counter)
 
-        base.music_player.crossfade(base.assets.music['death'])
+        shared.game_data.music_player.crossfade(shared.assets.music['death'])
 
-        interface.switch(self.death_screen)
+        #interface.switch(self.death_screen)
+        shared.ui.switch("death screen")
 
     def restart_level(self):
         '''Restarts a level from zero'''
@@ -696,5 +704,7 @@ class LoadLevel:
         '''Exit level to main menu'''
         self.cleanup()
 
-        base.music_player.crossfade(base.assets.music['menu_theme'])
-        interface.switch(base.main_menu)
+        #base.music_player.crossfade(base.assets.music['menu_theme'])
+        shared.game_data.music_player.crossfade(shared.assets.music['menu_theme'])
+        #interface.switch(shared.game_data.main_menu)
+        shared.ui.switch("main")

@@ -32,7 +32,8 @@ class Player(entity2d.Creature):
         category = shared.PLAYER_CATEGORY
 
         #this will crash on invalid, no safety checks for now
-        data = base.assets.classes[name]
+        #data = base.assets.classes[name]
+        data = shared.assets.classes[name]
 
         super().__init__(name = name,
                          category = category,
@@ -132,32 +133,32 @@ class Player(entity2d.Creature):
         #workaround for player moving faster diagonally than horizontally
         #it can be probably do prettier by normalizing vectors we are setting pos
         #to, but I was never able to achieve that without making player fly
-        if ((base.level.controls_status["move_up"] and
-             base.level.controls_status["move_left"]) or
-            ((base.level.controls_status["move_up"] and
-             base.level.controls_status["move_right"])) or
-            ((base.level.controls_status["move_down"] and
-             base.level.controls_status["move_left"])) or
-            ((base.level.controls_status["move_down"] and
-             base.level.controls_status["move_right"]))):
+        if ((shared.level.controls_status["move_up"] and
+             shared.level.controls_status["move_left"]) or
+            ((shared.level.controls_status["move_up"] and
+             shared.level.controls_status["move_right"])) or
+            ((shared.level.controls_status["move_down"] and
+             shared.level.controls_status["move_left"])) or
+            ((shared.level.controls_status["move_down"] and
+             shared.level.controls_status["move_right"]))):
                  mov_speed = mov_speed / sqrt(2)
 
-        if base.level.controls_status["move_up"]:
+        if shared.level.controls_status["move_up"]:
             self.node.set_pos(self.node.get_pos() + (0, -mov_speed, 0))
             action = "move"
-        if base.level.controls_status["move_down"]:
+        if shared.level.controls_status["move_down"]:
             self.node.set_pos(self.node.get_pos() + (0, mov_speed, 0))
             action = "move"
-        if base.level.controls_status["move_left"]:
+        if shared.level.controls_status["move_left"]:
             self.node.set_pos(self.node.get_pos() + (mov_speed, 0, 0))
             action = "move"
-        if base.level.controls_status["move_right"]:
+        if shared.level.controls_status["move_right"]:
             self.node.set_pos(self.node.get_pos() + (-mov_speed, 0, 0))
             action = "move"
 
         #using it like that, because due to requirement to somehow pass caster to
         #skill, Im unable to set using_skill to be a normal variable
-        if base.level.controls_status["attack"] and not self.node.get_python_tag("using_skill"):
+        if shared.level.controls_status["attack"] and not self.node.get_python_tag("using_skill"):
 
             hit_vector_x, hit_vector_y = self.mouse_vector.get_xy()
             #y has to be flipped if billboard_effect is active. Otherwise x has
@@ -206,10 +207,10 @@ class Player(entity2d.Creature):
             #this is a bit longer than stun lengh, to let player escape
         #    self.status_effects['immortal'] = 0.7
         #updating the value on player's hp gui
-        base.level.player_hud.update_hp(self.stats['hp'])
-        base.level.reset_score_multiplier()
+        shared.level.player_hud.update_hp(self.stats['hp'])
+        shared.level.reset_score_multiplier()
 
     def die(self):
         super().die()
 
-        base.level.on_player_death()
+        shared.level.on_player_death()

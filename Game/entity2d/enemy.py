@@ -36,7 +36,7 @@ class Enemy(entity2d.Creature):
         collision_mask = ENEMY_COLLISION_MASK
         category = shared.ENEMY_CATEGORY
 
-        data = base.assets.enemies[name]
+        data = shared.assets.enemies[name]
         #spritesheet = data['Assets']['sprite']
 
         #this is hopefully temporary stuff, because it seems bad to call for that
@@ -94,13 +94,13 @@ class Enemy(entity2d.Creature):
 
         #disable this handler if the enemy or player are dead. Without it, game
         #will crash the very next second after one of these events occur
-        if self.dead or base.level.player.dead:
+        if self.dead or shared.level.player.dead:
             return
 
         if 'stun' in self.status_effects:
             return event.cont
 
-        player_position = base.level.player.node.get_pos()
+        player_position = shared.level.player.node.get_pos()
         mov_speed = self.stats['mov_spd']
 
         enemy_position = self.node.get_pos()
@@ -174,8 +174,8 @@ class Enemy(entity2d.Creature):
         super().get_damage(amount, effects)
         #increasing score, based on HIT_SCORE value. It may be good idea to, instead,
         #increase it based on amount of damage received. But thats #TODO in future
-        base.level.increase_score_multiplier()
-        base.level.increase_score(HIT_SCORE)
+        shared.level.increase_score_multiplier()
+        shared.level.increase_score(HIT_SCORE)
 
     def mark_for_removal(self, event):
         '''Taskmanager routine that remove enemy node and marks instance for
@@ -198,9 +198,9 @@ class Enemy(entity2d.Creature):
 
         #for now this increase score based on HIT_SCORE+KILL_SCORE.
         #I dont think its a trouble, but may tweak at some point
-        base.level.increase_score(KILL_SCORE)
+        shared.level.increase_score(KILL_SCORE)
         #increase player's kill counter
-        base.level.kill_counter += 1
-        log.debug(f"Kill counter has been increased to {base.level.kill_counter}")
+        shared.level.kill_counter += 1
+        log.debug(f"Kill counter has been increased to {shared.level.kill_counter}")
         #reduce enemy counter
-        base.level.enemy_amount -= 1
+        shared.level.enemy_amount -= 1

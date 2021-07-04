@@ -15,7 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 #module where I specify variables to reffer to and to override from other modules
-
+from . import assets_loader
 import logging
 
 log = logging.getLogger(__name__)
@@ -61,3 +61,56 @@ MAP_SIZE = (600, 300)
 #debug stuff
 SHOW_COLLISIONS = False
 FPS_METER = False
+
+class Settings:
+    pass
+
+class GameData:
+    pass
+
+class InterfaceStorage:
+    def __init__(self):
+        self.storage = {}
+        self.currently_active = {}
+
+    def add(self, item, name:str):
+        self.storage[name] = item
+
+    def check(self, name:str):
+        if name in self.storage:
+            return True
+        else:
+            log.debug(f"{name} doesnt exist in storage!")
+            return False
+
+    def show(self, name:str):
+        if self.check(name):
+            self.currently_active[name] = self.storage[name]
+            self.storage[name].show()
+
+            log.info(f"Showing {name} ui")
+
+    def hide(self, name:str):
+        if self.check(name):
+            if getattr(self.currently_active, name, None):
+                self.currently_active.pop(name)
+            self.storage[name].hide()
+
+            log.info(f"Hid {name} ui")
+
+    def switch(self, name:str):
+        '''Switch CURRENT_INTERFACE menu to one passed as argument'''
+        #this is kind of nasty thing. But if used correctly, it should allow to
+        #easily switch active interfaces from one to another, in case only one
+        #can exist at given time
+        if self.currently_active:
+            for item in self.currently_active:
+                self.storage[item].hide()
+            self.currently_active = {}
+
+        self.show(name)
+
+level = None
+game_data = GameData()
+ui = InterfaceStorage()
+assets = assets_loader.AssetsLoader()
