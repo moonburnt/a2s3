@@ -28,6 +28,10 @@ class GameWindow(ShowBase):
         log.debug("Setting up the window")
         super().__init__()
 
+        loading = interface.LoadingScreen()
+        shared.ui.add(loading, "loading")
+        shared.ui.switch("loading")
+
         #disabling mouse to dont mess with camera
         self.disable_mouse()
 

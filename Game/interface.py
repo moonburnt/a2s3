@@ -26,47 +26,68 @@ from Game import shared
 
 log = logging.getLogger(__name__)
 
-class Popup:
-    '''Meta class for messages that appear on certain actions and disappear into nowhere'''
-    def __init__(self, text = None, pos = (0, 0), align = TextNode.ACenter, scale = 1,
-                 fg = (1,1,1,1), parent = None, name = "Popup", duration = 1):
+class TextMsg:
+    def __init__(self, text:str, text_pos:tuple = (0, 0),
+                       text_align = TextNode.ACenter, text_scale:float = 0.1,
+                       text_color:tuple = (1, 1, 1, 1), parent = None, **kwargs):
 
-        if not parent:
-            parent = base.aspect2d
+        self.msg = OnscreenText(pos = text_pos,
+                                align = text_align,
+                                scale = text_scale,
+                                fg = text_color,
+                                parent = parent or base.aspect2d,
+                                mayChange = True)
 
-        self.duration = duration
-        self.name = name
+        self.set_text(text)
+        self.hide()
 
-        #maybe make it possible for popup message to be not just text? idk
-        self.popup_msg = OnscreenText(pos = pos,
-                                      align = align,
-                                      scale = scale,
-                                      fg = fg,
-                                      parent = parent,
-                                      mayChange = True)
+    #None of these functions is necessary - I just want to provide unified way
+    #to do these things for all childs. And to avoid camelCase where possible.
+    #I may remove these in future, if it will seem pointless
+    def set_text(self, text:str):
+        self.msg.setText(text)
 
-        if text:
-            self.set_text(text)
+    def hide(self):
+        self.msg.hide()
 
-        self.popup_msg.hide()
+    def show(self):
+        self.msg.show()
+
+class LoadingScreen(TextMsg):
+    '''Meta class for filler screens used when we do some calculations that may
+    slow/freeze game window (such as level loading)'''
+    def __init__(self, **kwargs):
+        if not "text" in kwargs:
+            kwargs["text"] = "Loading..."
+
+        super().__init__(**kwargs)
+        #todo: add configurable bg image, maybe progress bar
+
+class Popup(TextMsg):
+    '''Meta class for messages that appear on certain actions and auto-hide after
+    certain amount of time has been passed'''
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", None) or "Popup"
+        self.duration = kwargs.get("duration", None) or 1
+
+        if not "text" in kwargs:
+            kwargs["text"] = ""
+
+        super().__init__(**kwargs)
 
     def set_duration(self, duration):
+        '''Set popup's duration. Expected to be positive number'''
         #duration may be both int and float, idk how to do that yet
         self.duration = duration
 
-    def set_text(self, text: str):
-        '''Set message's text. Same as setText of panda's native gui items'''
-        self.popup_msg.setText(text)
-
     def show(self):
-        '''Show popup for self.duration seconds, then auto-hide it away'''
-        #todo: add ability to use some visual effects
-        self.popup_msg.show()
+        #TODO: add ability to use some visual effects
+        super().show()
 
         #todo: maybe remake it into lerp, so there wont be need to involve base.
         #this function is hidden inside, coz we have no use for it outside
         def hide_popup_task(event):
-            self.popup_msg.hide()
+            self.hide()
             return
 
         base.task_mgr.do_method_later(self.duration, hide_popup_task, self.name)
@@ -435,7 +456,7 @@ class DeathScreen(Menu):
 
         #notice how its parent is different
         self.death_notification = Popup(text = "Death",
-                                        scale = 0.5,
+                                        text_scale = 0.5,
                                         parent = base.aspect2d,
                                         duration = self.dn_duration)
 
@@ -521,22 +542,22 @@ class PlayerHUD(Menu):
         #also idk about styling. I tried to make it look somehow ok, but idk
         self.wave_cleared_msg =     Popup(
                                          text = "Wave Cleared!",
-                                         pos = (0, 0.85),
-                                         scale = 0.1,
+                                         text_pos = (0, 0.85),
+                                         text_scale = 0.1,
                                          parent = self.frame,
                                          duration = 2
                                          )
 
         self.new_wave_msg =         Popup(
-                                         pos = (0, 0.85),
-                                         scale = 0.1,
+                                         text_pos = (0, 0.85),
+                                         text_scale = 0.1,
                                          parent = self.frame,
                                          duration = 2.5
                                          )
 
         self.kill_requirement_msg = Popup(
-                                         pos = (0, 0.75),
-                                         scale = 0.05,
+                                         text_pos = (0, 0.75),
+                                         text_scale = 0.05,
                                          parent = self.frame,
                                          duration = 2.5
                                          )

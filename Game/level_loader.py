@@ -47,6 +47,7 @@ UNIQUE_ENEMY_CHANCE = 25
 
 class LoadLevel:
     def __init__(self, player_class, map_scale: int):
+        shared.ui.switch("loading")
         self.map_scale = map_scale
         self.player_class = player_class
         #doing it there before everything else to avoid issues during generation
