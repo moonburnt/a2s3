@@ -14,16 +14,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-from .common import *
-from .game_window import *
-from .entity2d import *
-from .map_loader import *
-from .assets_loader import *
-from .level_loader import *
-from .interface import *
-#from .music_player import *
-from .music_manager import *
-from .skill import *
+from .classes import *
+from .shared import *
 
 import logging
 

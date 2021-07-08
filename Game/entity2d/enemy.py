@@ -33,12 +33,6 @@ class Enemy(entity2d.Creature):
     like entity2d.Creature, but also affix. Which can be either "Normal", "Big" or
     "Small". Based on affix, size, health and movement speed of enemy will get altered'''
     def __init__(self, name:str, affix:str = "Normal", position = None):
-        collision_mask = ENEMY_COLLISION_MASK
-        category = shared.ENEMY_CATEGORY
-
-        data = shared.assets.enemies[name]
-        #spritesheet = data['Assets']['sprite']
-
         #this is hopefully temporary stuff, because it seems bad to call for that
         #stuff twice
         if affix == "Big":
@@ -54,9 +48,9 @@ class Enemy(entity2d.Creature):
             scale = 0
 
         super().__init__(name = name,
-                         category = category,
-                         data = data,
-                         collision_mask = collision_mask,
+                         category = shared.game_data.enemy_category,
+                         data = shared.assets.enemies[name],
+                         collision_mask = ENEMY_COLLISION_MASK,
                          scale = scale,
                          position = position)
 
@@ -138,7 +132,7 @@ class Enemy(entity2d.Creature):
         #this thing basically makes enemy move till it hit player, than play
         #attack animation. May backfire if player's sprite size is not equal
         #to player's hitbox
-        if distance_to_player > shared.DEFAULT_SPRITE_SIZE[0]*2:
+        if distance_to_player > shared.game_data.sprite_size[0]*2:
             action = 'move'
         else:
             #cast the very first skill available. #TODO: add something to affect

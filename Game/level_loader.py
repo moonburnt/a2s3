@@ -57,7 +57,7 @@ class LoadLevel:
         base.chandler = CollisionHandlerEvent()
         #showing all occuring collisions. This is debatably better than manually
         #enabling collision.show() for each entity entry
-        if shared.SHOW_COLLISIONS:
+        if shared.settings.show_collisions:
             base.cTrav.show_collisions(render)
 
         #this way we are basically naming the events we want to track, so these
@@ -72,34 +72,34 @@ class LoadLevel:
 
         #tracking all the collision events related to instances of player colliding
         #with enemy projectile and causing related function to trigger on these
-        base.accept(f'{shared.PLAYER_CATEGORY}-into-{shared.ENEMY_PROJECTILE_CATEGORY}',
+        base.accept(f'{shared.game_data.player_category}-into-{shared.game_data.enemy_projectile_category}',
                                                                     self.damage_player)
-        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-into-{shared.PLAYER_CATEGORY}',
+        base.accept(f'{shared.game_data.enemy_projectile_category}-into-{shared.game_data.player_category}',
                                                                     self.damage_player)
-        base.accept(f'{shared.PLAYER_CATEGORY}-again-{shared.ENEMY_PROJECTILE_CATEGORY}',
+        base.accept(f'{shared.game_data.player_category}-again-{shared.game_data.enemy_projectile_category}',
                                                                     self.damage_player)
-        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-again-{shared.PLAYER_CATEGORY}',
+        base.accept(f'{shared.game_data.enemy_projectile_category}-again-{shared.game_data.player_category}',
                                                                     self.damage_player)
 
         #also tracking collisions of enemy with player's attack projectile
-        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-into-{shared.ENEMY_CATEGORY}', self.damage_enemy)
-        base.accept(f'{shared.ENEMY_CATEGORY}-into-{shared.PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
-        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-again-{shared.ENEMY_CATEGORY}', self.damage_enemy)
-        base.accept(f'{shared.ENEMY_CATEGORY}-again-{shared.PLAYER_PROJECTILE_CATEGORY}', self.damage_enemy)
+        base.accept(f'{shared.game_data.player_projectile_category}-into-{shared.game_data.enemy_category}', self.damage_enemy)
+        base.accept(f'{shared.game_data.enemy_category}-into-{shared.game_data.player_projectile_category}', self.damage_enemy)
+        base.accept(f'{shared.game_data.player_projectile_category}-again-{shared.game_data.enemy_category}', self.damage_enemy)
+        base.accept(f'{shared.game_data.enemy_category}-again-{shared.game_data.player_projectile_category}', self.damage_enemy)
 
         #tracking collisions with walls, in order to create custom pusher-like
         #behaviour with collisioneventhandler
-        base.accept(f'{shared.PLAYER_CATEGORY}-into-wall', self.on_wall_collision)
-        base.accept(f'{shared.PLAYER_CATEGORY}-again-wall', self.on_wall_collision)
-        base.accept(f'{shared.ENEMY_CATEGORY}-into-wall', self.on_wall_collision)
-        base.accept(f'{shared.ENEMY_CATEGORY}-again-wall', self.on_wall_collision)
+        base.accept(f'{shared.game_data.player_category}-into-wall', self.on_wall_collision)
+        base.accept(f'{shared.game_data.player_category}-again-wall', self.on_wall_collision)
+        base.accept(f'{shared.game_data.enemy_category}-into-wall', self.on_wall_collision)
+        base.accept(f'{shared.game_data.enemy_category}-again-wall', self.on_wall_collision)
 
         #temporary solution for tracking collision of projectiles with objects
         #TODO: find a better name for function, add support for non-wall objects
-        base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-into-wall', self.on_object_collision)
-        #base.accept(f'{shared.PLAYER_PROJECTILE_CATEGORY}-again-wall', self.on_object_collision)
-        base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-into-wall', self.on_object_collision)
-        #base.accept(f'{shared.ENEMY_PROJECTILE_CATEGORY}-again-wall', self.on_object_collision)
+        base.accept(f'{shared.game_data.player_projectile_category}-into-wall', self.on_object_collision)
+        #base.accept(f'{shared.game_data.player_projectile_category}-again-wall', self.on_object_collision)
+        base.accept(f'{shared.game_data.enemy_projectile_category}-into-wall', self.on_object_collision)
+        #base.accept(f'{shared.game_data.enemy_projectile_category}-again-wall', self.on_object_collision)
 
         log.debug("Setting up camera")
         #this will set camera to be right above card.
@@ -133,25 +133,25 @@ class LoadLevel:
 
         #.accept() is method that track panda's events and perform certain functions
         #once these occur. "-up" prefix means key has been released
-        base.accept(shared.CONTROLS['move_up'],
+        base.accept(shared.settings.controls['move_up'],
                     self.change_key_state, ["move_up", True])
-        base.accept(f"{shared.CONTROLS['move_up']}-up",
+        base.accept(f"{shared.settings.controls['move_up']}-up",
                     self.change_key_state, ["move_up", False])
-        base.accept(shared.CONTROLS['move_down'],
+        base.accept(shared.settings.controls['move_down'],
                     self.change_key_state, ["move_down", True])
-        base.accept(f"{shared.CONTROLS['move_down']}-up",
+        base.accept(f"{shared.settings.controls['move_down']}-up",
                     self.change_key_state, ["move_down", False])
-        base.accept(shared.CONTROLS['move_left'],
+        base.accept(shared.settings.controls['move_left'],
                     self.change_key_state, ["move_left", True])
-        base.accept(f"{shared.CONTROLS['move_left']}-up",
+        base.accept(f"{shared.settings.controls['move_left']}-up",
                     self.change_key_state, ["move_left", False])
-        base.accept(shared.CONTROLS['move_right'],
+        base.accept(shared.settings.controls['move_right'],
                     self.change_key_state, ["move_right", True])
-        base.accept(f"{shared.CONTROLS['move_right']}-up",
+        base.accept(f"{shared.settings.controls['move_right']}-up",
                     self.change_key_state, ["move_right", False])
-        base.accept(shared.CONTROLS['attack'],
+        base.accept(shared.settings.controls['attack'],
                     self.change_key_state, ["attack", True])
-        base.accept(f"{shared.CONTROLS['attack']}-up",
+        base.accept(f"{shared.settings.controls['attack']}-up",
                     self.change_key_state, ["attack", False])
 
         #TODO: dont autoload it, let loading screen handle this
@@ -176,12 +176,12 @@ class LoadLevel:
         '''Set default level's variables'''
         log.debug("Generating the map")
         self.map = map_loader.FlatMap(shared.assets.sprite['floor'],
-                                      size = shared.MAP_SIZE,
+                                      size = shared.game_data.map_size,
                                       scale = self.map_scale)
 
         log.debug("Initializing player")
-        #character's position should always render on shared.ENTITY_LAYER
-        #setting this lower may cause glitches, as below lies the FLOOR_LAYER
+        #character's position should always render on shared.game_data.entity_layer
+        #setting this lower may cause glitches, as below lies the floor_layer
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
         self.player = entity2d.Player(self.player_class,
@@ -237,7 +237,7 @@ class LoadLevel:
         #base.camera.reparent_to(self.player.object)
         base.camera.reparent_to(self.player_follower)
 
-        shared.game_data.music_player.crossfade(shared.assets.music['battle'])
+        shared.music_player.crossfade(shared.assets.music['battle'])
 
         #its important to sync items there, otherwise they will show incorrect
         #values before related event occurs for first time
@@ -288,7 +288,7 @@ class LoadLevel:
 
                 spawns = []
                 for spawnpoint in self.map.enemy_spawnpoints:
-                    spawn = *spawnpoint, shared.ENTITY_LAYER
+                    spawn = *spawnpoint, shared.game_data.entity_layer
                     vec_to_player = player_position - spawn
                     vec_length = vec_to_player.length()
                     #spawns.append((vec_length, spawn))
@@ -310,12 +310,12 @@ class LoadLevel:
                     #through the floor of big enemies. Once I will implement floor
                     #collision, this can be removed. #TODO
                     if affix == "Small":
-                        spawn_position = *spawn_xy, shared.ENTITY_LAYER/2
+                        spawn_position = *spawn_xy, shared.game_data.entity_layer/2
                     else:
-                        spawn_position = *spawn_xy, shared.ENTITY_LAYER*2
+                        spawn_position = *spawn_xy, shared.game_data.entity_layer*2
                 else:
                     affix = "Normal"
-                    spawn_position = *spawn_xy, shared.ENTITY_LAYER
+                    spawn_position = *spawn_xy, shared.game_data.entity_layer
 
                 enemy_type = "Cuboid"
                 log.debug(f"Spawning {affix} {enemy_type} on {spawn_position}")
@@ -445,8 +445,8 @@ class LoadLevel:
         with something that may hurt it. Checks if its possible to deal damage
         right now, then trigger player's "get_damage" function'''
 
-        #colliders = self.sort_collision(entry, shared.ENEMY_CATEGORY)
-        colliders = self.sort_collision(entry, shared.ENEMY_PROJECTILE_CATEGORY)
+        #colliders = self.sort_collision(entry, shared.game_data.enemy_category)
+        colliders = self.sort_collision(entry, shared.game_data.enemy_projectile_category)
         if not colliders:
             #log.warning("Collision cant occur")
             return
@@ -480,7 +480,7 @@ class LoadLevel:
         with something that may hurt it. Checks if its possible to deal damage
         right now, then trigger enemy's "get_damage" function'''
 
-        colliders = self.sort_collision(entry, shared.PLAYER_PROJECTILE_CATEGORY)
+        colliders = self.sort_collision(entry, shared.game_data.player_projectile_category)
         if not colliders:
             #log.warning("Collision cant occur")
             return
@@ -672,7 +672,7 @@ class LoadLevel:
                                                self.wave_number,
                                                self.kill_counter)
 
-        shared.game_data.music_player.crossfade(shared.assets.music['death'])
+        shared.music_player.crossfade(shared.assets.music['death'])
 
         #interface.switch(self.death_screen)
         shared.ui.switch("death screen")
@@ -705,7 +705,5 @@ class LoadLevel:
         '''Exit level to main menu'''
         self.cleanup()
 
-        #base.music_player.crossfade(base.assets.music['menu_theme'])
-        shared.game_data.music_player.crossfade(shared.assets.music['menu_theme'])
-        #interface.switch(shared.game_data.main_menu)
+        shared.music_player.crossfade(shared.assets.music['menu_theme'])
         shared.ui.switch("main")

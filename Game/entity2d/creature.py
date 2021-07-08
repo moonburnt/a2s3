@@ -123,7 +123,7 @@ class Creature(entity2d.Entity2D):
             (head_data['Main']['spritesheet'] in shared.assets.sprite) and
             head_data.get('Animations')):
             if not head_data.get('size', None):
-                size = shared.DEFAULT_SPRITE_SIZE
+                size = shared.game_data.sprite_size
             else:
                 size = head_data['size']
 
@@ -153,7 +153,7 @@ class Creature(entity2d.Entity2D):
                                     #sprites = head['head'],
                                     sprites = sprites,
                                     sprite_size = (head_data['Main'].get('size', None) or
-                                                   shared.DEFAULT_SPRITE_SIZE),
+                                                   shared.game_data.sprite_size),
                                     default_sprite = default_sprite,
                                     parent = self.visuals,
                                     default_action = default_action,

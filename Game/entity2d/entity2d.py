@@ -34,7 +34,7 @@ class Entity2D:
         self.category = category
 
         if not sprite_size:
-            sprite_size = shared.DEFAULT_SPRITE_SIZE
+            sprite_size = shared.game_data.sprite_size
 
         log.debug(f"{self.name}'s size has been set to {sprite_size}")
 
@@ -127,7 +127,7 @@ class Entity2D:
         #to fly into left wall. So I moved it to Creature subclass
 
         #debug function to show collisions all time
-        if shared.SHOW_COLLISIONS:
+        if shared.settings.show_collisions:
            self.collision.show()
 
     def die(self):

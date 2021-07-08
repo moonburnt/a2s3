@@ -102,10 +102,10 @@ class Skill:
 
             caster_category = self.caster.get_python_tag("category")
 
-            if caster_category == shared.PLAYER_CATEGORY:
-                self.projectile.category = shared.PLAYER_PROJECTILE_CATEGORY
+            if caster_category == shared.game_data.player_category:
+                self.projectile.category = shared.game_data.player_projectile_category
             else:
-                self.projectile.category = shared.ENEMY_PROJECTILE_CATEGORY
+                self.projectile.category = shared.game_data.enemy_projectile_category
 
             #Idk about current format, but Im trying to make it easy to use below
             #without need to store useless variables in memory

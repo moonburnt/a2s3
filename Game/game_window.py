@@ -19,7 +19,8 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
-from Game import shared, assets_loader, level_loader, interface, music_player
+from Game.common import shared
+from Game import assets_loader, level_loader, interface, music_manager
 
 log = logging.getLogger(__name__)
 
@@ -36,8 +37,6 @@ class GameWindow(ShowBase):
         self.disable_mouse()
 
         log.debug("Loading assets")
-        #self.assets = assets_loader.AssetsLoader()
-        #shared.game_data.assets = assets_loader.AssetsLoader()
         shared.assets.load_all()
 
         log.debug("Configuring game's window")
@@ -51,46 +50,40 @@ class GameWindow(ShowBase):
         max_res = (screen_info.getDisplayModeWidth(0),
                    screen_info.getDisplayModeHeight(0))
 
-        for cr, mr in zip(shared.WINDOW_SIZE, max_res):
+        for cr, mr in zip(shared.settings.window_size, max_res):
             if cr > mr:
                 log.warning("Requested resolution is bigger than screen size, "
                             "will use defaults instead")
-                resolution = shared.DEFAULT_WINDOW_SIZE
-                break
-            else:
-                resolution = shared.WINDOW_SIZE
+                shared.settings.window_size = shared.default_settings.window_size
 
         window_settings = WindowProperties()
-        window_settings.set_size(resolution)
+        window_settings.set_size(shared.settings.window_size)
 
         #ensuring that window cant be resized by dragging its borders around
         window_settings.set_fixed_size(True)
         #toggling fullscreen/windowed mode
-        window_settings.set_fullscreen(shared.FULLSCREEN)
+        window_settings.set_fullscreen(shared.settings.fullscreen)
         #setting window's title
-        window_settings.set_title(shared.GAME_NAME)
+        window_settings.set_title(shared.game_data.name)
         #applying settings to our window
         self.win.request_properties(window_settings)
-        log.debug(f"Resolution has been set to {resolution}")
+        log.debug(f"Resolution has been set to {shared.settings.window_size}")
 
         log.debug("Setting up the sound")
         #setting volume so it should apply to all music tracks
-        #self.music_player = music_player.MusicPlayer()
-        #self.music_player.set_player_volume(shared.MUSIC_VOLUME)
-        shared.game_data.music_player = music_player.MusicPlayer()
-        shared.game_data.music_player.set_player_volume(shared.MUSIC_VOLUME)
+        #thats about where shared.settings break. I have no idea why, for now
+
+        shared.music_player = music_manager.MusicPlayer()
+        shared.music_player.set_player_volume(shared.settings.music_volume)
 
         #same goes for sfx manager, which is a separate thing
-        #self.sfx_manager = base.sfxManagerList[0]
-        #self.sfx_manager.set_volume(shared.SFX_VOLUME)
-        shared.game_data.sfx_manager = base.sfxManagerList[0]
-        shared.game_data.sfx_manager.set_volume(shared.SFX_VOLUME)
+        shared.sfx_manager = base.sfxManagerList[0]
+        shared.sfx_manager.set_volume(shared.settings.sfx_volume)
 
-        #self.music_player.crossfade(self.assets.music['menu_theme'])
-        shared.game_data.music_player.crossfade(shared.assets.music['menu_theme'])
+        shared.music_player.crossfade(shared.assets.music['menu_theme'])
 
         #turning on fps meter, in case its enabled in settings
-        base.setFrameRateMeter(shared.FPS_METER)
+        base.setFrameRateMeter(shared.settings.fps_meter)
 
         #change background color to black. #TODO: move this to map generation,
         #make it possible to set to other values, aswell as pictures
@@ -142,6 +135,6 @@ class GameWindow(ShowBase):
         '''Run whatever cleanup tasks and exit the game'''
         #TODO: maybe save up some stuff and remove unused garbage from memory?
         log.info("Exiting the game... Bye :(")
-        shared.game_data.music_player.stop_all()
+        shared.music_player.stop_all()
         #this doesnt have the snek case version
         base.userExit()

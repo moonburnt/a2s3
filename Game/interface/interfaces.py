@@ -90,11 +90,11 @@ class OptionsMenu(Menu):
         self.back_command = back_command
 
         # Current value, updated via sliders
-        self.music_volume = shared.MUSIC_VOLUME
-        self.sfx_volume = shared.SFX_VOLUME
+        self.music_volume = shared.settings.music_volume
+        self.sfx_volume = shared.settings.sfx_volume
         # Save them to restore if player clicks 'back' without saving
-        self.old_music_volume = shared.MUSIC_VOLUME
-        self.old_sfx_volume = shared.SFX_VOLUME
+        self.old_music_volume = shared.settings.music_volume
+        self.old_sfx_volume = shared.settings.sfx_volume
 
         options_label = DirectLabel(text = "Options",
                                     pos = (0, 0, 0.8),
@@ -113,7 +113,7 @@ class OptionsMenu(Menu):
         self.music_slider = DirectSlider(pos = (0.3, 0, 0.5),
                                          scale = 0.4,
                                          parent = self.frame,
-                                         value = shared.MUSIC_VOLUME,
+                                         value = shared.settings.music_volume,
                                          command = self.update_music_volume)
 
         sfx_label = DirectLabel(text = "SFX",
@@ -126,7 +126,7 @@ class OptionsMenu(Menu):
         self.sfx_slider = DirectSlider(pos = (0.3, 0, 0.2),
                                        scale = 0.4,
                                        parent = self.frame,
-                                       value = shared.SFX_VOLUME,
+                                       value = shared.settings.sfx_volume,
                                        command = self.update_sfx_volume)
 
         ok_button = DirectButton(text = "Ok",
@@ -153,8 +153,8 @@ class OptionsMenu(Menu):
         '''Save options and return to parent menu.'''
 
         log.info("Saving options...")
-        shared.MUSIC_VOLUME = self.music_volume
-        shared.SFX_VOLUME = self.sfx_volume
+        shared.settings.music_volume = self.music_volume
+        shared.settings.sfx_volume = self.sfx_volume
 
         self.old_music_volume = self.music_volume
         self.old_sfx_volume = self.sfx_volume
@@ -164,11 +164,9 @@ class OptionsMenu(Menu):
     def restore_and_close(self):
         '''Restore previous options' values and return to parent menu.'''
 
-        #base.music_player.set_player_volume(self.old_music_volume)
-        #base.sfx_manager.set_volume(self.old_sfx_volume)
-        shared.game_data.music_player.set_player_volume(self.old_music_volume)
-        shared.game_data.sfx_manager.set_volume(self.old_sfx_volume)
-        #base.sfx_manager.set_volume(self.old_sfx_volume)
+        shared.music_player.set_player_volume(self.old_music_volume)
+        shared.sfx_manager.set_volume(self.old_sfx_volume)
+
         self.music_slider.setValue(self.old_music_volume)
         self.sfx_slider.setValue(self.old_sfx_volume)
 
@@ -176,13 +174,11 @@ class OptionsMenu(Menu):
 
     def update_music_volume(self):
         self.music_volume = self.music_slider["value"]
-        #base.music_player.set_player_volume(self.music_volume)
-        shared.game_data.music_player.set_player_volume(self.music_volume)
+        shared.music_player.set_player_volume(self.music_volume)
 
     def update_sfx_volume(self):
         self.sfx_volume = self.sfx_slider["value"]
-        #base.sfx_manager.set_volume(self.sfx_volume)
-        shared.game_data.sfx_manager.set_volume(self.sfx_volume)
+        shared.sfx_manager.set_volume(self.sfx_volume)
 
 class MapSettings(Menu):
     '''Menu where player can change map scale and other things'''

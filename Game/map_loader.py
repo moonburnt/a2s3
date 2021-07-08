@@ -24,9 +24,6 @@ log = logging.getLogger(__name__)
 
 #module where I specify everything related to generating and loading maps
 
-FLOOR_LAYER = shared.FLOOR_LAYER
-ENTITY_LAYER = shared.ENTITY_LAYER
-
 class FlatMap:
     def __init__(self, texture, size, scale = None):
         if not scale or scale < 1:
@@ -59,7 +56,7 @@ class FlatMap:
                                   (self.map_size[0] - 32, self.map_size[3] + 32)]
 
         #TODO: make this configurable aswell. For now its just center of map
-        self.player_spawnpoint = 0, 0, ENTITY_LAYER
+        self.player_spawnpoint = 0, 0, shared.game_data.entity_layer
 
     def create_floor(self):
         '''Generate flat floor of size, provided to class'''
@@ -86,7 +83,7 @@ class FlatMap:
         floor_object.set_tex_scale(TextureStage.getDefault(), repeats_x, repeats_y)
         #arranging card's angle
         floor_object.look_at((0, 0, -1))
-        floor_object.set_pos(0, 0, FLOOR_LAYER)
+        floor_object.set_pos(0, 0, shared.game_data.floor_layer)
 
     def add_border_walls(self):
         '''Attaching invisible walls to map's borders, to avoid falling off map'''

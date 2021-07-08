@@ -14,58 +14,13 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-#module where I specify variables to reffer to and to override from other modules
-from . import assets_loader
+# various common data types used across the game
 import logging
+from types import SimpleNamespace
 
 log = logging.getLogger(__name__)
 
-GAME_NAME = "A2S3"
-
-#default (x, y) of sprites, to dont specify these manually when not necessary.
-#also to make some things that rely on these variables to adjust their values
-#on fly in case they will be changed
-DEFAULT_SPRITE_SIZE = (32, 32)
-#the height where character sprite will reside. This need to be half of default
-#sprite's size's y, because character's placement counts from center of char's
-#object. Make it lower - and legs will be below ground. Higher - and chararacters
-#will fly above the ground. This will backfire if there are characters of different
-#heights, but for now it will do. And floor layer is always zero. Because yes
-ENTITY_LAYER = (DEFAULT_SPRITE_SIZE[1]/2)
-FLOOR_LAYER = 0
-
-#these are collision categories, referring to multiple objects of one type that
-#can collide with others and trigger some functions on collision with selected type
-ENEMY_CATEGORY = "enemy"
-PLAYER_CATEGORY = "player"
-PLAYER_PROJECTILE_CATEGORY = "player_projectile"
-ENEMY_PROJECTILE_CATEGORY = "enemy_projectile"
-
-#WALLS_COLLISION_MASK = 0X28
-
-#whatever below are variables that could be changed by user... potentially
-DEFAULT_WINDOW_SIZE = (1280, 720)
-WINDOW_SIZE = DEFAULT_WINDOW_SIZE
-FULLSCREEN = False
-#this is a float between 0 and 1, e.g 75 equals to "75%"
-MUSIC_VOLUME = 0.75
-SFX_VOLUME = 0.75
-#key is the name of action, value is the name of key in panda syntax
-CONTROLS = {"move_up": "w", "move_down": "s",
-            "move_left": "a", "move_right": "d",
-            "attack": "mouse1"}
-
-#it may be nice to add minimal allowed size check, but not today
-MAP_SIZE = (600, 300)
-
-#debug stuff
-SHOW_COLLISIONS = False
-FPS_METER = False
-
-class Settings:
-    pass
-
-class GameData:
+class Storage(SimpleNamespace):
     pass
 
 class InterfaceStorage:
@@ -109,8 +64,3 @@ class InterfaceStorage:
             self.currently_active = {}
 
         self.show(name)
-
-level = None
-game_data = GameData()
-ui = InterfaceStorage()
-assets = assets_loader.AssetsLoader()

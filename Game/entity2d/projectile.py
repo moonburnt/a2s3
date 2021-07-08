@@ -32,9 +32,9 @@ class Projectile(entity2d.Entity2D):
                  die_on_creature_collision:bool = False):
         self.name = name
 
-        if category == shared.PLAYER_PROJECTILE_CATEGORY:
+        if category == shared.game_data.player_projectile_category:
             collision_mask = PLAYER_PROJECTILE_COLLISION_MASK
-        elif category == shared.ENEMY_PROJECTILE_CATEGORY:
+        elif category == shared.game_data.enemy_projectile_category:
             collision_mask = ENEMY_PROJECTILE_COLLISION_MASK
         else:
             #this shouldnt happen, but just in case

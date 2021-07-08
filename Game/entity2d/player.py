@@ -28,17 +28,13 @@ PLAYER_COLLISION_MASK = 0X06
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
     def __init__(self, name:str, position = None):
-        collision_mask = PLAYER_COLLISION_MASK
-        category = shared.PLAYER_CATEGORY
-
         #this will crash on invalid, no safety checks for now
-        #data = base.assets.classes[name]
         data = shared.assets.classes[name]
 
         super().__init__(name = name,
-                         category = category,
+                         category = shared.game_data.player_category,
                          data = data,
-                         collision_mask = collision_mask,
+                         collision_mask = PLAYER_COLLISION_MASK,
                          position = position)
 
         base.task_mgr.add(self.controls_handler,

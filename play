@@ -19,61 +19,69 @@
 #game launcher script
 
 import logging
-import Game
+
+from Game.common import shared
+from Game import game_window
+
 import argparse
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
+formatter = logging.Formatter(
+                    fmt='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
+                    datefmt='%H:%M:%S',
+                    )
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter(fmt='[%(asctime)s][%(name)s][%(levelname)s] %(message)s', datefmt='%H:%M:%S'))
+handler.setFormatter(formatter)
 log.addHandler(handler)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--debug", help="Add debug messages to output",
-                action = "store_true")
-ap.add_argument("--show-collisions", help="Toggle showcase of objects collisions",
-                action = "store_true")
-ap.add_argument("--music-vol",
-                help = "Override default music volume. Should be "
-                       "between 0 and 100, else using defaults",
-                type = int, default = (Game.shared.MUSIC_VOLUME*100))
-ap.add_argument("--sfx-vol",
-                help = "Override default music volume. Should be "
-                       "between 0 and 100, else using defaults",
-                type = int, default = (Game.shared.MUSIC_VOLUME*100))
+ap.add_argument("--debug", action = "store_true",
+    help="Debug option. Adds debug messages to log output")
+ap.add_argument("--show-collisions", action = "store_true",
+    help="Debug option. Enable showcase of objects' collisions")
+ap.add_argument("--music-vol", type = int,
+    help = "Override default music volume. Should be between 0 and 100",
+    )
+ap.add_argument("--sfx-vol", type = int,
+    help = "Override default music volume. Should be between 0 and 100",
+    )
 ap.add_argument("--show-fps", help="Enable fps meter", action = "store_true")
-ap.add_argument("--window-x", help = "Override default window's X. If less than default "
-                                  "- will be still set to default", type = int)
-ap.add_argument("--window-y", help = "Override default window's Y. If less than default "
-                                  "- will be still set to default", type = int)
-
+ap.add_argument("--window-x", type = int,
+    help = ("Override window's X. Cant be less than "
+            f"{shared.settings.window_size[0]}"),
+            )
+ap.add_argument("--window-y", type = int,
+    help = ("Override window's Y. Cant be less than "
+            f"{shared.settings.window_size[1]}"),
+            )
 args = ap.parse_args()
 
 if args.debug:
     log.setLevel(logging.DEBUG)
 
 if args.show_collisions:
-    Game.shared.SHOW_COLLISIONS = True
+    shared.settings.show_collisions = True
 
 if args.show_fps:
-    Game.shared.FPS_METER = True
+    shared.settings.fps_meter = True
 
-if (0 <= args.music_vol <= 100):
-    Game.shared.MUSIC_VOLUME = args.music_vol / 100
+if args.music_vol and (0 <= args.music_vol <= 100):
+    shared.settings.music_volume = args.music_vol / 100
     log.debug(f"Music volume has been set to {args.music_vol}%")
 
-if (0 <= args.sfx_vol <= 100):
-    Game.shared.SFX_VOLUME = args.sfx_vol / 100
+if args.sfx_vol and (0 <= args.sfx_vol <= 100):
+    shared.settings.sfx_volume = args.sfx_vol / 100
     log.debug(f"Music volume has been set to {args.sfx_vol}%")
 
-if args.window_x and (args.window_x > Game.shared.DEFAULT_WINDOW_SIZE[0]):
-    win_y = Game.shared.WINDOW_SIZE[1]
-    Game.shared.WINDOW_SIZE = (args.window_x, win_y)
+if args.window_x and (args.window_x > shared.settings.window_size[0]):
+    win_y = shared.settings.window_size[1]
+    shared.settings.window_size = (args.window_x, win_y)
 
-if args.window_y and (args.window_y > Game.shared.DEFAULT_WINDOW_SIZE[1]):
-    win_x = Game.shared.WINDOW_SIZE[0]
-    Game.shared.WINDOW_SIZE = (win_x, args.window_y)
+if args.window_y and (args.window_y > shared.settings.window_size[1]):
+    win_x = shared.settings.window_size[0]
+    shared.settings.window_size = (win_x, args.window_y)
 
-play = Game.game_window.GameWindow()
+play = game_window.GameWindow()
 log.info("Running the game")
 play.run()
