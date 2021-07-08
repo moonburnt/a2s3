@@ -31,8 +31,11 @@ keep these two things in mind and do it accordingly.
 
 ## How to Play:
 
-- Install all dependencies (no setup.py available yet)
-- Run `./play`
+- Clone git repo locally (no release versions available yet)
+- Install all dependencies with pip (no setup.py available yet):
+`pip install -r requirements.txt`
+- Run the game:
+`./play`
 
 ## Compiling natively for your platform:
 
@@ -43,10 +46,10 @@ keep these two things in mind and do it accordingly.
 In order to reach 0.1 milestone (effectively an equal to "alpha"), the following
 features should be implemented (in no particular order):
 
-- Main menu, where you can change window resolution and music/sfx volume,
+- Main menu, where you can change window resolution ~~and music/sfx volume~~,
   rebind keys and ~~select size of map to play on~~
 - Simple leaderboard menu where you can see your previous high scores
-- Placeholder birth and death animations
+- Placeholder birth and ~~death~~ animations
 - Save/load settings into custom Config.prc located in `$HOME/.config/a2s3/config.prc`
 - At least 2 types of enemy: ~~chaser~~ and turret/ranger
 - At least one item to pickup (med kit/health potion)
@@ -54,8 +57,6 @@ features should be implemented (in no particular order):
 - At least 2 player's attacks: ~~basic~~ and charge-based
   (require certain amount of charge points to be used)
 - Ability to roll
-- Maybe something like force field appearing around character on getting damage
-  (like in dead cells), to avoid enemies endlessly pushing you into the wall and causing screen shake
 - Maybe ability to overcharge basic attack by holding down the button
   (like knights/archers in king arthur's gold work), coz its fun
 - Maybe move hitboxes under the legs of characters (e.g to some sort of "shadow")
