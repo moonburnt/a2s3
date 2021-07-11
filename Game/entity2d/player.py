@@ -55,6 +55,8 @@ class Player(entity2d.Creature):
         if self.dead:
             return
 
+        #TODO: I should probably move this to level itself
+
         mouse_watcher = base.mouseWatcherNode
 
         #safety check to avoid crash if mouse has got out of window
@@ -76,10 +78,14 @@ class Player(entity2d.Creature):
                                      render.get_relative_point(base.camera, far))
 
         hit_vector = mouse_pos_3d - self.node.get_pos()
-        hit_vector.normalize()
+        #We throw away third value, coz we have static height and dont need it
+        #moreover - setting custom height later, AFTER normalization, caused
+        #that long-standing bug with projectile spawning above player's head
+        vector2d = hit_vector.get_xy()
+        vector2d.normalize()
 
         #updating mouse vector
-        self.mouse_vector = hit_vector
+        self.mouse_vector = vector2d
 
         return event.cont
 
@@ -154,31 +160,23 @@ class Player(entity2d.Creature):
 
         #using it like that, because due to requirement to somehow pass caster to
         #skill, Im unable to set using_skill to be a normal variable
-        if shared.level.controls_status["attack"] and not self.node.get_python_tag("using_skill"):
-
-            hit_vector_x, hit_vector_y = self.mouse_vector.get_xy()
-            #y has to be flipped if billboard_effect is active. Otherwise x has
-            #to be flipped. Idk why its this way, probs coz first cam's num is 0
-            #hit_vector_2D = hit_vector_x, -hit_vector_y
-            hit_vector_2D = -hit_vector_x, hit_vector_y
+        if (shared.level.controls_status["attack"] and not
+            self.node.get_python_tag("using_skill")):
 
             y_vec = Vec2(0, 1)
-            angle = y_vec.signed_angle_deg(hit_vector_2D)
+            #x has to be flipped on proj without billboard, y - on proj with it.
+            #Idk why its this way, and I probs should move it to proj init #TODO
+            angle = y_vec.signed_angle_deg(
+                                (-self.mouse_vector[0], self.mouse_vector[1])
+                                )
 
             #placeholder that picks up first skill from dictionary.
             #TODO: add some proper way to attach skills to buttons
             skill = list(self.skills.keys())[0]
 
-            #pos_diff = shared.DEFAULT_SPRITE_SIZE[0]/2
-            #proj_direction = self.mouse_vector * pos_diff
-            #self.skills['Slash'].cast(direction = self.mouse_vector,
-
-            #this should solve the issue with projectile not spawning if cursor
-            #is located directly on top of player's head. However, the problem
-            #with projectile spawning closer to player's center (in the very same
-            #case) still remains - I have no idea how to solve it yet. #TODO
-            direction = Vec3(self.mouse_vector[0], self.mouse_vector[1], 0)
-            self.skills[skill].cast(direction = direction,
+            #we can do this later, but doing it here for now - since we cant do
+            #math operations between vec2 and vec3, converting one into another
+            self.skills[skill].cast(direction = Vec3(*self.mouse_vector, 0),
                                     angle = angle)
 
         #interrupting animation update tasks, in case we are in the middle of
