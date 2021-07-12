@@ -40,10 +40,7 @@ HEAD_HEIGHT = 0.2 #relatively to player height, not scene
 class Creature(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to generation of player and enemies'''
     def __init__(self, name: str, category: str, data:dict,
-                 # spritesheet, animations: dict,
-                 # stats: dict, skills: list, head: dict = None,
-                 # death_sound: str = None, hitbox_size: int = None, sprite_size: tuple = None,
-                 collision_mask = None, scale = None, position = None):
+                 collision_mask = None, scale = None):
 
         #First, lets extract all data unified for all creatures from our dict.
         #Safety checks are all over the place - some instances are secured, others
@@ -101,7 +98,7 @@ class Creature(entity2d.Entity2D):
                          collision_mask = collision_mask,
                          sprite_size = sprite_size,
                          scale = scale,
-                         position = position)
+                         )
 
         #magic that allows for rotating node around its h without making it look
         #invisible. Idk why its not enabled by default - guess its to save some
@@ -239,8 +236,6 @@ class Creature(entity2d.Entity2D):
         #e.g this is the key to achieve that "2.5D style" I aim for
         self.node.set_billboard_point_eye()
 
-        base.task_mgr.add(self.status_effects_handler, "status effects handler")
-
         #used to avoid issue with getting multiple damage func calls per frame
         #see game_window's damage functions
         self.last_collision_time = 0
@@ -252,6 +247,10 @@ class Creature(entity2d.Entity2D):
 
         #default rgba values. Saved on init, used in blinking
         self.default_colorscheme = self.node.get_color_scale()
+
+    def spawn(self, position):
+        super().spawn(position)
+        base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
     def change_direction(self, direction):
         '''Change direction, creature face, in case it didnt face this way already'''

@@ -184,8 +184,8 @@ class LoadLevel:
         #setting this lower may cause glitches, as below lies the floor_layer
         #hitbox is adjusted to match our current sprites. In case of change - will
         #need to tweak it manually
-        self.player = entity2d.Player(self.player_class,
-                                      position = self.map.player_spawnpoint)
+        self.player = entity2d.Player(self.player_class)
+        self.player.spawn(self.map.player_spawnpoint)
 
         self.wave_number = 0
         self.enemy_increase = 10
@@ -320,8 +320,8 @@ class LoadLevel:
                 enemy_type = "Cuboid"
                 log.debug(f"Spawning {affix} {enemy_type} on {spawn_position}")
                 enemy = entity2d.Enemy(name = enemy_type,
-                                       position = spawn_position,
                                        affix = affix)
+                enemy.spawn(spawn_position)
                 enemy.id = self.enemy_id
                 enemy.node.set_python_tag("id", enemy.id)
                 self.enemy_id += 1

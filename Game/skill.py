@@ -152,6 +152,65 @@ class Skill:
         #idk if I can get rid of it
         self.used = False
 
+    def initialize_projectile(self):
+        """Initializes projectile from provided data
+        """
+        if not self.projectile:
+            log.debug(f"{self.name} has no projectile attached to it")
+            return
+
+        dmg = self.calculate_stat('dmg')
+
+        if self.projectile.behavior == "follow_caster":
+            projectile = entity2d.ChasingProjectile(
+                name = self.projectile.name,
+                #this will explode on None, but it
+                #shouldnt happen... I guess
+                category = self.projectile.category,
+                #this shouldnt do anything on None or 0
+                scale = self.projectile.scale,
+                damage = dmg,
+                #same for all of these
+                hitbox_size = self.projectile.hitbox,
+                lifetime = self.projectile.lifetime,
+                effects = self.target_effects,
+                scale_modifier = self.projectile.scale_modifier,
+                speed = self.projectile.speed,
+                die_on_object_collision = self.projectile.die_on_object_collision,
+                die_on_creature_collision = self.projectile.die_on_creature_collision,
+                )
+
+        elif self.projectile.behavior == "move_towards_direction":
+            projectile = entity2d.MovingProjectile(
+                name = self.projectile.name,
+                category = self.projectile.category,
+                speed = self.projectile.speed,
+                scale = self.projectile.scale,
+                damage = dmg,
+                hitbox_size = self.projectile.hitbox,
+                lifetime = self.projectile.lifetime,
+                effects = self.target_effects,
+                scale_modifier = self.projectile.scale_modifier,
+                die_on_object_collision = self.projectile.die_on_object_collision,
+                die_on_creature_collision = self.projectile.die_on_creature_collision,
+                ricochets_amount = self.projectile.ricochets_amount,
+                )
+        else:
+            projectile = entity2d.Projectile(
+                name = self.projectile.name,
+                category = self.projectile.category,
+                scale = self.projectile.scale,
+                damage = dmg,
+                hitbox_size = self.projectile.hitbox,
+                lifetime = self.projectile.lifetime,
+                effects = self.target_effects,
+                scale_modifier = self.projectile.scale_modifier,
+                die_on_object_collision = self.projectile.die_on_object_collision,
+                die_on_creature_collision = self.projectile.die_on_creature_collision,
+                )
+
+        return projectile
+
     def calculate_stat(self, stat_name:str):
         '''Calculates, how much of provided stat skill will pass to projectile,
         based on (stat+self.caster_stats['stat'])*multiplier'''
@@ -165,7 +224,7 @@ class Skill:
 
             return 0
 
-    def cast(self, position = None, direction = None, angle = None):
+    def cast(self, position = None, direction = 0, angle = None):
         '''Casts the skill'''
         #TODO: maybe configure position and angle automatically, based on caster?
 
@@ -198,7 +257,6 @@ class Skill:
                 #print('stun', self.caster_effects.stun, self.buff_caster)
                 buff_caster('stun', self.caster_effects.stun)
 
-
         if self.cooldown:
             #there is no point to flip this switch if skill has no cd, I think
             self.used = True
@@ -208,9 +266,11 @@ class Skill:
                             f"cooldown handler of {self.caster}'s {self.name} skill")
 
         if self.projectile:
-            #there is no point to do manual safety check anymore, coz I moved it
-            #to the calculation function itself
-            dmg = self.calculate_stat('dmg')
+            #I tried deepcopy approach, but it didnt work coz same node on scene
+            #graph was reused for projectiles of same type, which caused many
+            #issues. Probably I should try some other serialization approach
+            #TODO
+            projectile = self.initialize_projectile()
 
             if not position:
                 position = self.caster.get_pos()
@@ -220,66 +280,12 @@ class Skill:
             if self.projectile.spawn_offset:
                 direction = direction * self.projectile.spawn_offset
 
-            #TODO: add ability to pass knockbass to projectile
-
-            #if self.projectile.target:
-            if self.projectile.behavior == "follow_caster":
-                projectile = entity2d.ChasingProjectile(
-                    name = self.projectile.name,
-                    #this will explode on None, but it
-                    #shouldnt happen... I guess
-                    category = self.projectile.category,
-                    position = position,
-                    target = self.projectile.target,
-                    #this shouldnt do anything on None or 0
-                    direction = direction,
-                    scale = self.projectile.scale,
-                    damage = dmg,
-                    #same for all of these
-                    hitbox_size = self.projectile.hitbox,
-                    lifetime = self.projectile.lifetime,
-                    effects = self.target_effects,
-                    scale_modifier = self.projectile.scale_modifier,
-                    speed = self.projectile.speed,
-                    angle = angle,
-                    die_on_object_collision = self.projectile.die_on_object_collision,
-                    die_on_creature_collision = self.projectile.die_on_creature_collision,
-                    )
-
-            elif self.projectile.behavior == "move_towards_direction":
-                projectile = entity2d.MovingProjectile(
-                    name = self.projectile.name,
-                    category = self.projectile.category,
-                    position = position,
-                    direction = direction,
-                    speed = self.projectile.speed,
-                    scale = self.projectile.scale,
-                    damage = dmg,
-                    hitbox_size = self.projectile.hitbox,
-                    lifetime = self.projectile.lifetime,
-                    effects = self.target_effects,
-                    scale_modifier = self.projectile.scale_modifier,
-                    angle = angle,
-                    die_on_object_collision = self.projectile.die_on_object_collision,
-                    die_on_creature_collision = self.projectile.die_on_creature_collision,
-                    ricochets_amount = self.projectile.ricochets_amount,
-                    )
-            else:
-                projectile = entity2d.Projectile(
-                    name = self.projectile.name,
-                    category = self.projectile.category,
-                    position = position,
-                    direction = direction,
-                    scale = self.projectile.scale,
-                    damage = dmg,
-                    hitbox_size = self.projectile.hitbox,
-                    lifetime = self.projectile.lifetime,
-                    effects = self.target_effects,
-                    scale_modifier = self.projectile.scale_modifier,
-                    angle = angle,
-                    die_on_object_collision = self.projectile.die_on_object_collision,
-                    die_on_creature_collision = self.projectile.die_on_creature_collision,
-                    )
+            projectile.spawn(position = position,
+                             direction = direction,
+                             angle = angle,
+                             #this will need adjustments in future
+                             target = self.projectile.target,
+                             )
 
             #maybe I should attach it to skill itself instead? or to caster? and
             #destroy together? Hmmm.... #TODO

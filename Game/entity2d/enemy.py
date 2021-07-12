@@ -32,7 +32,7 @@ class Enemy(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of enemies. Accepts everything
     like entity2d.Creature, but also affix. Which can be either "Normal", "Big" or
     "Small". Based on affix, size, health and movement speed of enemy will get altered'''
-    def __init__(self, name:str, affix:str = "Normal", position = None):
+    def __init__(self, name:str, affix:str = "Normal"):
         #this is hopefully temporary stuff, because it seems bad to call for that
         #stuff twice
         if affix == "Big":
@@ -52,7 +52,7 @@ class Enemy(entity2d.Creature):
                          data = shared.assets.enemies[name],
                          collision_mask = ENEMY_COLLISION_MASK,
                          scale = scale,
-                         position = position)
+                         )
 
         self.rot_timer = ROT_TIMER
         self.can_be_removed = False
@@ -72,11 +72,15 @@ class Enemy(entity2d.Creature):
         else:
             pass
 
-        base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")
+        #base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")
 
         #id variable that will be set from game_window. Placed it there to avoid
         #possible crashes and to remind that its a thing that exists
         self.id = None
+
+    def spawn(self, position):
+        super().spawn(position)
+        base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")
 
     def ai_movement_handler(self, event):
         '''This is but nasty hack to make enemies follow character. TODO: remake

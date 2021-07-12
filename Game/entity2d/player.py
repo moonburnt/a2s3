@@ -27,7 +27,7 @@ PLAYER_COLLISION_MASK = 0X06
 
 class Player(entity2d.Creature):
     '''Subclass of Creature, dedicated to creation of player'''
-    def __init__(self, name:str, position = None):
+    def __init__(self, name:str):
         #this will crash on invalid, no safety checks for now
         data = shared.assets.classes[name]
 
@@ -35,10 +35,9 @@ class Player(entity2d.Creature):
                          category = shared.game_data.player_category,
                          data = data,
                          collision_mask = PLAYER_COLLISION_MASK,
-                         position = position)
+                         )
+                         #position = position)
 
-        base.task_mgr.add(self.controls_handler,
-                        f"controls handler of {self.name}")
         #the thing to track mouse position relatively to map. See get_mouse_vector.
         #It probably could be better to move this thing to map func/class instead?
         #TODO
@@ -47,6 +46,11 @@ class Player(entity2d.Creature):
         #this is quite a resource-consuming task, but hopefully it wont be too
         #much of an issue...
         self.mouse_vector = Vec3(0, 0, 0)
+
+    def spawn(self, position):
+        super().spawn(position)
+        base.task_mgr.add(self.controls_handler,
+                        f"controls handler of {self.name}")
         base.task_mgr.add(self.get_mouse_vector,
                         f"mouse vector tracker of {self.name}")
 

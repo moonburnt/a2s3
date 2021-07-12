@@ -15,7 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 import logging
-from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode
+from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode, NodePath
 import p3dss
 from Game import shared
 
@@ -27,7 +27,8 @@ class Entity2D:
     def __init__(self, name: str, category: str,
                  spritesheet = None, animations = None, visuals_node:bool = False,
                  hitbox_size: int = None, collision_mask = None,
-                 sprite_size: tuple = None, scale: int = None, position = None):
+                 #sprite_size: tuple = None, scale: int = None, position = None):
+                 sprite_size: tuple = None, scale: int = None):
         self.name = name
         log.debug(f"Initializing {self.name} object")
 
@@ -45,7 +46,10 @@ class Entity2D:
         #from animation wont affect other items attached to node (since its not
         #a parent anymore, but just another child)
         entity_node = PandaNode(name)
-        self.node = render.attach_new_node(entity_node)
+        #for now, self.node will be empty nodepath - we will reparent it to render
+        #on spawn, to dont overflood it with reference entity instances
+        self.node = NodePath(entity_node)
+        #self.node = render.attach_new_node(entity_node)
 
         if spritesheet and animations:
             #so, what is it and why is it a thing:
@@ -89,8 +93,8 @@ class Entity2D:
             self.change_animation = placeholder_anim_changer
 
         #if no position has been received - wont set it up
-        if position:
-            self.node.set_pos(*position)
+        #if position:
+        #    self.node.set_pos(*position)
 
         #setting character's collisions
         entity_collider = CollisionNode(self.category)
@@ -130,8 +134,20 @@ class Entity2D:
         if shared.settings.show_collisions:
            self.collision.show()
 
+    def spawn(self, position):
+        """"Attach node to scene graph and spawn entity at specified position"""
+        #I may want to add further spawn options later. Like stats modificators
+        #or scale modificators #TODO
+        #I also have no idea if there should be some safety bool ("self.spawned")
+        #to avoid breakage in case someone would try to use this func more than
+        #once per entity #TODO
+        self.node.wrt_reparent_to(render)
+        self.node.set_pos(*position)
+        log.debug(f"{self.name} has been spawned at {position}")
+        #render.attach_new_node(self.node)
+
     def die(self):
-        '''Function that should be triggered when entity is about to die'''
+        """Function that should be triggered when entity is about to die"""
         self.collision.remove_node()
         self.dead = True
         log.debug(f"{self.name} is now dead")

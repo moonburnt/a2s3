@@ -25,9 +25,9 @@ ENEMY_PROJECTILE_COLLISION_MASK = 0X04
 
 class Projectile(entity2d.Entity2D):
     '''Subclass of Entity2D, dedicated to creation of collideable effects'''
-    def __init__(self, name:str, category:str, position, damage = 0,
-                 effects = None, scale = 0, hitbox_size = 0, target = None, #speed = 0,
-                 lifetime = 0, direction = None, scale_modifier = None, angle = 0,
+    def __init__(self, name:str, category:str, damage = 0,
+                 effects = None, scale = 0, hitbox_size = 0,
+                 lifetime = 0, scale_modifier = None,
                  die_on_object_collision:bool = False,
                  die_on_creature_collision:bool = False):
         self.name = name
@@ -63,16 +63,7 @@ class Projectile(entity2d.Entity2D):
         if scale_modifier:
             projectile_scale = projectile_scale*scale_modifier
 
-        #idk about this. Really. It will most likely break with introduction of
-        #new skill's projectile behaviours and need rework. Like, idk - add bool
-        #to init with "keep_distance: True/False" or something
-        if direction:
-            self.direction = direction
-            #setting projectile to already spawn with directional offset, because
-            #otherwise all the direction tracking will do no good on movement
-            position = position + self.direction
-        else:
-            self.direction = 0
+        self.direction = 0
 
         super().__init__(name = name,
                          category = category,
@@ -81,24 +72,16 @@ class Projectile(entity2d.Entity2D):
                          visuals_node = False,
                          hitbox_size = projectile_hitbox,
                          collision_mask = collision_mask,
-                         #sprite_size = sprite_size,
                          scale = projectile_scale,
-                         position = position)
+                         )
 
         #optionally enabling billboard effect for projectile, in case it has such
         #setting in config. I could probably pass it to entity2d directly, idk
         if data['Main'].get('billboard', False):
             self.node.set_billboard_point_eye()
-        else:
-            #idk about numbers and if it will explode on weird map angles, but
-            #for now it kinda works. Dropped it there, coz if its used together
-            #with billboard, node will never face camera like its invisible
-            one, two, _ = position
-            self.node.look_at(one, two, 1)
 
-        #due to addition of placeholder function that successfully does nothing
-        #in case anim doesnt exist, its not necessary anymore to check for
-        #existance of spriteseet and animations in order to cast this function
+        #if projectile has no visuals attached to it, this wont do anything -
+        #thanks to new placeholder function that works as null point for this
         self.change_animation('default')
 
         self.damage = damage
@@ -108,23 +91,15 @@ class Projectile(entity2d.Entity2D):
             self.node.set_python_tag("effects", self.effects)
         self.dead = False
 
-        default_angle = data['Main'].get('angle', 0)
-        #this will look kinda weird on projectiles with billboard, but for now
-        #Im not fixing it, because Im unsure of how it should work. #TODO
-        if angle or default_angle:
-            angle += default_angle
-            #rotating projectile around 2d axis to match the shooting angle
-            #I have no idea how if it will work for enemies tho
-            self.node.set_r(angle)
+        self.default_angle = data['Main'].get('angle', 0)
 
         if lifetime:
             self.lifetime = lifetime
-            #schedulging projectile to die in self.lifetime seconds after spawn
-            base.task_mgr.add(self.dying_task,
-                            f"dying task of projectile {self.name}")
 
         #its probably possible to do it in less ugly way
         if die_on_object_collision or die_on_creature_collision:
+            #I should probably add collider on spawn, idk #TODO
+
             #coz there is no point in traversing projectile itself otherwise
             base.cTrav.add_collider(self.collision, base.chandler)
             self.node.set_python_tag("die_command", self.die)
@@ -134,6 +109,42 @@ class Projectile(entity2d.Entity2D):
 
         if die_on_object_collision:
             self.node.set_python_tag("die_on_object_collision", True)
+
+    def spawn(self, position, direction = None, angle:int = 0, **kwargs):
+        """Spawns the projectile on provided position
+        """
+
+        #idk about this. Really. It will most likely break with introduction of
+        #new skill's projectile behaviours and need rework. Like, idk - add bool
+        #to init with "keep_distance: True/False" or something
+        if direction:
+            self.direction = direction
+
+            position = position + direction
+
+        #TODO: add ability to override stats (dmg, speed) on cast
+        super().spawn(position)
+
+        if not self.node.has_billboard():
+            #idk about numbers and if it will explode on weird map angles, but
+            #for now it kinda works. Dropped it there, coz if its used together
+            #with billboard, node will never face camera like its invisible
+            one, two, _ = position
+            self.node.look_at(one, two, 1)
+
+        #this will look kinda weird on projectiles with billboard, but for now
+        #Im not fixing it, because Im unsure of how it should work. #TODO
+        if angle or self.default_angle:
+            angle += self.default_angle
+            #rotating projectile around 2d axis to match the shooting angle
+            #I have no idea how if it will work for enemies tho
+            self.node.set_r(angle)
+
+        #target does nothing, for now. May come handly in future
+        if self.lifetime:
+            #schedulging projectile to die in self.lifetime seconds after spawn
+            base.task_mgr.add(self.dying_task,
+                            f"dying task of projectile {self.name}")
 
     def dying_task(self, event):
         #ensuring that projectile didnt die already
@@ -164,15 +175,16 @@ class Projectile(entity2d.Entity2D):
         #self.dying_task(0)
 
 class ChasingProjectile(Projectile):
-    '''Projectile that always follows its target. Aside from usual projectile's
-    stuff, receive "target" variable, which should be NodePath'''
-    def __init__(self, name:str, category:str, position, target, damage = 0,
+    """Projectile that always follows its target.
+    Aside from usual projectile's stuff, should receive "target" NodePath on spawn
+    """
+    def __init__(self, name:str, category:str, damage = 0,
                  effects = None, scale = 0, hitbox_size = 0, speed = 0,
-                 lifetime = 0, direction = None, scale_modifier = None, angle = 0,
+                 lifetime = 0, scale_modifier = None,
                  die_on_object_collision:bool = False,
                  die_on_creature_collision:bool = False):
 
-        self.target = target
+        self.target = None
         if speed:
             self.speed = speed
         else:
@@ -180,7 +192,6 @@ class ChasingProjectile(Projectile):
 
         super().__init__(name = name,
                          category = category,
-                         position = position,
                          damage = damage,
                          effects = effects,
                          scale = scale,
@@ -188,12 +199,13 @@ class ChasingProjectile(Projectile):
                          #I dont think speed should be there
                          #speed = speed
                          lifetime = lifetime,
-                         direction = direction,
                          scale_modifier = scale_modifier,
-                         angle = angle,
                          die_on_object_collision = die_on_object_collision,
                          die_on_creature_collision = die_on_creature_collision)
 
+    def spawn(self, **kwargs):
+        self.target = kwargs["target"]
+        super().spawn(**kwargs)
         base.task_mgr.add(self.follow_task, f"following task of {self.name}")
 
     def follow_task(self, event):
@@ -215,9 +227,9 @@ class ChasingProjectile(Projectile):
 
 class MovingProjectile(Projectile):
     '''Projectile that moves into specified direction with provided speed'''
-    def __init__(self, name:str, category:str, position, direction, speed,
+    def __init__(self, name:str, category:str, speed,
                  damage = 0, effects = None, scale = 0, hitbox_size = 0,
-                 lifetime = 0, scale_modifier = None, angle = 0,
+                 lifetime = 0, scale_modifier = None,
                  ricochets_amount:int = 0,
                  die_on_object_collision:bool = False,
                  die_on_creature_collision:bool = False):
@@ -227,7 +239,6 @@ class MovingProjectile(Projectile):
 
         super().__init__(name = name,
                          category = category,
-                         position = position,
                          damage = damage,
                          effects = effects,
                          scale = scale,
@@ -235,21 +246,22 @@ class MovingProjectile(Projectile):
                          #I dont think speed should be there
                          #speed = speed
                          lifetime = lifetime,
-                         direction = direction,
                          scale_modifier = scale_modifier,
-                         angle = angle,
                          die_on_object_collision = die_on_object_collision,
                          die_on_creature_collision = die_on_creature_collision)
-
-        #normalizing direction, to fix issue with projectile moving too fast
-        #It has to be done after init, coz original direction is needed there
-        self.direction.normalize()
 
         #it makes no sense to ricochet chasing or static projectile, thus its there
         if ricochets_amount:
             self.node.set_python_tag("ricochets_amount", ricochets_amount)
 
+    def spawn(self, **kwargs):
+        super().spawn(**kwargs)
+        #normalizing direction, to fix issue with projectile moving too fast
+        #it has to be done after parent's spawn, coz we need original direction
+        #for sprite rotation and to make chasing projectile work
+        self.direction.normalize()
         #doing so to enable support for ricochets
+        #doing it after spawn, coz self.direction is set in parent
         self.node.set_python_tag("direction", self.direction)
 
         base.task_mgr.add(self.move_task, f"moving task of {self.name}")
