@@ -112,8 +112,14 @@ class LoadLevel:
 
         log.debug("Initializing UI")
         self.player_hud = interface.PlayerHUD()
+
         #initializing death screen
+        def show_lb():
+            shared.ui.storage["leaderboard"].update_visible_scores()
+            shared.ui.switch("leaderboard")
+
         self.death_screen = interface.DeathScreen(
+                                        show_leaderboard_command = show_lb,
                                         restart_command = self.restart_level,
                                         exit_level_command = self.exit_level,
                                         exit_game_command = base.exit_game,
@@ -668,13 +674,21 @@ class LoadLevel:
     def on_player_death(self):
         '''Function called when player has died'''
         #TODO: rename this function to something less stupid
-        self.death_screen.update_death_message(self.score,
-                                               self.wave_number,
-                                               self.kill_counter)
+        self.death_screen.update_death_message(
+                                            self.score,
+                                            self.wave_number,
+                                            self.kill_counter,
+                                            )
 
         shared.music_player.crossfade(shared.assets.music['death'])
 
         #interface.switch(self.death_screen)
+        shared.user_data.update_leaderboard(
+                                            score = self.score,
+                                            player_class = self.player_class,
+                                            )
+        shared.user_data.save_leaderboards()
+
         shared.ui.switch("death screen")
 
     def restart_level(self):

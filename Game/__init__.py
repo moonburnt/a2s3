@@ -20,8 +20,8 @@ from .entity2d import *
 from .map_loader import *
 from .assets_loader import *
 from .level_loader import *
+from .userdata import *
 from .interface import *
-#from .music_player import *
 from .music_manager import *
 from .skill import *
 

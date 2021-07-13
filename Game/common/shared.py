@@ -20,7 +20,7 @@
 # Game.common import shared"), coz otherwise variables get copied and not linked,
 # which breaks whole "cross-module sharing" thing and kills purpose of this
 
-from .. import assets_loader
+from .. import assets_loader, userdata
 from . import classes
 from copy import deepcopy
 import logging
@@ -95,3 +95,6 @@ ui = classes.InterfaceStorage()
 # Storage for assets. Since for now it doesnt break stuff, its initialized there
 # and not via GameWindow like sound managers. #TODO: remake in case of emergence
 assets = assets_loader.AssetsLoader()
+
+# Manager for user settings and stuff
+user_data = userdata.UserdataManager()

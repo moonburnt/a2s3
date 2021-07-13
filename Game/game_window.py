@@ -39,6 +39,9 @@ class GameWindow(ShowBase):
         log.debug("Loading assets")
         shared.assets.load_all()
 
+        log.debug("Loading user data")
+        shared.user_data.load_leaderboards()
+
         log.debug("Configuring game's window")
         #setting up resolution
         screen_info = base.pipe.getDisplayInformation()
@@ -69,6 +72,13 @@ class GameWindow(ShowBase):
         self.win.request_properties(window_settings)
         log.debug(f"Resolution has been set to {shared.settings.window_size}")
 
+        #turning on fps meter, in case its enabled in settings
+        base.setFrameRateMeter(shared.settings.fps_meter)
+
+        #change background color to black. #TODO: move this to map generation,
+        #make it possible to set to other values, aswell as pictures
+        self.win.set_clear_color((0,0,0,1))
+
         log.debug("Setting up the sound")
         #setting volume so it should apply to all music tracks
         #thats about where shared.settings break. I have no idea why, for now
@@ -82,16 +92,23 @@ class GameWindow(ShowBase):
 
         shared.music_player.crossfade(shared.assets.music['menu_theme'])
 
-        #turning on fps meter, in case its enabled in settings
-        base.setFrameRateMeter(shared.settings.fps_meter)
-
-        #change background color to black. #TODO: move this to map generation,
-        #make it possible to set to other values, aswell as pictures
-        self.win.set_clear_color((0,0,0,1))
-
         #TODO: create separate storage for scenes
 
+        log.debug("Configuring UI")
         #these need to be this way, coz menu buttons dont accept activated funcs
+        def update_scores():
+            return shared.user_data.leaderboards
+
+        leaderboard = interface.Leaderboard(
+                        back_command = shared.ui.show_previous,
+                        update_scores_command = update_scores,
+                        )
+
+        shared.ui.add(leaderboard, "leaderboard")
+
+        def show_lb():
+            shared.ui.switch("leaderboard")
+
         def set_map():
             shared.ui.switch("map settings")
 
@@ -103,6 +120,7 @@ class GameWindow(ShowBase):
 
         main_menu = interface.MainMenu(
                                 play_command = set_map,
+                                show_leaderboard_command = show_lb,
                                 options_command = options,
                                 exit_command = self.exit_game,
                                 )
@@ -114,11 +132,14 @@ class GameWindow(ShowBase):
         map_settings = interface.MapSettings(
                                 play_command = self.start_game,
                                 back_command = show_menu,
-                                            )
+                                )
 
         shared.ui.add(main_menu, "main")
         shared.ui.add(options_menu, "options")
         shared.ui.add(map_settings, "map settings")
+
+        log.debug("Doing misc stuff")
+        leaderboard.update_visible_scores()
 
         shared.ui.switch("main")
 

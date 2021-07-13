@@ -27,7 +27,8 @@ from Game import shared
 log = logging.getLogger(__name__)
 
 class MainMenu(Menu):
-    def __init__(self, play_command, options_command, exit_command):
+    def __init__(self, play_command, show_leaderboard_command,
+                                options_command, exit_command):
         name = "main menu"
         parent = base.pixel2d
         super().__init__(name, parent)
@@ -40,46 +41,69 @@ class MainMenu(Menu):
         # self.main_menu.reparent_to(pixel2d)
         # self.main_menu.show()
 
-        self.game_logo = OnscreenImage(image = shared.assets.sprite['logo'],
-                                       scale = (122, 1, 53),
-                                       pos = (150, 1, -100),
-                                       parent = self.frame)
+        self.game_logo = OnscreenImage(
+                                    image = shared.assets.sprite['logo'],
+                                    scale = (122, 1, 53),
+                                    pos = (150, 1, -100),
+                                    parent = self.frame,
+                                    )
 
         #not assigning "self" stuff, coz Im not referring to these from elsewhere
-        start_button = DirectButton(text = "Play",
+        start_button = DirectButton(
+                                    text = "Play",
                                     command = play_command,
                                     pos = (150, 1, -300),
-                                    text_scale = 1,
+                                    text_scale = 0.8,
                                     text_pos = (0,-0.25),
                                     scale = (64, 1, 32),
                                     frameTexture = self.button_textures,
                                     frameSize = (-2, 2, -1, 1),
                                     clickSound = self.select_sfx,
                                     rolloverSound = self.hover_sfx,
-                                    parent = self.frame)
+                                    parent = self.frame,
+                                    )
 
-        options_button = DirectButton(text = "Options",
-                                      command = options_command,
-                                      pos = (150, 1, -400),
-                                      text_scale = 1,
-                                      text_pos = (0, -0.25),
-                                      scale = (64, 1, 32),
-                                      frameTexture = self.button_textures,
-                                      frameSize = (-2, 2, -1, 1),
-                                      clickSound = self.select_sfx,
-                                      rolloverSound = self.hover_sfx,
-                                      parent = self.frame)
+        options_button = DirectButton(
+                                    text = "Options",
+                                    command = options_command,
+                                    pos = (150, 1, -400),
+                                    text_scale = 0.8,
+                                    text_pos = (0, -0.25),
+                                    scale = (64, 1, 32),
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-2, 2, -1, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
+                                    parent = self.frame,
+                                    )
 
-        exit_button = DirectButton(text = "Exit",
-                                   command = exit_command,
-                                   pos = (150, 1, -500),
-                                   text_pos = (0,-0.25),
-                                   scale = (64, 1, 32),
-                                   frameTexture = self.button_textures,
-                                   frameSize = (-2, 2, -1, 1),
-                                   clickSound = self.select_sfx,
-                                   rolloverSound = self.hover_sfx,
-                                   parent = self.frame)
+        show_lb_button = DirectButton(
+                                    text = "Leaderboard",
+                                    command = show_leaderboard_command,
+                                    pos = (150, 1, -500),
+                                    text_scale = 0.8,
+                                    text_pos = (0, -0.25),
+                                    scale = (64, 1, 32),
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-2, 2, -1, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
+                                    parent = self.frame,
+                                    )
+
+        exit_button = DirectButton(
+                                    text = "Exit",
+                                    command = exit_command,
+                                    pos = (150, 1, -600),
+                                    text_scale = 0.8,
+                                    text_pos = (0,-0.25),
+                                    scale = (64, 1, 32),
+                                    frameTexture = self.button_textures,
+                                    frameSize = (-2, 2, -1, 1),
+                                    clickSound = self.select_sfx,
+                                    rolloverSound = self.hover_sfx,
+                                    parent = self.frame,
+                                    )
 
 class OptionsMenu(Menu):
     '''Options menu where player can change game options such as volume.'''
@@ -294,7 +318,8 @@ class MapSettings(Menu):
 
 class DeathScreen(Menu):
     '''Screen shown on player's death'''
-    def __init__(self, restart_command, exit_level_command, exit_game_command):
+    def __init__(self, show_leaderboard_command, restart_command,
+                       exit_level_command, exit_game_command):
         name = "death screen"
         parent = base.aspect2d
         super().__init__(name, parent)
@@ -303,50 +328,71 @@ class DeathScreen(Menu):
         #TODO: set align to be on left. Maybe replae death_message's DirectLabel
         #with OnscreenText and draw frame on background?
         self.death_message = DirectLabel(
-                                      pos = (0, 0, 0.3),
-                                      scale = 0.1,
-                                      frameTexture = shared.assets.sprite['frame'],
-                                      frameSize = (-4.5, 4.5, -2.5, 1),
-                                      parent = self.frame)
+                            pos = (0, 0, 0.3),
+                            scale = 0.1,
+                            frameTexture = shared.assets.sprite['frame'],
+                            frameSize = (-4.5, 4.5, -2.5, 1),
+                            parent = self.frame,
+                            )
 
-        self.restart_button = DirectButton(text = "Restart",
-                                           command = restart_command,
-                                           pos = (0, 0, -0.1),
-                                           scale = 0.1,
-                                           frameTexture = self.button_textures,
-                                           frameSize = (-3, 3, -0.5, 1),
-                                           clickSound = self.select_sfx,
-                                           rolloverSound = self.hover_sfx,
-                                           parent = self.frame)
+        self.restart_button = DirectButton(
+                            text = "Restart",
+                            command = restart_command,
+                            pos = (0, 0, -0.1),
+                            scale = 0.1,
+                            frameTexture = self.button_textures,
+                            frameSize = (-3, 3, -0.5, 1),
+                            clickSound = self.select_sfx,
+                            rolloverSound = self.hover_sfx,
+                            parent = self.frame,
+                            )
 
-        self.exit_level_button = DirectButton(text = "Back to Menu",
-                                              command = exit_level_command,
-                                              pos = (0, 0, -0.3),
-                                              scale = 0.1,
-                                              frameTexture = self.button_textures,
-                                              frameSize = (-3, 3, -0.5, 1),
-                                              clickSound = self.select_sfx,
-                                              rolloverSound = self.hover_sfx,
-                                              parent = self.frame)
+        self.show_lb_button = DirectButton(
+                            text = "Leaderboards",
+                            command = show_leaderboard_command,
+                            pos = (0, 0, -0.3),
+                            scale = 0.1,
+                            frameTexture = self.button_textures,
+                            frameSize = (-3, 3, -0.5, 1),
+                            clickSound = self.select_sfx,
+                            rolloverSound = self.hover_sfx,
+                            parent = self.frame,
+                            )
 
-        self.exit_button = DirectButton(text = "Exit",
-                                        command = exit_game_command,
-                                        pos = (0, 0, -0.5),
-                                        scale = 0.1,
-                                        frameTexture = self.button_textures,
-                                        frameSize = (-3, 3, -0.5, 1),
-                                        clickSound = self.select_sfx,
-                                        rolloverSound = self.hover_sfx,
-                                        parent = self.frame)
+        self.exit_level_button = DirectButton(
+                            text = "Back to Menu",
+                            command = exit_level_command,
+                            pos = (0, 0, -0.5),
+                            scale = 0.1,
+                            frameTexture = self.button_textures,
+                            frameSize = (-3, 3, -0.5, 1),
+                            clickSound = self.select_sfx,
+                            rolloverSound = self.hover_sfx,
+                            parent = self.frame,
+                            )
+
+        self.exit_button = DirectButton(
+                            text = "Exit",
+                            command = exit_game_command,
+                            pos = (0, 0, -0.7),
+                            scale = 0.1,
+                            frameTexture = self.button_textures,
+                            frameSize = (-3, 3, -0.5, 1),
+                            clickSound = self.select_sfx,
+                            rolloverSound = self.hover_sfx,
+                            parent = self.frame,
+                            )
 
         #idk if this should be there either. But will do for now
         self.dn_duration = 2
 
         #notice how its parent is different
-        self.death_notification = Popup(text = "Death",
-                                        text_scale = 0.5,
-                                        parent = base.aspect2d,
-                                        duration = self.dn_duration)
+        self.death_notification = Popup(
+                            text = "Death",
+                            text_scale = 0.5,
+                            parent = base.aspect2d,
+                            duration = self.dn_duration,
+                            )
 
     def update_death_message(self, score: int, wave: int, killed: int):
         '''Change dispayed self.high_score to provided value'''
@@ -478,3 +524,75 @@ class PlayerHUD(Menu):
     def update_current_wave(self, value: int):
         '''Update self.current_wave to provided value'''
         self.current_wave.setText(f"Current Wave: {value}")
+
+#TODO: create new "table" class, use it instead of having to place stuff manually
+class Leaderboard(Menu):
+    def __init__(self, back_command, update_scores_command):
+        name = "leaderboard"
+        parent = base.aspect2d
+        super().__init__(name, parent)
+
+        self.update_scores_command = update_scores_command
+
+        title = DirectLabel(
+                            text = "Leaderboard",
+                            pos = (0, 0, 0.7),
+                            scale = 0.1,
+                            frameTexture = shared.assets.sprite['frame'],
+                            frameSize = (-4.5, 4.5, -1, 1),
+                            parent = self.frame,
+                            )
+
+        labels_frame = DirectLabel(
+                            pos = (0, 0, 0.1),
+                            scale = 0.1,
+                            frameTexture = shared.assets.sprite['frame'],
+                            frameSize = (-7, 7, -4.5, 4.5),
+                            parent = self.frame,
+                            )
+
+        self.scores = []
+
+        y = 3.4
+        #coz we have 10 leaderboard items
+        for num in range(0, 10):
+            score_label = OnscreenText(
+                            text = "",
+                            pos = (0, y),
+                            scale = 0.7,
+                            parent = labels_frame,
+                            )
+
+            self.scores.append(score_label)
+            #decrease height of message with each new item, to add it under prev
+            y -= 0.8
+
+        self.back_button = DirectButton(
+                            text = "Back",
+                            #TODO: maybe make ui switcher save last shown screen?
+                            command = back_command,
+                            pos = (0, 0, -0.7),
+                            scale = 0.1,
+                            frameTexture = self.button_textures,
+                            frameSize = (-3, 3, -0.5, 1),
+                            clickSound = self.select_sfx,
+                            rolloverSound = self.hover_sfx,
+                            parent = self.frame,
+                            )
+
+    def update_visible_scores(self):
+        """Update score labels"""
+        leaderboards = self.update_scores_command()
+        if not leaderboards:
+            return
+
+        #this will break if length of lb is bigger than local score table
+        for num, value in enumerate(leaderboards):
+            #I could prolly write it in one line instead #TODO
+            label = self.scores[num]
+            score = value['score']
+            player = value['player_class']
+            pos = num+1
+            text = f"{pos}. Score: {score} Class: {player}"
+            label.setText(text)
+
