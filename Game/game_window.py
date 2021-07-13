@@ -115,9 +115,6 @@ class GameWindow(ShowBase):
         def options():
             shared.ui.switch("options")
 
-        def show_menu():
-            shared.ui.switch("main")
-
         main_menu = interface.MainMenu(
                                 play_command = set_map,
                                 show_leaderboard_command = show_lb,
@@ -126,12 +123,12 @@ class GameWindow(ShowBase):
                                 )
 
         options_menu = interface.OptionsMenu(
-                                back_command = show_menu,
+                                back_command = shared.ui.show_previous,
                                 )
 
         map_settings = interface.MapSettings(
                                 play_command = self.start_game,
-                                back_command = show_menu,
+                                back_command = shared.ui.show_previous,
                                 )
 
         shared.ui.add(main_menu, "main")
