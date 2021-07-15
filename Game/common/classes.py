@@ -35,6 +35,12 @@ class InterfaceStorage:
         #like, idk - introduce state checkpoints or something? #TODO
         self.previous = []
 
+        #storage meant to address issue with "previous" storage allowing to only
+        #switch back and forth between two combinations of items. With this, it
+        #should be possible to dump whole self.currently_active as named blueprint,
+        #to retrieve and reuse in future
+        self.blueprints = {}
+
     def add(self, item, name:str):
         """Add interface into self.storage"""
         self.storage[name] = item
@@ -47,13 +53,20 @@ class InterfaceStorage:
             log.debug(f"{name} doesnt exist in storage!")
             return False
 
-    def show(self, name:str):
-        """Show item with provided name, if it exists in self.storage"""
+    #this should NEVER have switch'es default set to True, coz its used in
+    #self.switch() and this will cause endless recursion
+    def show(self, name:str, switch:bool = False):
+        """Show item with provided name, if it exists in self.storage.
+        If switch - then also hide currently shown items.
+        """
+        if switch:
+            self.switch(name)
+
         if self.check(name):
             self.currently_active[name] = self.storage[name]
             self.storage[name].show()
 
-            log.info(f"Showing {name} ui")
+            log.debug(f"Showing {name} ui")
 
     def hide(self, name:str):
         """Hide item with provided name, if it exists in self.storage"""
@@ -62,42 +75,77 @@ class InterfaceStorage:
                 self.currently_active.pop(name)
             self.storage[name].hide()
 
-            log.info(f"Hid {name} ui")
+            log.debug(f"Hid {name} ui")
 
-    def switch(self, name:str):
-        """Hide active menus and show item with provided name instead"""
-        #TODO: maybe add ability to pass multiple items?
-
-        #this is kind of nasty thing. But if used correctly, it should allow to
-        #easily switch active interfaces from one to another, in case only one
-        #can exist at given time
-        if self.previous:
-            self.previous = []
-
-        if self.currently_active:
+    def save_blueprint(self, name:str, items:list = []):
+        """Save self.currently_active or items into named blueprints storage"""
+        if not items:
+            names = []
             for item in self.currently_active:
-                #adding just names to use with self.show()
-                self.previous.append(item)
-                self.storage[item].hide()
-            self.currently_active = {}
+                names.append(item)
+        else:
+            #this may backfire since there is no check to ensure items exist
+            names = items
+
+        self.blueprints[name] = names
+        log.debug(f"Saved {names} into blueprint storage as {name}")
+
+    def show_multiple(self, items:list, switch:bool = False):
+        """Show multiple items at once.
+        If switch - then also hide currently shown items
+        """
+        #this will be used to skip first item in list, if its passed to switch
+        list_start = 0
+        if switch:
+            self.switch(items[0])
+            list_start = 1
+
+        #this will be skipped if previous has but one elem in list, I think
+        for item in items[list_start:]:
+            self.show(item)
+
+    def load_blueprint(self, name:str):
+        """Switch from currently active items to saved blueprint"""
+        if not name in self.blueprints:
+            log.error(f"{name} doesnt exist in blueprints storage!")
+            return
+
+        blueprint = self.blueprints[name]
+        self.show_multiple(blueprint)
+
+    #TODO: maybe rename "keep_current_as" to something else
+    def switch(self, name:str, keep_current_as:str = None):
+        """Hide active menus and show item with provided name instead"""
+        current_items = []
+
+        for item in self.currently_active:
+            #adding just names to use with self.show()
+            current_items.append(item)
+            self.storage[item].hide()
+        self.currently_active = {}
+
+        #save current items into named blueprint
+        if keep_current_as:
+            self.save_blueprint(keep_current_as, current_items)
+
+        self.previous = current_items
 
         self.show(name)
 
-    def show_previous(self):
+    def show_previous(self, exclude: list = [], keep_current_as:str = None):
         """Show menu state before last call of self.switch(), if available"""
-        #TODO: maybe add ability to exclude specific ui types from showcase,
-        #coz rn it shows popups and stuff, which may be unwanted
         if not self.previous:
             log.debug("There are no previous screens saved in memory!")
             return
 
-        #copying current list state, coz switch() will overwrite it
+        if keep_current_as:
+            self.save_blueprint(keep_current_as)
+
         previous = self.previous.copy()
+        #if exclude list has been passed - removing matching items from previous
+        for item in exclude:
+            if item in previous:
+                previous.remove(item)
 
-        #this is far from perfect, but will do for now
-        #switching to first elem in self.previous, then manually showin others
-        self.switch(self.previous[0])
-
-        #this will be skipped if previous has but one elem in list, I think
-        for item in previous[1:]:
-            self.show(item)
+        #copying current list state, coz switch() will overwrite it
+        self.show_multiple(previous, switch = True)
