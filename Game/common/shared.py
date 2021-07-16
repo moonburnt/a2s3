@@ -86,6 +86,9 @@ settings = deepcopy(default_settings)
 music_player = None
 sfx_manager = None
 
+# Storage for class used to build consistent ui parts
+ui_builder = None
+
 # Storage for current level's instance, same as above
 level = None
 

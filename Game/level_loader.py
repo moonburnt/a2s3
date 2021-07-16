@@ -122,7 +122,6 @@ class LoadLevel:
                                         show_leaderboard_command = show_lb,
                                         restart_command = self.restart_level,
                                         exit_level_command = self.exit_level,
-                                        exit_game_command = base.exit_game,
                                         )
 
         shared.ui.add(self.player_hud, "player hud")

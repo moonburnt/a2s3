@@ -39,6 +39,21 @@ class GameWindow(ShowBase):
         log.debug("Loading assets")
         shared.assets.load_all()
 
+        log.debug("Initializing interface builder")
+        shared.ui_builder = interface.builder.InterfaceBuilder(
+                button_textures = (
+                            shared.assets.sprite["button"],
+                            shared.assets.sprite["button_active"],
+                            shared.assets.sprite["button_selected"],
+                                ),
+                frame_texture = shared.assets.sprite["frame"],
+                wide_frame_texture = shared.assets.sprite["frame_wide"],
+                select_sfx = shared.assets.sfx["menu_select"],
+                hover_sfx = shared.assets.sfx["menu_hover"],
+                text_pos = (0, -0.25),
+                text_scale = 0.6,
+                )
+
         log.debug("Loading user data")
         shared.user_data.load_leaderboards()
 
@@ -100,9 +115,9 @@ class GameWindow(ShowBase):
             return shared.user_data.leaderboards
 
         leaderboard = interface.Leaderboard(
-                        back_command = shared.ui.show_previous,
-                        update_scores_command = update_scores,
-                        )
+                            back_command = shared.ui.show_previous,
+                            update_scores_command = update_scores,
+                            )
 
         shared.ui.add(leaderboard, "leaderboard")
 
@@ -116,20 +131,22 @@ class GameWindow(ShowBase):
             shared.ui.switch("options")
 
         main_menu = interface.MainMenu(
-                                play_command = set_map,
-                                show_leaderboard_command = show_lb,
-                                options_command = options,
-                                exit_command = self.exit_game,
-                                )
+                            play_command = set_map,
+                            show_leaderboard_command = show_lb,
+                            options_command = options,
+                            exit_command = self.exit_game,
+                            game_logo = shared.assets.sprite['logo'],
+                            )
 
         options_menu = interface.OptionsMenu(
-                                back_command = shared.ui.show_previous,
-                                )
+                            back_command = shared.ui.show_previous,
+                            )
 
         map_settings = interface.MapSettings(
-                                play_command = self.start_game,
-                                back_command = shared.ui.show_previous,
-                                )
+                            play_command = self.start_game,
+                            back_command = shared.ui.show_previous,
+                            player_classes = list(shared.assets.classes.keys()),
+                            )
 
         shared.ui.add(main_menu, "main")
         shared.ui.add(options_menu, "options")

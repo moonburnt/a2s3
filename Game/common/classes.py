@@ -61,6 +61,7 @@ class InterfaceStorage:
         """
         if switch:
             self.switch(name)
+            return
 
         if self.check(name):
             self.currently_active[name] = self.storage[name]
