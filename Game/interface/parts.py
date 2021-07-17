@@ -19,7 +19,7 @@
 import logging
 from panda3d.core import NodePath
 from direct.gui.OnscreenText import OnscreenText, TextNode
-from direct.gui.DirectGui import DirectButton, DirectLabel, DirectSlider
+from direct.gui.DirectGui import DirectButton, DirectLabel, DirectSlider, DGG
 #from direct.gui.OnscreenImage import OnscreenImage
 
 from Game import shared
@@ -135,9 +135,10 @@ class DialogButtons:
                             pos = back_pos,
                             text_pos = text_pos,
                             text_scale = text_scale,
-                            scale = button_scale,
+                            image_scale = button_scale,
                             frameTexture = button_texture,
                             frameSize = button_size,
+                            relief = DGG.FLAT,
                             clickSound = click_sound,
                             rolloverSound = rollover_sound,
                             parent = self.frame,
@@ -149,9 +150,10 @@ class DialogButtons:
                             pos = forward_pos,
                             text_pos = text_pos,
                             text_scale = text_scale,
-                            scale = button_scale,
+                            image_scale = button_scale,
                             frameTexture = button_texture,
                             frameSize = button_size,
+                            relief = DGG.FLAT,
                             clickSound = click_sound,
                             rolloverSound = rollover_sound,
                             parent = self.frame,

@@ -17,7 +17,8 @@
 # stuff to create ui parts with consistent style across application
 
 from direct.gui.DirectGui import (DirectButton, DirectLabel,
-                                  DirectSlider, DirectOptionMenu)
+                                  DirectSlider, DirectOptionMenu, DGG)
+from direct.gui.OnscreenText import TextNode
 from .parts import *
 from Game import shared
 import logging
@@ -54,14 +55,10 @@ class InterfaceBuilder:
             y = texture.getOrigFileYSize()
             return (x, 1, y)
 
-        #coz this should reflect size differences from texture size
-        #this will break if we cant x/y without trail
         def get_texture_scale(texture):
             x = texture.getOrigFileXSize()
             y = texture.getOrigFileYSize()
-            scale_x = x / y
-            scale_y = 1
-            return (-scale_x, scale_x, -scale_y, scale_y)
+            return (-x, x, -y, y)
 
         self.button_size = (button_size or
                             get_texture_size(self.button_textures[0]))
@@ -95,7 +92,9 @@ class InterfaceBuilder:
                             pos = pos,
                             text_scale = self.text_scale,
                             text_pos = self.text_pos,
-                            scale = self.button_size,
+                            text_align = TextNode.ACenter,
+                            relief = DGG.FLAT,
+                            image_scale = self.button_size,
                             frameTexture = self.button_textures,
                             frameSize = self.button_scale,
                             clickSound = self.select_sfx,
@@ -122,9 +121,11 @@ class InterfaceBuilder:
                             pos = pos,
                             frameTexture = self.frame_texture,
                             frameSize = frame_scale,
+                            relief = DGG.FLAT,
                             text_scale = self.text_scale,
                             text_pos = text_pos,
-                            scale = self.frame_size,
+                            text_align = TextNode.ACenter,
+                            image_scale = self.frame_size,
                             parent = parent,
                             )
 
@@ -147,9 +148,11 @@ class InterfaceBuilder:
                             pos = pos,
                             frameTexture = self.wide_frame_texture,
                             frameSize = frame_scale,
+                            relief = DGG.FLAT,
                             text_scale = self.text_scale,
                             text_pos = text_pos,
-                            scale = self.wide_frame_size,
+                            text_align = TextNode.ACenter,
+                            image_scale = self.wide_frame_size,
                             parent = parent,
                             )
 
@@ -165,6 +168,7 @@ class InterfaceBuilder:
                             scale = (256, 1, 128),
                             value = value,
                             parent = parent,
+                            relief = DGG.FLAT,
                             )
 
         return slider
@@ -206,14 +210,34 @@ class InterfaceBuilder:
                             text_pos = self.text_pos,
                             text_scale = self.text_scale,
                             text_align = TextNode.ACenter,
-                            popupMarker_scale = 0.01,
-                            scale = self.button_size,
+                            item_text_scale = self.text_scale,
+                            item_text_align = TextNode.ACenter,
+                            item_text_pos = self.text_pos,
+                            item_frameTexture = self.button_textures,
+                            #this doesnt seem to do anyting - its always default
+                            item_frameSize = self.button_scale,
+                            item_image_scale = self.button_size,
+                            #this doesnt seem to do anything - transparency still
+                            #doesnt work
+                            item_relief = DGG.FLAT,
+                            item_rolloverSound = self.hover_sfx,
+                            item_clickSound = self.select_sfx,
+                            highlightColor = (1, 1, 1, 1),
+                            popupMarker_scale = 10,
                             frameTexture = self.button_textures,
                             frameSize = self.button_scale,
+                            #this doesnt seem to do anything
+                            image_scale = self.button_size,
+                            #same
+                            relief = DGG.FLAT,
+                            popupMarker_relief = None,
                             popupMarker_image = None,
                             clickSound = self.select_sfx,
                             rolloverSound = self.hover_sfx,
                             parent = parent,
                             )
+
+        #this doesnt seem to do anything either
+        option_menu.set_transparency(True)
 
         return option_menu

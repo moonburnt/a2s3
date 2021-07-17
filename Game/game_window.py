@@ -50,8 +50,8 @@ class GameWindow(ShowBase):
                 wide_frame_texture = shared.assets.sprite["frame_wide"],
                 select_sfx = shared.assets.sfx["menu_select"],
                 hover_sfx = shared.assets.sfx["menu_hover"],
-                text_pos = (0, -0.25),
-                text_scale = 0.6,
+                text_pos = (0, -8),
+                text_scale = 30,
                 )
 
         log.debug("Loading user data")
@@ -135,7 +135,7 @@ class GameWindow(ShowBase):
                             show_leaderboard_command = show_lb,
                             options_command = options,
                             exit_command = self.exit_game,
-                            game_logo = shared.assets.sprite['logo'],
+                            logo_img = shared.assets.sprite['logo'],
                             )
 
         options_menu = interface.OptionsMenu(

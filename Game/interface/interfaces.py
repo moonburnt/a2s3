@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 class MainMenu(Menu):
     """Game's main menu, appearing right after launch"""
     def __init__(self, play_command, show_leaderboard_command, options_command,
-                                                        exit_command, game_logo):
+                                                        exit_command, logo_img):
         super().__init__("main menu", base.pixel2d)
 
         #reparenting this thing to pixel2d make buttons scale pixel-perfectly.
@@ -38,9 +38,12 @@ class MainMenu(Menu):
         #not from center, but from top left corner of window
         #TODO: add ability to auto-adjust position, coz rn its based on 1280x720
         #this will be critical when I will implement resolution slider
-        self.game_logo = OnscreenImage(
-                                        image = game_logo,
-                                        scale = (122, 1, 53),
+        logo_size = (logo_img.getOrigFileXSize(), 1, logo_img.getOrigFileYSize())
+        #right now this has some weird blurrines. Thus far I was unable to find
+        #the culprit #TODO
+        game_logo = OnscreenImage(
+                                        image = logo_img,
+                                        scale = logo_size,
                                         pos = (150, 1, -100),
                                         parent = self.frame,
                                         )
@@ -239,7 +242,7 @@ class DeathScreen(Menu):
                                         pos = (640, 1, -300),
                                         parent = self.frame,
                                         scale = 2,
-                                        text_pos = (0, 0.15),
+                                        text_pos = (0, 20),
                                         )
 
         restart_button = shared.ui_builder.make_button(
@@ -429,19 +432,19 @@ class Leaderboard(Menu):
 
         self.scores = []
 
-        y = 2.2
+        y = 150
         #coz we have 10 leaderboard items
         for num in range(0, 10):
             score_label = OnscreenText(
                             text = "",
                             pos = (0, y),
-                            scale = 0.4,
+                            scale = 30,
                             parent = labels_frame,
                             )
 
             self.scores.append(score_label)
             #decrease height of message with each new item, to add it under prev
-            y -= 0.5
+            y -= 35
 
         back_button = shared.ui_builder.make_button(
                                         text = "Back",
