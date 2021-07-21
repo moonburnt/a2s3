@@ -14,30 +14,29 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-import logging
 from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode, NodePath
 import p3dss
+from collections import namedtuple
 from Game import shared
+import logging
 
 log = logging.getLogger(__name__)
 
+LOOK_RIGHT = 0
+LOOK_LEFT = 180
+
+VisualsNode = namedtuple(
+    'VisualsNode', ['instance', 'position', 'layer', 'scale', 'remove_on_death']
+    )
+
 class Entity2D:
     '''Main class, dedicated to creation of collideable 2D objects.'''
-
     def __init__(self, name: str, category: str,
-                 spritesheet = None, animations = None, visuals_node:bool = False,
                  hitbox_size: int = None, collision_mask = None,
-                 #sprite_size: tuple = None, scale: int = None, position = None):
-                 sprite_size: tuple = None, scale: int = None):
+                 scale: int = None, animated_parts:list = None,
+                 static_parts:list = None):
         self.name = name
         log.debug(f"Initializing {self.name} object")
-
-        self.category = category
-
-        if not sprite_size:
-            sprite_size = shared.game_data.sprite_size
-
-        log.debug(f"{self.name}'s size has been set to {sprite_size}")
 
         self.category = category
 
@@ -49,52 +48,20 @@ class Entity2D:
         #for now, self.node will be empty nodepath - we will reparent it to render
         #on spawn, to dont overflood it with reference entity instances
         self.node = NodePath(entity_node)
-        #self.node = render.attach_new_node(entity_node)
 
-        if spritesheet and animations:
-            #so, what is it and why is it a thing:
-            #basically, we are making YET ANOTHER node to hold all visuals.
-            #why so? Coz it will be easier this way to rotate all of these together.
-            #But we dont need it for projectiles, since these dont have anything
-            #attached to them... at least right now. Thus its an option, not
-            #something enabled out of box
-            if visuals_node:
-                vn = PandaNode(f"{name}_visuals")
-                #hopefully Im doing this correctly
-                visuals = self.node.attach_new_node(vn)
-            else:
-                visuals = self.node
+        #separate visuals node, to which parts from below will be attached
+        vn = PandaNode(f"{name}_visuals")
+        self.visuals = self.node.attach_new_node(vn)
 
-            self.animation = p3dss.SpritesheetObject(name = f"{name}_body",
-                                                     spritesheet = spritesheet,
-                                                     sprites = animations,
-                                                     sprite_size = sprite_size,
-                                                     parent = visuals)
-                                                     #parent = self.node)
+        #this allows for rotating node around its h without making it invisible
+        self.visuals.set_two_sided(True)
 
-            #self.node = self.animation.node
-            self.visuals = visuals
-            #legacy proxy function that turned to be kind of nicer way to
-            #update anims, than calling for switch manually
-            self.change_animation = self.animation.switch
-
-        else:
-            #if we didnt get valid sprite data - create placeholder invisible
-            #node to attach hitbox and other stuff to
-            # placeholder_node = PandaNode(name)
-            # self.node = render.attach_new_node(placeholder_node)
-
-            self.visuals = None
-            #dummy placeholder to avoid breakage in case some object tried to
-            #load invalid spritesheet and then toggle its anims
-            def placeholder_anim_changer(action):
-                pass
-
-            self.change_animation = placeholder_anim_changer
-
-        #if no position has been received - wont set it up
-        #if position:
-        #    self.node.set_pos(*position)
+        #storage for entity parts (visuals) that will be attached to entity node.
+        #static parts is used for stuff that is SpritesheetObject and doesnt have
+        #switcher in it. Animated_parts reffers to thing that need to be changed
+        #in case some related even occurs
+        self.static_parts = static_parts or []
+        self.animated_parts = animated_parts or []
 
         #setting character's collisions
         entity_collider = CollisionNode(self.category)
@@ -106,18 +73,36 @@ class Entity2D:
 
         #TODO: move this to be under character's legs
         #right now its centered on character's center
-        if hitbox_size:
-            self.hitbox_size = hitbox_size
-        else:
-            #coz its sphere and not oval - it doesnt matter if we use x or y
-            #but, for sake of convenience - we are going for size_y
-            self.hitbox_size = (sprite_size[1]/2)
+        self.hitbox_size = hitbox_size or shared.game_data.hitbox_size
 
         entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
         self.collision = self.node.attach_new_node(entity_collider)
 
+        self.direction = None
+
+        #initializing visual parts added with self.add_part()
+        if self.static_parts or self.animated_parts:
+            for sp in self.static_parts:
+                sp.instance.wrt_reparent_to(self.visuals)
+                if sp.position:
+                    sp.instance.set_pos(sp.position)
+                if sp.scale:
+                    sp.instance.set_scale(sp.scale)
+
+            for ap in self.animated_parts:
+                ap.instance.node.wrt_reparent_to(self.visuals)
+                if ap.position:
+                    ap.instance.node.set_pos(ap.position)
+                if ap.scale:
+                    ap.instance.node.set_scale(ap.scale)
+
+        #this will rescale whole node with all parts attached to it
+        #in case some part as already been rescaled above - it will be rescaled
+        #again, which may cause issues
         if scale:
             self.node.set_scale(scale)
+
+        self.change_direction("right")
 
         #death status, that may be usefull during cleanup
         self.dead = False
@@ -127,12 +112,54 @@ class Entity2D:
         self.node.set_python_tag("name", self.name)
         self.node.set_python_tag("category", self.category)
 
-        #I thought to put ctrav there, but for whatever reason it glitched projectile
+        #I thought to put ctrav there, but for whatever reason it glitched proj
         #to fly into left wall. So I moved it to Creature subclass
 
         #debug function to show collisions all time
         if shared.settings.show_collisions:
            self.collision.show()
+
+    def add_part(self, instance, position: tuple = (0, 0, 0), layer: float = 0.0,
+                       scale:int = 0, remove_on_death:bool = True):
+        """Attach provided visual part to node"""
+        data = VisualsNode(instance, position, layer, scale, remove_on_death)
+
+        if isinstance(instance, p3dss.SpritesheetObject):
+            self.animated_parts.append(data)
+        else:
+            self.static_parts.append(data)
+
+    def change_animation(self, action):
+        """Change animation of self.animated_parts items"""
+        for item in self.animated_parts:
+            item.instance.switch(action)
+        #log.debug(f"Changed animation of {self.name} to {action}")
+
+    def change_direction(self, direction:str):
+        """Change direction of sprite (left/right)"""
+        if direction == self.direction:
+            return
+
+        if direction == "right":
+            #this is done to rotate all visuals. For the most, its enough
+            self.visuals.set_h(LOOK_RIGHT)
+            #however, our parts may overlap eachother on rotation in non-desired
+            #way. To fix that, we also change their height levels (which are on
+            #y, for panda-only-knows reasons)
+            for item in self.animated_parts:
+                item.instance.node.set_y(-item.layer)
+            for item in self.static_parts:
+                item.instance.node.set_y(-item.layer)
+        else:
+            self.visuals.set_h(LOOK_LEFT)
+
+            for item in self.animated_parts:
+                item.instance.node.set_y(item.layer)
+            for item in self.static_parts:
+                item.instance.set_y(item.layer)
+
+        self.direction = direction
+        log.debug(f"{self.name} is now facing {self.direction}")
 
     def spawn(self, position):
         """"Attach node to scene graph and spawn entity at specified position"""
@@ -144,11 +171,18 @@ class Entity2D:
         self.node.wrt_reparent_to(render)
         self.node.set_pos(*position)
         log.debug(f"{self.name} has been spawned at {position}")
-        #render.attach_new_node(self.node)
 
     def die(self):
         """Function that should be triggered when entity is about to die"""
         self.collision.remove_node()
         self.dead = True
-        log.debug(f"{self.name} is now dead")
+        self.change_animation("dying")
 
+        for ap in self.animated_parts:
+            if ap.remove_on_death:
+                ap.instance.node.remove_node()
+
+        for sp in self.static_parts:
+            if sp.remove_on_death:
+                sp.instance.remove_node()
+        log.debug(f"{self.name} is now dead")

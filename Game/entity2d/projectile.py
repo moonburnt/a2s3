@@ -14,8 +14,10 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-import logging
+from panda3d.core import NodePath
+import p3dss
 from Game import entity2d, shared
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -47,11 +49,13 @@ class Projectile(entity2d.Entity2D):
         #its probably possible to do this in less ugly way, but whatever
         assets = data.get('Assets', None)
         if assets:
-            spritesheet = data['Assets'].get('sprite', None)
+            sheet = data['Assets'].get('sprite', None)
             animations = data.get('Animations', None)
         else:
-            spritesheet = None
+            sheet = None
             animations = None
+
+        spritesheet = shared.assets.sprite.get(sheet, None)
 
         #doing it like that, coz default value from projectile's config can be
         #overriden on init. Say, by skill's values
@@ -65,14 +69,25 @@ class Projectile(entity2d.Entity2D):
 
         self.direction = 0
 
+        parts = []
+        if spritesheet and animations:
+            body = p3dss.SpritesheetObject(
+                name = f"{name}_body",
+                spritesheet = spritesheet,
+                sprites = animations,
+                sprite_size = shared.game_data.sprite_size,
+                parent = NodePath(),
+            )
+            parts.append(
+                entity2d.VisualsNode(body, (0, 0, 0), 0.0, 0, False)
+                )
+
         super().__init__(name = name,
                          category = category,
-                         spritesheet = shared.assets.sprite.get(spritesheet, None),
-                         animations = animations,
-                         visuals_node = False,
                          hitbox_size = projectile_hitbox,
                          collision_mask = collision_mask,
                          scale = projectile_scale,
+                         animated_parts = parts,
                          )
 
         #optionally enabling billboard effect for projectile, in case it has such

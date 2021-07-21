@@ -17,7 +17,7 @@
 import logging
 from direct.interval.LerpInterval import LerpColorScaleInterval
 from direct.interval.IntervalGlobal import Sequence, Func, Wait
-from panda3d.core import Vec3
+from panda3d.core import Vec3, NodePath
 import p3dss
 from random import randint
 from Game import entity2d, skill, shared
@@ -28,9 +28,6 @@ log = logging.getLogger(__name__)
 #it will return too much warnings, related to missing head's animations
 p3dss_logger = logging.getLogger('p3dss')
 p3dss_logger.setLevel(logging.ERROR)
-
-LOOK_RIGHT = 0
-LOOK_LEFT = 180
 
 MINIMUM_ALLOWED_DAMAGE = 1
 DODGE_CHANCE_RANGE = (0, 100)
@@ -63,18 +60,18 @@ class Creature(entity2d.Entity2D):
                 body_data = shared.assets.bodies[body]
                 #not checking if "main" exists, coz it should be already filtered
                 #out by assets loader
-                spritesheet_name = body_data['Main'].get('spritesheet', None)
-                if spritesheet_name and (spritesheet_name in shared.assets.sprite):
-                    spritesheet = shared.assets.sprite[spritesheet_name]
+                bspritesheet_name = body_data['Main'].get('spritesheet', None)
+                if bspritesheet_name and (bspritesheet_name in shared.assets.sprite):
+                    bspritesheet = shared.assets.sprite[bspritesheet_name]
                     #idk if this will break at some point
                     sprite_size = body_data['Main'].get('size', None)
                     animations = body_data.get('Animations', None)
                 else:
-                    spritesheet = None,
+                    bspritesheet = None,
                     animations = None,
                     sprite_size = None
             else:
-                spritesheet = None,
+                bspritesheet = None,
                 animations = None,
                 sprite_size = None
 
@@ -83,47 +80,32 @@ class Creature(entity2d.Entity2D):
             else:
                 death_sound = None
         else:
-            spritesheet = None,
+            bspritesheet = None,
             animations = None,
             sprite_size = None,
             death_sound = None
 
-        #Initializing all the stuff from parent class'es init to be done
-        super().__init__(name = name,
-                         category = category,
-                         spritesheet = spritesheet,
-                         animations = animations,
-                         visuals_node = True,
-                         hitbox_size = hitbox_size,
-                         collision_mask = collision_mask,
-                         sprite_size = sprite_size,
-                         scale = scale,
-                         )
+        parts = []
 
-        #magic that allows for rotating node around its h without making it look
-        #invisible. Idk why its not enabled by default - guess its to save some
-        #resources, thus Im doing it there and not during base entity2d init
-        self.node.set_two_sided(True)
-
-        if death_sound and (death_sound in shared.assets.sfx):
-            self.death_sound = shared.assets.sfx[death_sound]
-        else:
-            log.warning(f"{name} has no custom death sound, using fallback")
-            self.death_sound = shared.assets.sfx['default_death']
+        if bspritesheet and animations:
+            body = p3dss.SpritesheetObject(
+                name = f"{name}_body",
+                spritesheet = bspritesheet,
+                sprites = animations,
+                sprite_size = sprite_size or shared.game_data.sprite_size,
+                parent = NodePath(),
+            )
+            parts.append(
+                entity2d.VisualsNode(body, (0, 0, 0), 0.0, 0, False)
+                )
 
         #placeholder code that implements support for attachable heads
         #not really efficient, I should probably do it somewhere else
-        #if head_data
-        #if head and head.get('spritesheet', None) and head.get('head', None):
+        #its func coz vars overlapped with other init stuff
         if (head_data and
             head_data['Main'].get('spritesheet', None) and
             (head_data['Main']['spritesheet'] in shared.assets.sprite) and
             head_data.get('Animations')):
-            if not head_data.get('size', None):
-                size = shared.game_data.sprite_size
-            else:
-                size = head_data['size']
-
             #if no head has been set to start with, or head doesnt exist - setting
             #up the very first one to be shown instead
             starting_head = default_head or head_data['Main'].get('default_head', None)
@@ -140,62 +122,43 @@ class Creature(entity2d.Entity2D):
             else:
                 default_sprite = sprites[default_action]['sprites'][0]
 
-            spritesheet_name = head_data['Main']['spritesheet']
-            spritesheet = shared.assets.sprite[spritesheet_name]
+            hspritesheet_name = head_data['Main']['spritesheet']
+            hspritesheet = shared.assets.sprite[hspritesheet_name]
 
-            self.head = p3dss.SpritesheetObject(
+            head = p3dss.SpritesheetObject(
                                     name = f"{name}_head",
-                                    #spritesheet = head_data['Main']['spritesheet'],
-                                    spritesheet = spritesheet,
-                                    #sprites = head['head'],
+                                    spritesheet = hspritesheet,
                                     sprites = sprites,
                                     sprite_size = (head_data['Main'].get('size', None) or
                                                    shared.game_data.sprite_size),
                                     default_sprite = default_sprite,
-                                    parent = self.visuals,
+                                    parent = NodePath(),
                                     default_action = default_action,
                                     )
-            #it would make sense to add both pos and dic received from player
-            #into configuration toml, for default values (and to enable support
-            #of these for enemies, who dont have player-configurable hats) #TODO
 
-            #Depending on values, sprite may render slightly different. Been told
-            #that it happens because of lack of antialiasing #TODO
+            #Depending on values, sprite may render slightly different.
+            #Been told that it happens because of lack of antialiasing #TODO
             #self.head.node.set_pos(0.2, 0, 5)
-            position = head_data['Main'].get('position', None)
-            if position:
-               self.head.node.set_pos(*position)
-            #self.head.node.set_pos(0.2, 0, 4.4)
+            position = tuple(head_data['Main'].get('position', (0, 0, 0)))
+            parts.append(
+                entity2d.VisualsNode(head, position, HEAD_HEIGHT, 0, True)
+                )
 
-            #I need to fix rendering order of head, to appear above body.
-            #It could be done like that, but sometimes it glitch out
-            #head.node.reparent_to(self.visuals, sort = -1)
-            #It could also be sone like that, but then head always renders on top
-            #of the all bodies on screen
-            #head.node.set_bin("fixed", 0)
-            #head.node.set_depth_test(False)
-            #head.node.set_depth_write(False)
-            #Thus Im going for not-so-flexible solution that will involve altering
-            #head's pos on direction change.
-            #its set to -, coz default direction is "right"
-            self.head.node.set_y(-HEAD_HEIGHT)
+        #Initializing all the stuff from parent class'es init to be done
+        super().__init__(name = name,
+                         category = category,
+                         hitbox_size = hitbox_size,
+                         collision_mask = collision_mask,
+                         scale = scale,
+                         animated_parts = parts,
+                         )
 
-            #enabling support for animated head, in case we have more than one
-            #sprite in our hair style's config
-            if len(sprites) > 1:
-                #its done a bit funky, because I couldnt figure out how to make
-                #it work with super from here, lol
-                super_anim_changer = self.change_animation
-                def change_animation(*args):
-                    self.head.switch(*args)
-                    super_anim_changer(*args)
-
-                self.change_animation = change_animation
-
+        if death_sound and (death_sound in shared.assets.sfx):
+            self.death_sound = shared.assets.sfx[death_sound]
         else:
-            self.head = None
+            log.warning(f"{name} has no custom death sound, using fallback")
+            self.death_sound = shared.assets.sfx['default_death']
 
-        self.direction = 'right'
         self.change_animation('idle')
         #its .copy() coz otherwise we will link to dictionary itself, which will
         #cause any change to stats of one enemy to affect every other enemy
@@ -249,28 +212,9 @@ class Creature(entity2d.Entity2D):
         self.default_colorscheme = self.node.get_color_scale()
 
     def spawn(self, position):
+        """Spawn entity on provided position"""
         super().spawn(position)
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
-
-    def change_direction(self, direction):
-        '''Change direction, creature face, in case it didnt face this way already'''
-        #ensuring that object has visible parts to rotate
-        if not self.visuals:
-            return
-
-        if direction != self.direction:
-            if direction == "right":
-                #self.node.set_h(LOOK_RIGHT)
-                self.visuals.set_h(LOOK_RIGHT)
-                if self.head:
-                    self.head.node.set_y(-HEAD_HEIGHT)
-            else:
-                #self.node.set_h(LOOK_LEFT)
-                self.visuals.set_h(LOOK_LEFT)
-                if self.head:
-                    self.head.node.set_y(HEAD_HEIGHT)
-            self.direction = direction
-            log.debug(f"{self.name} is now facing {self.direction}")
 
     def status_effects_handler(self, event):
         '''Meant to run as taskmanager routine. Each frame, reduce lengh of active
@@ -356,11 +300,7 @@ class Creature(entity2d.Entity2D):
             self.die()
             return
 
-        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5)
-        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5, fade_in = True)
         self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5, fade_out = True)
-        #self.blink(rgba = (0.1, 0.1, 0.1, 1), length = 0.5,
-                            #fade_in = True, fade_out = True)
 
         #this is placeholder. May need to track target's name in future to play
         #different damage sounds
@@ -414,15 +354,6 @@ class Creature(entity2d.Entity2D):
 
     def die(self):
         super().die()
-        #Death of creature is a bit different than death of other entities,
-        #because we dont remove creature's node itself right away, but keep it
-        #to rot. And then, with some additional taskmanager task, clean things up
-        #self.change_animation(f'dying_{self.direction}')
-        self.change_animation(f'dying')
 
-        #for now we dont have anything special to do with heads on death, so we
-        #just remove them right away. #TODO: add something like head's death anim
-        if self.head:
-            self.head.node.remove_node()
-
-        self.death_sound.play()
+        if self.death_sound:
+            self.death_sound.play()

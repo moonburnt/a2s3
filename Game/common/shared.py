@@ -34,6 +34,7 @@ game_data.name = "A2S3"
 # (x, y) of sprites, to avoid specifying these manually except when necessary.
 # Also to enable autoadjusting of values for things that rely on these
 game_data.sprite_size = (32, 32)
+game_data.hitbox_size = game_data.sprite_size[0]/2
 # The height at which character's object will appear. This needs to be half of
 # character object's y, because character's placement counts from center of it.
 # Thus making it lower make legs appear under ground; higher - make char flow.

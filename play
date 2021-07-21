@@ -84,4 +84,8 @@ if args.window_y and (args.window_y > shared.settings.window_size[1]):
 
 play = game_window.GameWindow()
 log.info("Running the game")
-play.run()
+try:
+    play.run()
+except Exception as e:
+    log.critical(e)
+    exit(2)
