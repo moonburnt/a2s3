@@ -34,13 +34,13 @@ game_data.name = "A2S3"
 # (x, y) of sprites, to avoid specifying these manually except when necessary.
 # Also to enable autoadjusting of values for things that rely on these
 game_data.sprite_size = (32, 32)
-game_data.hitbox_size = game_data.sprite_size[0]/2
+game_data.hitbox_size = game_data.sprite_size[0] / 2
 # The height at which character's object will appear. This needs to be half of
 # character object's y, because character's placement counts from center of it.
 # Thus making it lower make legs appear under ground; higher - make char flow.
 # This may backfire at some point, but for now will do. Also this will probably
 # become obsolete, if we will ever get actual "solid" floor with gravity #TODO
-game_data.entity_layer = (game_data.sprite_size[1]/2)
+game_data.entity_layer = game_data.sprite_size[1] / 2
 # Floor layer is always zero. Because yes
 game_data.floor_layer = 0
 
@@ -58,7 +58,7 @@ game_data.map_size = (600, 300)
 
 # Default variables for things that can be altered by user
 default_settings = classes.Storage()
-default_settings.window_size = (1280, 720) #(x, y)
+default_settings.window_size = (1280, 720)  # (x, y)
 default_settings.fullscreen = False
 # These are floats between 0 and 1, e.g 75 equals to "75%"
 default_settings.music_volume = 0.75
@@ -67,10 +67,12 @@ default_settings.sfx_volume = 0.75
 # I may want to introduce separate storage for that, at some point #TODO
 # Key is the name of action, value is the name of key in panda syntax
 default_settings.controls = {
-            "move_up": "w", "move_down": "s",
-            "move_left": "a", "move_right": "d",
-            "attack": "mouse1",
-            }
+    "move_up": "w",
+    "move_down": "s",
+    "move_left": "a",
+    "move_right": "d",
+    "attack": "mouse1",
+}
 
 # Debug stuff, which probably wont have option in in-game menu, but will be
 # possible to toggle via launch argumenta

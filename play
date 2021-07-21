@@ -16,7 +16,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-#game launcher script
+# game launcher script
 
 import logging
 
@@ -28,33 +28,49 @@ import argparse
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 formatter = logging.Formatter(
-                    fmt='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
-                    datefmt='%H:%M:%S',
-                    )
+    fmt="[%(asctime)s][%(name)s][%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--debug", action = "store_true",
-    help="Debug option. Adds debug messages to log output")
-ap.add_argument("--show-collisions", action = "store_true",
-    help="Debug option. Enable showcase of objects' collisions")
-ap.add_argument("--music-vol", type = int,
-    help = "Override default music volume. Should be between 0 and 100",
-    )
-ap.add_argument("--sfx-vol", type = int,
-    help = "Override default music volume. Should be between 0 and 100",
-    )
-ap.add_argument("--show-fps", help="Enable fps meter", action = "store_true")
-ap.add_argument("--window-x", type = int,
-    help = ("Override window's X. Cant be less than "
-            f"{shared.settings.window_size[0]}"),
-            )
-ap.add_argument("--window-y", type = int,
-    help = ("Override window's Y. Cant be less than "
-            f"{shared.settings.window_size[1]}"),
-            )
+ap.add_argument(
+    "--debug",
+    action="store_true",
+    help="Debug option. Adds debug messages to log output",
+)
+ap.add_argument(
+    "--show-collisions",
+    action="store_true",
+    help="Debug option. Enable showcase of objects' collisions",
+)
+ap.add_argument(
+    "--music-vol",
+    type=int,
+    help="Override default music volume. Should be between 0 and 100",
+)
+ap.add_argument(
+    "--sfx-vol",
+    type=int,
+    help="Override default music volume. Should be between 0 and 100",
+)
+ap.add_argument("--show-fps", help="Enable fps meter", action="store_true")
+ap.add_argument(
+    "--window-x",
+    type=int,
+    help=(
+        "Override window's X. Cant be less than " f"{shared.settings.window_size[0]}"
+    ),
+)
+ap.add_argument(
+    "--window-y",
+    type=int,
+    help=(
+        "Override window's Y. Cant be less than " f"{shared.settings.window_size[1]}"
+    ),
+)
 args = ap.parse_args()
 
 if args.debug:

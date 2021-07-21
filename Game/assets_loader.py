@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-#module where I specify functions related to loading game assets into memory
+# module where I specify functions related to loading game assets into memory
 
 from os import listdir
 from os.path import isfile, isdir, basename, join, splitext
@@ -24,7 +24,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-GAME_DIR = '.'
+GAME_DIR = "."
 ASSETS_DIR = join(GAME_DIR, "Assets")
 SPRITE_DIR = join(ASSETS_DIR, "Sprites")
 MUSIC_DIR = join(ASSETS_DIR, "BGM")
@@ -37,11 +37,12 @@ PROJECTILES_DIR = join(ENTITY_DIR, "Projectiles")
 HEADS_DIR = join(ENTITY_DIR, "Heads")
 BODIES_DIR = join(ENTITY_DIR, "Bodies")
 
+
 class AssetsLoader:
     def __init__(self):
-        #this will load all the default assets into memory. With reworked loader,
-        #it should conceptually be possible to load custom stuff on top of these
-        #in future. E.g for modding and such purposes
+        # this will load all the default assets into memory. With reworked loader,
+        # it should conceptually be possible to load custom stuff on top of these
+        # in future. E.g for modding and such purposes
         self.music = {}
         self.sfx = {}
         self.sprite = {}
@@ -52,12 +53,17 @@ class AssetsLoader:
         self.heads = {}
         self.bodies = {}
 
-        #self.load_all()
+        # self.load_all()
 
-    def get_files(self, pathtodir: str, include_subdirs: bool = False,
-                        extension: str = None, case_insensitive: bool = True):
-        '''Fetches and returns list of files in provided directory. Optionally
-        may include subdirectories and seek for specific file extension'''
+    def get_files(
+        self,
+        pathtodir: str,
+        include_subdirs: bool = False,
+        extension: str = None,
+        case_insensitive: bool = True,
+    ):
+        """Fetches and returns list of files in provided directory. Optionally
+        may include subdirectories and seek for specific file extension"""
         files = []
 
         log.debug(f"Attempting to parse directory {pathtodir}")
@@ -69,14 +75,16 @@ class AssetsLoader:
             itempath = join(pathtodir, item)
             if isdir(itempath):
                 if include_subdirs:
-                    log.debug(f"{itempath} leads to directory, attempting "
-                           "to process its content")
+                    log.debug(
+                        f"{itempath} leads to directory, attempting "
+                        "to process its content"
+                    )
                     files += self.get_files(itempath, include_subdirs, extension)
             else:
-                #assuming that everything that isnt directory is file
+                # assuming that everything that isnt directory is file
                 log.debug(f"{itempath} leads to file")
                 if extension:
-                    #there is probably a prettier way to do that
+                    # there is probably a prettier way to do that
                     if case_insensitive:
                         file_ext = splitext(itempath)[-1].lower()
                         ext = extension.lower()
@@ -95,8 +103,8 @@ class AssetsLoader:
         return files
 
     def load_music(self, pathtodir: str, extension: str = ".ogg"):
-        '''Load and update currently known music from provided directory and its subdirs'''
-        files = self.get_files(pathtodir, extension = extension)
+        """Load and update currently known music from provided directory and its subdirs"""
+        files = self.get_files(pathtodir, extension=extension)
 
         data = {}
         for item in files:
@@ -108,8 +116,8 @@ class AssetsLoader:
         self.music = self.music | data
 
     def load_sfx(self, pathtodir: str, extension: str = ".ogg"):
-        '''Load and update currently known sfx from provided directory and its subdirs'''
-        files = self.get_files(pathtodir, extension = extension)
+        """Load and update currently known sfx from provided directory and its subdirs"""
+        files = self.get_files(pathtodir, extension=extension)
 
         data = {}
         for item in files:
@@ -121,8 +129,8 @@ class AssetsLoader:
         self.sfx = self.sfx | data
 
     def load_sprite(self, pathtodir: str, extension: str = ".png"):
-        '''Load and update currently known sprites from provided directory and its subdirs'''
-        files = self.get_files(pathtodir, extension = extension)
+        """Load and update currently known sprites from provided directory and its subdirs"""
+        files = self.get_files(pathtodir, extension=extension)
 
         data = {}
         for item in files:
@@ -137,17 +145,17 @@ class AssetsLoader:
         self.sprite = self.sprite | data
 
     def _load_toml(self, pathtodir: str, extension: str = ".toml"):
-        '''Load toml data from all .toml files in provided and return it as meta-dictionary'''
-        files = self.get_files(pathtodir, extension = extension)
+        """Load toml data from all .toml files in provided and return it as meta-dictionary"""
+        files = self.get_files(pathtodir, extension=extension)
         data = {}
         for item in files:
-            #name_of_file = basename(item)
-            #name_without_extension = splitext(name_of_file)[0]
+            # name_of_file = basename(item)
+            # name_without_extension = splitext(name_of_file)[0]
 
-            #data[name_without_extension] = tomload(item)
+            # data[name_without_extension] = tomload(item)
             try:
                 toml_content = tomload(item)
-                internal_name = toml_content['Main']['name']
+                internal_name = toml_content["Main"]["name"]
             except Exception as e:
                 log.warning(f"{item} has invalid format: {e}. Wont import")
                 continue
@@ -157,49 +165,49 @@ class AssetsLoader:
         return data
 
     def load_classes(self, pathtodir: str):
-        '''Load and update configuration files of player classes from provided
-        directory and its subdirs'''
+        """Load and update configuration files of player classes from provided
+        directory and its subdirs"""
         data = self._load_toml(pathtodir, ".player")
         log.debug("Updating player classes storage")
         self.classes = self.classes | data
 
     def load_enemies(self, pathtodir: str):
-        '''Load and update enemy configuration files from provided directory
-        and its subdirs'''
+        """Load and update enemy configuration files from provided directory
+        and its subdirs"""
         data = self._load_toml(pathtodir, ".enemy")
         log.debug("Updating enemies storage")
         self.enemies = self.enemies | data
 
     def load_skills(self, pathtodir: str):
-        '''Load and update skill configuration files from provided directory
-        and its subdirs'''
+        """Load and update skill configuration files from provided directory
+        and its subdirs"""
         data = self._load_toml(pathtodir, ".skill")
         log.debug("Updating skills storage")
         self.skills = self.skills | data
 
     def load_projectiles(self, pathtodir: str):
-        '''Load and update projectile configuration files from provided directory
-        and its subdirs'''
+        """Load and update projectile configuration files from provided directory
+        and its subdirs"""
         data = self._load_toml(pathtodir, ".projectile")
         log.debug("Updating projectiles storage")
         self.projectiles = self.projectiles | data
 
-    def load_heads(self, pathtodir:str):
-        '''Load and update head configuration files from provided directory
-        and its subdirs'''
+    def load_heads(self, pathtodir: str):
+        """Load and update head configuration files from provided directory
+        and its subdirs"""
         data = self._load_toml(pathtodir, ".head")
         log.debug("Updating heads storage")
         self.heads = self.heads | data
 
-    def load_bodies(self, pathtodir:str):
-        '''Load and update body configuration files from provided directory
-        and its subdirs'''
+    def load_bodies(self, pathtodir: str):
+        """Load and update body configuration files from provided directory
+        and its subdirs"""
         data = self._load_toml(pathtodir, ".body")
         log.debug("Updating bodies storage")
         self.bodies = self.bodies | data
 
     def load_all(self):
-        '''Load all assets from default paths'''
+        """Load all assets from default paths"""
         self.load_music(MUSIC_DIR)
         self.load_sfx(SFX_DIR)
         self.load_sprite(SPRITE_DIR)
@@ -211,7 +219,7 @@ class AssetsLoader:
         self.load_bodies(BODIES_DIR)
 
     def reset(self):
-        '''Reset assets dictionaries to empty state'''
+        """Reset assets dictionaries to empty state"""
         self.music = {}
         self.sfx = {}
         self.sprite = {}
@@ -223,6 +231,6 @@ class AssetsLoader:
         self.bodies = {}
 
     def reload(self):
-        '''Reset assets dictionaries to be empty, then load defaults'''
+        """Reset assets dictionaries to be empty, then load defaults"""
         self.reset()
         self.load_all()

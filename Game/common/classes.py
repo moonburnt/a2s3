@@ -20,32 +20,35 @@ from types import SimpleNamespace
 
 log = logging.getLogger(__name__)
 
+
 class Storage(SimpleNamespace):
     pass
+
 
 class InterfaceStorage:
     """Storage for interface items.
     Provides some handy functions to make switching between UIs easier
     """
+
     def __init__(self):
         self.storage = {}
         self.currently_active = {}
-        #this will make it possible to revert to previous switch state.
-        #for the time being, it only works once - I may do something about it l8r
-        #like, idk - introduce state checkpoints or something? #TODO
+        # this will make it possible to revert to previous switch state.
+        # for the time being, it only works once - I may do something about it l8r
+        # like, idk - introduce state checkpoints or something? #TODO
         self.previous = []
 
-        #storage meant to address issue with "previous" storage allowing to only
-        #switch back and forth between two combinations of items. With this, it
-        #should be possible to dump whole self.currently_active as named blueprint,
-        #to retrieve and reuse in future
+        # storage meant to address issue with "previous" storage allowing to only
+        # switch back and forth between two combinations of items. With this, it
+        # should be possible to dump whole self.currently_active as named blueprint,
+        # to retrieve and reuse in future
         self.blueprints = {}
 
-    def add(self, item, name:str):
+    def add(self, item, name: str):
         """Add interface into self.storage"""
         self.storage[name] = item
 
-    def check(self, name:str):
+    def check(self, name: str):
         """Check if interface exists in self.storage"""
         if name in self.storage:
             return True
@@ -53,9 +56,9 @@ class InterfaceStorage:
             log.debug(f"{name} doesnt exist in storage!")
             return False
 
-    #this should NEVER have switch'es default set to True, coz its used in
-    #self.switch() and this will cause endless recursion
-    def show(self, name:str, switch:bool = False):
+    # this should NEVER have switch'es default set to True, coz its used in
+    # self.switch() and this will cause endless recursion
+    def show(self, name: str, switch: bool = False):
         """Show item with provided name, if it exists in self.storage.
         If switch - then also hide currently shown items.
         """
@@ -69,7 +72,7 @@ class InterfaceStorage:
 
             log.debug(f"Showing {name} ui")
 
-    def hide(self, name:str):
+    def hide(self, name: str):
         """Hide item with provided name, if it exists in self.storage"""
         if self.check(name):
             if getattr(self.currently_active, name, None):
@@ -78,34 +81,34 @@ class InterfaceStorage:
 
             log.debug(f"Hid {name} ui")
 
-    def save_blueprint(self, name:str, items:list = []):
+    def save_blueprint(self, name: str, items: list = []):
         """Save self.currently_active or items into named blueprints storage"""
         if not items:
             names = []
             for item in self.currently_active:
                 names.append(item)
         else:
-            #this may backfire since there is no check to ensure items exist
+            # this may backfire since there is no check to ensure items exist
             names = items
 
         self.blueprints[name] = names
         log.debug(f"Saved {names} into blueprint storage as {name}")
 
-    def show_multiple(self, items:list, switch:bool = False):
+    def show_multiple(self, items: list, switch: bool = False):
         """Show multiple items at once.
         If switch - then also hide currently shown items
         """
-        #this will be used to skip first item in list, if its passed to switch
+        # this will be used to skip first item in list, if its passed to switch
         list_start = 0
         if switch:
             self.switch(items[0])
             list_start = 1
 
-        #this will be skipped if previous has but one elem in list, I think
+        # this will be skipped if previous has but one elem in list, I think
         for item in items[list_start:]:
             self.show(item)
 
-    def load_blueprint(self, name:str):
+    def load_blueprint(self, name: str):
         """Switch from currently active items to saved blueprint"""
         if not name in self.blueprints:
             log.error(f"{name} doesnt exist in blueprints storage!")
@@ -114,18 +117,18 @@ class InterfaceStorage:
         blueprint = self.blueprints[name]
         self.show_multiple(blueprint)
 
-    #TODO: maybe rename "keep_current_as" to something else
-    def switch(self, name:str, keep_current_as:str = None):
+    # TODO: maybe rename "keep_current_as" to something else
+    def switch(self, name: str, keep_current_as: str = None):
         """Hide active menus and show item with provided name instead"""
         current_items = []
 
         for item in self.currently_active:
-            #adding just names to use with self.show()
+            # adding just names to use with self.show()
             current_items.append(item)
             self.storage[item].hide()
         self.currently_active = {}
 
-        #save current items into named blueprint
+        # save current items into named blueprint
         if keep_current_as:
             self.save_blueprint(keep_current_as, current_items)
 
@@ -133,7 +136,7 @@ class InterfaceStorage:
 
         self.show(name)
 
-    def show_previous(self, exclude: list = [], keep_current_as:str = None):
+    def show_previous(self, exclude: list = [], keep_current_as: str = None):
         """Show menu state before last call of self.switch(), if available"""
         if not self.previous:
             log.debug("There are no previous screens saved in memory!")
@@ -143,10 +146,10 @@ class InterfaceStorage:
             self.save_blueprint(keep_current_as)
 
         previous = self.previous.copy()
-        #if exclude list has been passed - removing matching items from previous
+        # if exclude list has been passed - removing matching items from previous
         for item in exclude:
             if item in previous:
                 previous.remove(item)
 
-        #copying current list state, coz switch() will overwrite it
-        self.show_multiple(previous, switch = True)
+        # copying current list state, coz switch() will overwrite it
+        self.show_multiple(previous, switch=True)
