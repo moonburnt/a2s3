@@ -110,7 +110,7 @@ class Enemy(entity2d.Creature):
         # normalizing vector is the key to avoid "flickering" effect, as its
         # basically ignores whatever minor difference in placement there are
         # I dont know how it works, lol
-        vector_to_player.normalize()
+        vector_to_player = vector_to_player.normalized()
 
         # workaround to ensure enemy will stay on its layer, even if its different
         # from player due to size difference or whatever else reasons
@@ -118,6 +118,8 @@ class Enemy(entity2d.Creature):
         # new_pos = enemy_position + (vector_to_player*mov_speed)
         new_pos = enemy_position + (vxy * mov_speed, 0)
         pos_diff = enemy_position - new_pos
+
+        self.node.set_python_tag("mov_spd", mov_speed)
 
         action = "idle"
 

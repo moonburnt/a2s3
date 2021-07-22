@@ -610,8 +610,6 @@ class LoadLevel:
             log.warning(f"{col} seems to be dead, collision wont occur")
             return
 
-        # print(f"{col_obj} collides with wall")
-
         # first, lets get wall's parent, coz render/wall/wall is collision node,
         # and our tags are attached to render/wall, which is nodepath itself
         wall_obj = wall.get_parent()
@@ -621,14 +619,10 @@ class LoadLevel:
         col_pos = col_obj.get_pos()
 
         vector = col_pos - wall_pos
-        vector.normalize()
-
         vx, vy = vector.get_xy()
 
-        col_obj_stats = col_obj.get_python_tag("stats")
         # this will be ideal knockback if we collide with wall right on its center
-        knockback = col_obj_stats["mov_spd"]
-        # knockback = col_obj_spd
+        knockback = col_obj.get_python_tag("mov_spd")
 
         # workaround to fix the issue with entity running into a wall getting
         # pushed to wall's center. This way it wont hapen anymore... I think
@@ -650,10 +644,10 @@ class LoadLevel:
         else:
             pass
 
-        # this works for entities with any movement speed. However, there are two
-        # old issues, I was unable to fix:
-        # - If you will keep trying to run into the wall diagonally, your screen
-        # will shake.
+        vector = Vec3(vx, vy, 0).normalized()
+
+        # this works for entities with any movement speed. However, there is some
+        # old issue, I was unable to fix:
         # - Character will get pushed back as far as its running speed is. Meaning
         # creatures that move faster will get pushed closer to map's center. Its
         # not an issue for enemies (I think), but it may get annoying for player.
@@ -661,7 +655,7 @@ class LoadLevel:
         # For now, I have no idea how to solve both of these. Maybe at some point
         # I will re-implement collisionhandlerpusher for player, to deal with the
         # most annoying part of it #TODO
-        new_pos = col_pos - (vx * knockback, vy * knockback, 0)
+        new_pos = col_pos - vector * knockback
 
         col_obj.set_pos(new_pos)
 

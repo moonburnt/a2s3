@@ -183,6 +183,8 @@ class Creature(entity2d.Entity2D):
         self.node.set_python_tag("using_skill", False)
         self.node.set_python_tag("status_effects", self.status_effects)
 
+        self.node.set_python_tag("mov_speed", self.stats["mov_spd"])
+
         if skills:
             # I should probably rework this into list or idk
             entity_skills = {}

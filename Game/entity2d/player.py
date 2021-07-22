@@ -89,7 +89,7 @@ class Player(entity2d.Creature):
         # moreover - setting custom height later, AFTER normalization, caused
         # that long-standing bug with projectile spawning above player's head
         vector2d = hit_vector.get_xy()
-        vector2d.normalize()
+        vector2d = vector2d.normalized()
 
         # updating mouse vector
         self.mouse_vector = vector2d
@@ -179,6 +179,8 @@ class Player(entity2d.Creature):
         if shared.level.controls_status["move_right"]:
             self.node.set_pos(self.node.get_pos() + (-mov_speed, 0, 0))
             action = "move"
+
+        self.node.set_python_tag("mov_spd", mov_speed)
 
         # using it like that, because due to requirement to somehow pass caster to
         # skill, Im unable to set using_skill to be a normal variable

@@ -143,19 +143,24 @@ class AssetsLoader:
 
         return data
 
-    def get_spritesheet_descriptions(self, pathtodir: str, extension:str = ".ss") -> dict:
+    def get_spritesheet_descriptions(
+        self, pathtodir: str, extension: str = ".ss"
+    ) -> dict:
         """Get spritesheet descriptions from provided directory"""
         data = self.get_jsons(pathtodir, extension=extension)
         # filtering invalid descriptions.
         # Doing like that to avoid crash on dict size change
         keys = list(data.keys())
         for item in keys:
-            if (not "sprite_size" in data[item] or
+            if (
+                not "sprite_size" in data[item]
+                or
                 # assumed first wont trigger on existing but empty
                 # #TODO: maybe add type/length check?
-                not data[item]["sprite_size"] or
-                not "batch_cutting" in data[item] or
-                not "sprites" in data[item]):
+                not data[item]["sprite_size"]
+                or not "batch_cutting" in data[item]
+                or not "sprites" in data[item]
+            ):
                 data.pop(item)
 
         return data
@@ -192,13 +197,13 @@ class AssetsLoader:
 
             # for now, only batch cutting is supported. Precise sprite cutting
             # is something I will need to add in future #TODO
-            #textures[sheet].set_keep_ram_image(True)
+            # textures[sheet].set_keep_ram_image(True)
             if descriptions[sheet]["batch_cutting"]:
                 # avoiding possible issues with incorrect sized/formats
                 try:
                     sprites = processor.get_textures(
-                        spritesheet = textures[sheet],
-                        sprite_sizes = tuple(descriptions[sheet]["sprite_size"]),
+                        spritesheet=textures[sheet],
+                        sprite_sizes=tuple(descriptions[sheet]["sprite_size"]),
                     )
                 except Exception as e:
                     log.warning(f"Unable to cut {sheet}: {e}")
@@ -214,7 +219,7 @@ class AssetsLoader:
                     # maybe should do that after removal of original file?
                     textures = textures | sprite_data
 
-                    #textures[f"{sheet}_sprites"] = sprites
+                    # textures[f"{sheet}_sprites"] = sprites
                     textures[sheet] = sprites
             textures.pop(sheet)
 
