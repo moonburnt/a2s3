@@ -46,7 +46,11 @@ class MainMenu(Menu):
         # not from center, but from top left corner of window
         # TODO: add ability to auto-adjust position, coz rn its based on 1280x720
         # this will be critical when I will implement resolution slider
-        logo_size = (logo_img.getOrigFileXSize(), 1, logo_img.getOrigFileYSize())
+
+        # Ensuring it works for both virtual and real textures
+        logo_x = logo_img.getOrigFileXSize() or logo_img.getXSize()
+        logo_y = logo_img.getOrigFileYSize() or logo_img.getYSize()
+        logo_size = (logo_x, 1, logo_y)
         # right now this has some weird blurrines. Thus far I was unable to find
         # the culprit #TODO
         game_logo = OnscreenImage(

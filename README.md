@@ -1,5 +1,3 @@
-*This started as personal challenge to write something that may, even remotely, count as game. In one month*
-
 # a2s3
 
 ## Description:
@@ -14,12 +12,12 @@ where you fight hordes of enemies in order to get to the top of leaderboard.
 
 ## Contributing:
 
-Being python software, this project *tries* to follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
-for as much as possible. Meaning spaces over tabs, 80 symbols per line limit (except
-for when it hurts readability) and other funny stuff. Also, this project *tries* to
-follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
-specification for commit messages. If you will decide to contribute, please try to
-keep these two things in mind and do it accordingly.
+This project tries to follow [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+for as much as possible. Since #2424156, it uses [black](https://github.com/psf/black)
+for automatic code formatting. Also this project tries to follow
+[Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+specification for commit messages. If you will decide to contribute, please keep
+these things in mind and format related stuff accordingly.
 
 ## Dependencies:
 
@@ -48,7 +46,6 @@ features should be implemented (in no particular order):
 
 - Main menu, where you can change window resolution ~~and music/sfx volume~~,
   rebind keys and ~~select size of map to play on~~
-- Simple leaderboard menu where you can see your previous high scores
 - Placeholder birth and ~~death~~ animations
 - Save/load settings into custom Config.prc located in `$HOME/.config/a2s3/config.prc`
 - At least 2 types of enemy: ~~chaser~~ and turret/ranger

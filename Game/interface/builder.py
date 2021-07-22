@@ -63,13 +63,15 @@ class InterfaceBuilder:
         self.hover_sfx = hover_sfx
 
         def get_texture_size(texture):
-            x = texture.getOrigFileXSize()
-            y = texture.getOrigFileYSize()
+            # Safety check to ensure it works for both p3dss-generates sprites
+            # and images loaded from disk
+            x = texture.getOrigFileXSize() or texture.getXSize()
+            y = texture.getOrigFileYSize() or texture.getYSize()
             return (x, 1, y)
 
         def get_texture_scale(texture):
-            x = texture.getOrigFileXSize()
-            y = texture.getOrigFileYSize()
+            x = texture.getOrigFileXSize() or texture.getXSize()
+            y = texture.getOrigFileYSize() or texture.getYSize()
             return (-x, x, -y, y)
 
         self.button_size = button_size or get_texture_size(self.button_textures[0])

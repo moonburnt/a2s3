@@ -20,3 +20,5 @@ Source: https://opengameart.org/content/tragic-ambient-main-menu
 Author: brandon75689
 License: cc-by 3.0
 Used: BGM/death.ogg
+
+Everything else is made by myself (moonburnt) to be used specifically in a2s3

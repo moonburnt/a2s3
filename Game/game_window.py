@@ -43,12 +43,13 @@ class GameWindow(ShowBase):
         log.debug("Initializing interface builder")
         shared.ui_builder = interface.builder.InterfaceBuilder(
             button_textures=(
-                shared.assets.sprite["button"],
-                shared.assets.sprite["button_active"],
-                shared.assets.sprite["button_selected"],
+                shared.assets.ui["buttons_0"],
+                shared.assets.ui["buttons_1"],
+                shared.assets.ui["buttons_2"],
+                shared.assets.ui["buttons_3"],
             ),
-            frame_texture=shared.assets.sprite["frame"],
-            wide_frame_texture=shared.assets.sprite["frame_wide"],
+            frame_texture=shared.assets.ui["frame"],
+            wide_frame_texture=shared.assets.ui["frame_wide"],
             select_sfx=shared.assets.sfx["menu_select"],
             hover_sfx=shared.assets.sfx["menu_hover"],
             text_pos=(0, -8),
@@ -140,7 +141,7 @@ class GameWindow(ShowBase):
             show_leaderboard_command=show_lb,
             options_command=options,
             exit_command=self.exit_game,
-            logo_img=shared.assets.sprite["logo"],
+            logo_img=shared.assets.ui["logo"],
         )
 
         options_menu = interface.OptionsMenu(
