@@ -253,6 +253,7 @@ class LoadLevel:
             size=shared.game_data.map_size,
             scale=self.map_scale,
         )
+        self.map.generate()
 
         log.debug("Initializing player")
         # character's position should always render on shared.game_data.entity_layer
