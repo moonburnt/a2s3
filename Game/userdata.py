@@ -19,6 +19,8 @@
 from os import makedirs
 from os.path import join, isfile
 from sys import exit
+from panda3d.core import loadPrcFileData
+from . import assets_loader
 import json
 import logging
 
@@ -35,6 +37,8 @@ LEADERBOARDS = "leaderboards.json"
 
 
 class UserdataManager:
+    """Load up settings and savefiles"""
+
     def __init__(self, data_path: str = None, settings_path: str = None):
         # coz we may want to override these with launch arg
         self.settings_path = settings_path or SETTINGS_DIR
@@ -54,10 +58,120 @@ class UserdataManager:
                 log.critical(f"Unable to create {directory}: {e}")
                 exit(2)
 
-    # not implemented "ini/toml -> panda's internal format" converter yet, stub
-    # TODO
+    # #TODO: add support for custom config format and load it from disk
     def load_settings(self):
-        pass
+        """Load up engine's settings, to avoid depending on panda's defaults"""
+        # First, lets set stuff from Confauto.prc, which wont be changed anyway
+        loadPrcFileData(
+            "default_settings",
+            """
+        load-file-type egg pandaegg
+        load-file-type p3assimp
+        load-audio-type * p3ffmpeg
+        load-video-type * p3ffmpeg
+        egg-object-type-portal          <Scalar> portal { 1 }
+        egg-object-type-polylight       <Scalar> polylight { 1 }
+        egg-object-type-seq24           <Switch> { 1 } <Scalar> fps { 24 }
+        egg-object-type-seq12           <Switch> { 1 } <Scalar> fps { 12 }
+        egg-object-type-indexed         <Scalar> indexed { 1 }
+        egg-object-type-seq10           <Switch> { 1 } <Scalar> fps { 10 }
+        egg-object-type-seq8            <Switch> { 1 } <Scalar> fps { 8 }
+        egg-object-type-seq6            <Switch> { 1 } <Scalar>  fps { 6 }
+        egg-object-type-seq4            <Switch> { 1 } <Scalar>  fps { 4 }
+        egg-object-type-seq2            <Switch> { 1 } <Scalar>  fps { 2 }
+
+        egg-object-type-binary          <Scalar> alpha { binary }
+        egg-object-type-dual            <Scalar> alpha { dual }
+        egg-object-type-glass           <Scalar> alpha { blend_no_occlude }
+        egg-object-type-model           <Model> { 1 }
+        egg-object-type-dcs             <DCS> { 1 }
+        egg-object-type-notouch         <DCS> { no_touch }
+        egg-object-type-barrier         <Collide> { Polyset descend }
+        egg-object-type-sphere          <Collide> { Sphere descend }
+        egg-object-type-invsphere       <Collide> { InvSphere descend }
+        egg-object-type-tube            <Collide> { Tube descend }
+        egg-object-type-trigger         <Collide> { Polyset descend intangible }
+        egg-object-type-trigger-sphere  <Collide> { Sphere descend intangible }
+        egg-object-type-floor           <Collide> { Polyset descend level }
+        egg-object-type-dupefloor       <Collide> { Polyset keep descend level }
+        egg-object-type-bubble          <Collide> { Sphere keep descend }
+        egg-object-type-ghost           <Scalar> collide-mask { 0 }
+        egg-object-type-glow            <Scalar> blend { add }
+        load-file-type p3ptloader
+        egg-object-type-direct-widget   <Scalar> collide-mask { 0x80000000 } <Collide> { Polyset descend }
+        cull-bin gui-popup 60 unsorted
+        default-model-extension .egg
+
+        load-display pandagl
+        aux-display p3headlessgl
+        #load-display p3tinydisplay
+
+        framebuffer-hardware #t
+        framebuffer-software #f
+
+        depth-bits 1
+        color-bits 1 1 1
+        alpha-bits 0
+        stencil-bits 0
+        multisamples 0
+
+        model-path    $MAIN_DIR
+        model-path    $THIS_PRC_DIR/..
+        model-path    $THIS_PRC_DIR/../models
+
+        want-directtools  #f
+        want-tk           #f
+
+        want-pstats            #f
+
+        audio-library-name p3openal_audio
+
+        use-movietexture #t
+
+        hardware-animated-vertices #f
+
+        model-cache-dir $XDG_CACHE_HOME/panda3d
+        model-cache-textures #f
+
+        basic-shaders-only #f
+
+        # This makes window spawn on center of screen
+        win-origin -2 -2
+        """,
+        )
+
+        # Now lets load custom stuff that shouldnt be overriden
+        loadPrcFileData(
+            "hardcoded_settings",
+            (
+                # Notify levels of built-in messages. Defaults were "warning"
+                "notify-level error\n"
+                "default-directnotify-level error\n"
+                # Disables autorescaling of textures, sides of which arent power
+                # of 2. Which fixes the issue with ugly upscaled logo
+                "textures-power-2 none\n"
+                # Path to custom cursor. Must be .ico
+                # If path-based settings are incorrect - engine will use default
+                f"cursor-filename {join(assets_loader.UI_DIR, 'cursor.ico')}\n"
+                # Custom font to be used everywhere instead of default
+                f"text-default-font {join(assets_loader.FONTS_DIR, 'romulus.ttf')}\n"
+            ),
+        )
+
+        # And then we load things that we may want to overwrite in future #TODO
+        loadPrcFileData(
+            "customizable_settings",
+            """
+        # This toggles up fps meter
+        show-frame-rate-meter #f
+
+        # This changes default window size
+        win-size 800 600
+
+        # This toggles fullscreen. You need to change #f to #t for that
+        fullscreen #f
+        """,
+        )
 
     def load_leaderboards(self):
         """Load self.lb_file into self.leaderboards"""

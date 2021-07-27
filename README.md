@@ -47,7 +47,7 @@ features should be implemented (in no particular order):
 - Main menu, where you can change window resolution ~~and music/sfx volume~~,
   rebind keys and ~~select size of map to play on~~
 - Placeholder birth and ~~death~~ animations
-- Save/load settings into custom Config.prc located in `$HOME/.config/a2s3/config.prc`
+- Save/load settings into custom configuration file
 - At least 2 types of enemy: ~~chaser~~ and turret/ranger
 - At least one item to pickup (med kit/health potion)
 - Basic charge meter. The more you hit enemy - the higher charge meter gets (up to 100).
@@ -59,7 +59,6 @@ features should be implemented (in no particular order):
 - Maybe move hitboxes under the legs of characters (e.g to some sort of "shadow")
   and reshape them to be ovals or rectangles, to make combat feel the same regardless of camera angle
 - Maybe make camera angle adjustable in game (with mouse wheel or something, between some degrees)
-- Custom font for UI
 
 ## License:
 

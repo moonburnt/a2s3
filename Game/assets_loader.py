@@ -39,6 +39,7 @@ SKILLS_DIR = join(ENTITY_DIR, "Skills")
 PROJECTILES_DIR = join(ENTITY_DIR, "Projectiles")
 HEADS_DIR = join(ENTITY_DIR, "Heads")
 BODIES_DIR = join(ENTITY_DIR, "Bodies")
+FONTS_DIR = join(ASSETS_DIR, "Fonts")
 
 
 class AssetsLoader:

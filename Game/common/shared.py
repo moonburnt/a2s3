@@ -104,3 +104,5 @@ assets = assets_loader.AssetsLoader()
 
 # Manager for user settings and stuff
 user_data = userdata.UserdataManager()
+# Doing this from here, coz else ShowBase hasnt been affected by logging lvls
+user_data.load_settings()
