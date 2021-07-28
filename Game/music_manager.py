@@ -59,18 +59,21 @@ class MusicPlayer:
         self.default_loop_policy = toggle
         log.debug(f"Default loop policy has been set to {toggle}")
 
-    def play(self, song, loop=None, reset_volume=True, stop_current=True, fade_speed=0):
-        """Play the song. Meant to be used instead of default "play" command, as
-        it also adds song to self.currently_playing. If reset_volume = True, set
-        song's volume to default before playback. If stop_current - also reset
-        self.currently_playing and stop all the songs that already play"""
+    def play(
+        self,
+        song,
+        loop: bool = None,
+        reset_volume: bool = True,
+        stop_current: bool = True,
+        fade_speed=0,
+    ):
+        """Play the song with provided settings and add it to self.currently_playing"""
         if stop_current and self.currently_playing:
             for item in self.currently_playing:
                 item.stop()
             self.currently_playing = set()
 
-        # I tried to pass this directly, but it didnt work
-        if not loop:
+        if loop == None:
             loop = self.default_loop_policy
         song.set_loop(loop)
 
@@ -121,16 +124,21 @@ class MusicPlayer:
         log.debug(f"{song}'s volume has been reset to default")
 
     def crossfade(self, song, loop: bool = None, speed=0.5):
-        """Fade in provided song, while silencing and then stopping and removing
-        from self.currently_playing what currently plays"""
+        """Crossfade song with whatever is currently playing.
+        Will fade in provided song, while silencing and then stopping and removing
+        from self.currently_playing what currently plays
+        """
         active_songs = self.currently_playing.copy()
 
-        if not loop:
+        if loop == None:
             loop = self.default_loop_policy
 
         if not speed:
             self.play(song=song, loop=loop)
             return
+
+        # Doing it there coz self.play also has the same check
+        song.set_loop(loop)
 
         self.music_player.crossfade(
             song=song,
@@ -142,6 +150,6 @@ class MusicPlayer:
             fade_in_speed=speed,
         )
 
-        # resettings list of active tracks
+        # reset active tracks
         self.currently_playing = set()
         self.currently_playing.add(song)

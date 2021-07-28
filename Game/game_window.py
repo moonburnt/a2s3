@@ -111,7 +111,7 @@ class GameWindow(ShowBase):
         shared.sfx_manager = base.sfxManagerList[0]
         shared.sfx_manager.set_volume(shared.settings.sfx_volume)
 
-        shared.music_player.crossfade(shared.assets.music["menu_theme"])
+        shared.music_player.crossfade(shared.assets.music["menu_theme"], loop=True)
 
         # TODO: create separate storage for scenes
 
