@@ -66,6 +66,9 @@ class MainMenu(Menu):
             pos=(150, 1, -300),
             command=play_command,
             parent=self.frame,
+            # #TODO: mybe make icons configurable on init
+            icon=shared.assets.ui["ui_icons_1"],
+            text_style="left",
         )
 
         options_button = shared.ui_builder.make_button(
@@ -73,6 +76,8 @@ class MainMenu(Menu):
             pos=(150, 1, -400),
             command=options_command,
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_7"],
+            text_style="left",
         )
 
         show_lb_button = shared.ui_builder.make_button(
@@ -80,6 +85,8 @@ class MainMenu(Menu):
             pos=(150, 1, -500),
             command=show_leaderboard_command,
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_2"],
+            text_style="left",
         )
 
         exit_button = shared.ui_builder.make_button(
@@ -87,6 +94,8 @@ class MainMenu(Menu):
             pos=(150, 1, -600),
             command=exit_command,
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_0"],
+            text_style="left",
         )
 
 
@@ -115,6 +124,8 @@ class OptionsMenu(Menu):
             text="Music Volume",
             pos=(200, 1, -200),
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_4"],
+            text_style="left",
         )
 
         self.music_slider = shared.ui_builder.make_slider(
@@ -128,6 +139,8 @@ class OptionsMenu(Menu):
             text="SFX Volume",
             pos=(200, 1, -300),
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_5"],
+            text_style="left",
         )
 
         self.sfx_slider = shared.ui_builder.make_slider(
@@ -197,6 +210,8 @@ class MapSettings(Menu):
             text="Player Class:",
             pos=(200, 1, -100),
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_6"],
+            text_style="left",
         )
 
         class_selection = shared.ui_builder.make_option_menu(
@@ -211,6 +226,8 @@ class MapSettings(Menu):
             text="Map Scale:",
             pos=(200, 1, -200),
             parent=self.frame,
+            icon=shared.assets.ui["ui_icons_3"],
+            text_style="left",
         )
 
         map_scale_selection = shared.ui_builder.make_option_menu(

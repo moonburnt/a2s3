@@ -23,12 +23,34 @@ from direct.gui.DirectGui import (
     DirectOptionMenu,
     DGG,
 )
-from direct.gui.OnscreenText import TextNode
+from collections import namedtuple
 from .parts import *
 from Game import shared
 import logging
 
 log = logging.getLogger(__name__)
+
+# The idea was to group pos and alignment together, coz same pos on different
+# align will produce completely different results. But we can actually expand it
+# further and also include scale. Maybe some other text properties l8r, idk #TODO
+TextStyle = namedtuple("TextStyle", ["alignment", "position", "scale"])
+
+
+def get_texture_size(texture):
+    """Get size of texture in DirectGUI's measurement values"""
+    # Safety check to ensure it works for both p3dss-generates sprites
+    # and images loaded from disk
+    x = texture.getOrigFileXSize() or texture.getXSize()
+    y = texture.getOrigFileYSize() or texture.getYSize()
+    return (x, 1, y)
+
+
+def get_texture_scale(texture):
+    """Get scale of texture in DirectGUI's measurement values"""
+    x = texture.getOrigFileXSize() or texture.getXSize()
+    y = texture.getOrigFileYSize() or texture.getYSize()
+    return (-x, x, -y, y)
+
 
 # its class and not set of functions, coz I wasnt able to make these work properly
 # otherwise, due to initialization order shenanigans loading textures after this
@@ -45,8 +67,9 @@ class InterfaceBuilder:
         wide_frame_texture,
         select_sfx,
         hover_sfx,
-        text_pos: tuple,
-        text_scale: float,
+        text_styles: dict,
+        icon_pos: tuple,
+        default_text_style: "str" = None,
         button_size: tuple = None,
         button_scale: tuple = None,
         frame_size: tuple = None,
@@ -62,18 +85,6 @@ class InterfaceBuilder:
         self.select_sfx = select_sfx
         self.hover_sfx = hover_sfx
 
-        def get_texture_size(texture):
-            # Safety check to ensure it works for both p3dss-generates sprites
-            # and images loaded from disk
-            x = texture.getOrigFileXSize() or texture.getXSize()
-            y = texture.getOrigFileYSize() or texture.getYSize()
-            return (x, 1, y)
-
-        def get_texture_scale(texture):
-            x = texture.getOrigFileXSize() or texture.getXSize()
-            y = texture.getOrigFileYSize() or texture.getYSize()
-            return (-x, x, -y, y)
-
         self.button_size = button_size or get_texture_size(self.button_textures[0])
         self.button_scale = button_scale or get_texture_scale(self.button_textures[0])
 
@@ -87,10 +98,23 @@ class InterfaceBuilder:
             self.wide_frame_texture
         )
 
-        self.text_pos = text_pos
-        self.text_scale = text_scale
+        self.text_styles = text_styles
+        self.default_text_style = (
+            default_text_style or self.text_styles[list(self.text_styles)[0]]
+        )
 
-    def make_button(self, parent, pos: tuple, text: str = "", command=None):
+        self.icon_pos = icon_pos
+
+    def make_button(
+        self,
+        parent,
+        pos: tuple,
+        text: str = "",
+        icon=None,
+        icon_pos: tuple = None,
+        text_style: str = None,
+        command=None,
+    ):
         """Get button of default format with provided args."""
         # if not command:
         # def placeholder_command(*args, **kwargs):
@@ -99,30 +123,48 @@ class InterfaceBuilder:
 
         # same as commented out above
         command = command or (lambda *args, **kwargs: None)
+        if text_style:
+            text_style = self.text_styles[text_style]
+        else:
+            text_style = self.default_text_style
 
-        button = DirectButton(
-            text=text,
-            command=command,
-            pos=pos,
-            text_scale=self.text_scale,
-            text_pos=self.text_pos,
-            text_align=TextNode.ACenter,
-            relief=DGG.FLAT,
-            image_scale=self.button_size,
-            frameTexture=self.button_textures,
-            frameSize=self.button_scale,
-            clickSound=self.select_sfx,
-            rolloverSound=self.hover_sfx,
-            parent=parent,
-        )
+        # collecting arguments into kwargs, to avoid duplicating whole thing
+        # solely due to icon-related shenanigans
+        kwargs = {
+            "text": text,
+            "command": command,
+            "pos": pos,
+            "text_scale": text_style.scale,
+            "text_pos": text_style.position,
+            "text_align": text_style.alignment,
+            "relief": DGG.FLAT,
+            "frameTexture": self.button_textures,
+            "frameSize": self.button_scale,
+            "clickSound": self.select_sfx,
+            "rolloverSound": self.hover_sfx,
+            "parent": parent,
+        }
+        if icon:
+            kwargs["image"] = icon
+            kwargs["image_scale"] = get_texture_size(icon)
+            kwargs["image_pos"] = icon_pos or self.icon_pos
 
-        return button
+        return DirectButton(**kwargs)
 
-    def make_label(
-        self, parent, pos: tuple, text: str = "", scale: int = 0, text_pos: tuple = None
+    def _make_label(
+        self,
+        parent,
+        frame_scale,
+        texture,
+        pos: tuple,
+        text: str = "",
+        scale: int = 0,
+        text_pos: tuple = None,
+        icon=None,
+        icon_pos: tuple = None,
+        text_style: str = None,
     ):
-        """Get label of default format with provided args."""
-        frame_scale = self.frame_scale
+
         if scale:
             frame_scale = (
                 frame_scale[0] * scale,
@@ -131,49 +173,80 @@ class InterfaceBuilder:
                 frame_scale[3] * scale,
             )
 
-        text_pos = text_pos or self.text_pos
+        if text_style:
+            text_style = self.text_styles[text_style]
+        else:
+            text_style = self.default_text_style
 
-        label = DirectLabel(
-            text=text,
-            pos=pos,
-            frameTexture=self.frame_texture,
-            frameSize=frame_scale,
-            relief=DGG.FLAT,
-            text_scale=self.text_scale,
-            text_pos=text_pos,
-            text_align=TextNode.ACenter,
-            image_scale=self.frame_size,
+        kwargs = {
+            "text": text,
+            "pos": pos,
+            "frameTexture": texture,
+            "frameSize": frame_scale,
+            "relief": DGG.FLAT,
+            "text_scale": text_style.scale,
+            "text_pos": text_pos or text_style.position,
+            "text_align": text_style.alignment,
+            "parent": parent,
+        }
+        if icon:
+            kwargs["image"] = icon
+            kwargs["image_scale"] = get_texture_size(icon)
+            kwargs["image_pos"] = icon_pos or self.icon_pos
+
+        return DirectLabel(**kwargs)
+
+    def make_label(
+        self,
+        parent,
+        pos: tuple,
+        text: str = "",
+        scale: int = 0,
+        text_pos: tuple = None,
+        icon=None,
+        icon_pos: tuple = None,
+        text_style: str = None,
+    ):
+        """Get label of default format with provided args."""
+
+        label = self._make_label(
             parent=parent,
+            frame_scale=self.frame_scale,
+            texture=self.frame_texture,
+            pos=pos,
+            text=text,
+            scale=scale,
+            text_pos=text_pos,
+            icon=icon,
+            icon_pos=icon_pos,
+            text_style=text_style,
         )
 
         return label
 
     def make_wide_label(
-        self, parent, pos: tuple, text: str = "", scale: int = 0, text_pos: tuple = None
+        self,
+        parent,
+        pos: tuple,
+        text: str = "",
+        scale: int = 0,
+        text_pos: tuple = None,
+        icon=None,
+        icon_pos: tuple = None,
+        text_style: str = None,
     ):
         """Get wide label of default format with provided args."""
-        frame_scale = self.wide_frame_scale
-        if scale:
-            frame_scale = (
-                frame_scale[0] * scale,
-                frame_scale[1] * scale,
-                frame_scale[2] * scale,
-                frame_scale[3] * scale,
-            )
-
-        text_pos = text_pos or self.text_pos
-
-        label = DirectLabel(
-            text=text,
-            pos=pos,
-            frameTexture=self.wide_frame_texture,
-            frameSize=frame_scale,
-            relief=DGG.FLAT,
-            text_scale=self.text_scale,
-            text_pos=text_pos,
-            text_align=TextNode.ACenter,
-            image_scale=self.wide_frame_size,
+        label = self._make_label(
             parent=parent,
+            frame_scale=self.wide_frame_scale,
+            texture=self.wide_frame_texture,
+            pos=pos,
+            text=text,
+            scale=scale,
+            text_pos=text_pos,
+            icon=icon,
+            icon_pos=icon_pos,
+            text_style=text_style,
         )
 
         return label
@@ -201,8 +274,14 @@ class InterfaceBuilder:
         forward_text: str = "",
         back_command=None,
         forward_command=None,
+        text_style: str = None,
     ):
         """Get dialog with two buttons of default format with provided args."""
+        if text_style:
+            text_style = self.text_styles[text_style]
+        else:
+            text_style = self.default_text_style
+
         dialog_buttons = DialogButtons(
             back_text=back_text,
             back_command=back_command,
@@ -211,8 +290,8 @@ class InterfaceBuilder:
             gap=130,
             pos=pos,
             button_scale=self.button_size,
-            text_pos=self.text_pos,
-            text_scale=self.text_scale,
+            text_pos=text_style.position,
+            text_scale=text_style.scale,
             button_texture=self.button_textures,
             button_size=self.button_scale,
             click_sound=self.select_sfx,
@@ -223,10 +302,20 @@ class InterfaceBuilder:
         return dialog_buttons
 
     def make_option_menu(
-        self, parent, pos: tuple, items: list, initial_item: int, command=None
+        self,
+        parent,
+        pos: tuple,
+        items: list,
+        initial_item: int,
+        command=None,
+        text_style: str = None,
     ):
         """Get option menu of default format with provided args."""
         command = command or (lambda *args, **kwargs: None)
+        if text_style:
+            text_style = self.text_styles[text_style]
+        else:
+            text_style = self.default_text_style
 
         # TODO: replace this garbage with self-made carousel
         option_menu = DirectOptionMenu(
@@ -234,12 +323,12 @@ class InterfaceBuilder:
             items=items,
             initialitem=initial_item,
             pos=pos,
-            text_pos=self.text_pos,
-            text_scale=self.text_scale,
-            text_align=TextNode.ACenter,
-            item_text_scale=self.text_scale,
-            item_text_align=TextNode.ACenter,
-            item_text_pos=self.text_pos,
+            text_scale=text_style.scale,
+            text_pos=text_style.position,
+            text_align=text_style.alignment,
+            item_text_scale=text_style.scale,
+            item_text_pos=text_style.position,
+            item_text_align=text_style.alignment,
             item_frameTexture=self.button_textures,
             # this doesnt seem to do anyting - its always default
             item_frameSize=self.button_scale,
@@ -254,8 +343,6 @@ class InterfaceBuilder:
             frameTexture=self.button_textures,
             frameSize=self.button_scale,
             # this doesnt seem to do anything
-            image_scale=self.button_size,
-            # same
             relief=DGG.FLAT,
             popupMarker_relief=None,
             popupMarker_image=None,

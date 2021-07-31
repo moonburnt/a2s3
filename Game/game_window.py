@@ -19,6 +19,7 @@
 import logging
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
+from direct.gui.OnscreenText import TextNode
 from Game.common import shared
 from Game import assets_loader, level_loader, interface, music_manager
 
@@ -52,8 +53,12 @@ class GameWindow(ShowBase):
             wide_frame_texture=shared.assets.ui["frame_wide"],
             select_sfx=shared.assets.sfx["menu_select"],
             hover_sfx=shared.assets.sfx["menu_hover"],
-            text_pos=(0, -8),
-            text_scale=30,
+            text_styles={
+                "center": interface.builder.TextStyle(TextNode.ACenter, (0, -5), 30),
+                "left": interface.builder.TextStyle(TextNode.ALeft, (-60, -5), 30),
+                "right": interface.builder.TextStyle(TextNode.ARight, (90, -5), 30),
+            },
+            icon_pos=(-90, 1, 0),
         )
 
         log.debug("Loading user data")
