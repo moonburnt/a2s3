@@ -85,6 +85,7 @@ class Entity2D:
 
         entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
         self.collision = self.node.attach_new_node(entity_collider)
+        #self.collision.set_pos(0, 0, -shared.game_data.entity_layer/2)
 
         self.direction = None
 
@@ -163,7 +164,7 @@ class Entity2D:
             for item in self.animated_parts:
                 item.instance.node.set_y(-item.layer)
             for item in self.static_parts:
-                item.instance.node.set_y(-item.layer)
+                item.instance.set_y(-item.layer)
         else:
             self.visuals.set_h(LOOK_LEFT)
 

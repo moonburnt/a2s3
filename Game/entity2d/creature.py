@@ -17,7 +17,7 @@
 import logging
 from direct.interval.LerpInterval import LerpColorScaleInterval
 from direct.interval.IntervalGlobal import Sequence, Func, Wait
-from panda3d.core import Vec3, NodePath
+from panda3d.core import Vec3, NodePath, CardMaker, Texture
 import p3dss
 from random import randint
 from Game import entity2d, skill, shared
@@ -146,6 +146,15 @@ class Creature(entity2d.Entity2D):
             position = tuple(head_data["Main"].get("position", (0, 0, 0)))
             parts.append(entity2d.VisualsNode(head, position, HEAD_HEIGHT, 0, True))
 
+        # #TODO: since all entities would have one shadow, maybe we should keep 
+        # it pre-generated somewhere else?
+        shadow_texture = shared.assets.sprite["shadow"]
+        shadow_texture.set_wrap_u(Texture.WM_clamp)
+        shadow_texture.set_wrap_v(Texture.WM_clamp)
+        shadow_frame = CardMaker(f"{name}_shadow")
+        hitbox_size = hitbox_size or shared.game_data.hitbox_size
+        shadow_frame.set_frame(-hitbox_size, hitbox_size, -hitbox_size, hitbox_size)
+
         # Initializing all the stuff from parent class'es init to be done
         super().__init__(
             name=name,
@@ -155,6 +164,15 @@ class Creature(entity2d.Entity2D):
             scale=scale,
             animated_parts=parts,
         )
+
+        shadow_node = self.node.attach_new_node(shadow_frame.generate())
+        shadow_node.set_texture(shadow_texture)
+        shadow_node.set_transparency(1)
+        # without it shadow may be invisible
+        shadow_node.set_two_sided(True)
+        self.shadow = shadow_node
+        # Attaching it to collision node and setting height together didnt work
+        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer+1)
 
         if death_sound and (death_sound in shared.assets.sfx):
             self.death_sound = shared.assets.sfx[death_sound]
@@ -202,7 +220,8 @@ class Creature(entity2d.Entity2D):
 
         # billboard is effect to ensure that node always face camera the same
         # e.g this is the key to achieve that "2.5D style" I aim for
-        self.node.set_billboard_point_eye()
+        #self.node.set_billboard_point_eye()
+        self.visuals.set_billboard_point_eye()
 
         # used to avoid issue with getting multiple damage func calls per frame
         # see game_window's damage functions
@@ -219,6 +238,7 @@ class Creature(entity2d.Entity2D):
     def spawn(self, position):
         """Spawn entity on provided position"""
         super().spawn(position)
+        self.shadow.look_at(0, 0, 1)
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
     def status_effects_handler(self, event):
@@ -362,6 +382,7 @@ class Creature(entity2d.Entity2D):
 
     def die(self):
         super().die()
+        self.shadow.remove_node()
 
         if self.death_sound:
             self.death_sound.play()
