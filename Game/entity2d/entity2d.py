@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-from panda3d.core import CollisionSphere, CollisionNode, BitMask32, PandaNode, NodePath
+from panda3d.core import CollisionNode, BitMask32, PandaNode, NodePath
 import p3dss
 from collections import namedtuple
 from Game import shared
@@ -29,6 +29,10 @@ VisualsNode = namedtuple(
     "VisualsNode", ["instance", "position", "layer", "scale", "remove_on_death"]
 )
 
+CollisionSettings = namedtuple(
+    "CollisionSettings", ["shape", "size", "position", "mask"]
+)
+
 
 class Entity2D:
     """Main class, dedicated to creation of collideable 2D objects."""
@@ -37,8 +41,7 @@ class Entity2D:
         self,
         name: str,
         category: str,
-        hitbox_size: int = None,
-        collision_mask=None,
+        collision_settings: CollisionSettings,
         scale: int = None,
         animated_parts: list = None,
         static_parts: list = None,
@@ -75,17 +78,15 @@ class Entity2D:
         entity_collider = CollisionNode(self.category)
 
         # if no collision mask has been received - using defaults
-        if collision_mask:
-            entity_collider.set_from_collide_mask(BitMask32(collision_mask))
-            entity_collider.set_into_collide_mask(BitMask32(collision_mask))
+        if collision_settings.mask is not None:
+            mask = BitMask32(collision_settings.mask)
+            entity_collider.set_from_collide_mask(mask)
+            entity_collider.set_into_collide_mask(mask)
 
-        # TODO: move this to be under character's legs
-        # right now its centered on character's center
-        self.hitbox_size = hitbox_size or shared.game_data.hitbox_size
-
-        entity_collider.add_solid(CollisionSphere(0, 0, 0, self.hitbox_size))
+        entity_collider.add_solid(collision_settings.shape(*collision_settings.size))
         self.collision = self.node.attach_new_node(entity_collider)
-        #self.collision.set_pos(0, 0, -shared.game_data.entity_layer/2)
+        if collision_settings.position:
+            self.collision.set_pos(*collision_settings.position)
 
         self.direction = None
 

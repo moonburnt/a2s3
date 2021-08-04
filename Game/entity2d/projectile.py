@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-from panda3d.core import NodePath
+from panda3d.core import NodePath, CollisionSphere
 import p3dss
 from Game import entity2d, shared
 import logging
@@ -90,11 +90,18 @@ class Projectile(entity2d.Entity2D):
             )
             parts.append(entity2d.VisualsNode(body, (0, 0, 0), 0.0, 0, False))
 
+        # #TODO: make shape configurable (say, for rays)
+        collision_settings = entity2d.CollisionSettings(
+            shape=CollisionSphere,
+            size=(0, 0, 0, projectile_hitbox),
+            position=None,
+            mask=collision_mask or None,
+        )
+
         super().__init__(
             name=name,
             category=category,
-            hitbox_size=projectile_hitbox,
-            collision_mask=collision_mask,
+            collision_settings=collision_settings,
             scale=projectile_scale,
             animated_parts=parts,
         )

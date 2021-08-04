@@ -17,7 +17,7 @@
 import logging
 from direct.interval.LerpInterval import LerpColorScaleInterval
 from direct.interval.IntervalGlobal import Sequence, Func, Wait
-from panda3d.core import Vec3, NodePath, CardMaker, Texture
+from panda3d.core import Vec3, NodePath, CardMaker, Texture, CollisionCapsule
 import p3dss
 from random import randint
 from Game import entity2d, skill, shared
@@ -146,7 +146,7 @@ class Creature(entity2d.Entity2D):
             position = tuple(head_data["Main"].get("position", (0, 0, 0)))
             parts.append(entity2d.VisualsNode(head, position, HEAD_HEIGHT, 0, True))
 
-        # #TODO: since all entities would have one shadow, maybe we should keep 
+        # #TODO: since all entities would have one shadow, maybe we should keep
         # it pre-generated somewhere else?
         shadow_texture = shared.assets.sprite["shadow"]
         shadow_texture.set_wrap_u(Texture.WM_clamp)
@@ -155,12 +155,22 @@ class Creature(entity2d.Entity2D):
         hitbox_size = hitbox_size or shared.game_data.hitbox_size
         shadow_frame.set_frame(-hitbox_size, hitbox_size, -hitbox_size, hitbox_size)
 
+        # its collision shape is capsule and not sphere, coz this way it will be
+        # possible to hit things somewhat consistently regardless of their size
+        # Keep in mind that changing scale of entity will change height of this
+        # too. So... yeah, its not perfect
+        collision_settings = entity2d.CollisionSettings(
+            shape=CollisionCapsule,
+            size=(0, 0, 0, 0, 0, 30, hitbox_size),
+            position=(0, 0, -shared.game_data.entity_layer / 2),
+            mask=collision_mask or None,
+        )
+
         # Initializing all the stuff from parent class'es init to be done
         super().__init__(
             name=name,
             category=category,
-            hitbox_size=hitbox_size,
-            collision_mask=collision_mask,
+            collision_settings=collision_settings,
             scale=scale,
             animated_parts=parts,
         )
@@ -172,7 +182,10 @@ class Creature(entity2d.Entity2D):
         shadow_node.set_two_sided(True)
         self.shadow = shadow_node
         # Attaching it to collision node and setting height together didnt work
-        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer+1)
+        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer + 1)
+
+        # Moving visuals a bit higher to make shadow appear somewhat on center
+        self.visuals.set_pos(0, 0, 4)
 
         if death_sound and (death_sound in shared.assets.sfx):
             self.death_sound = shared.assets.sfx[death_sound]
@@ -220,7 +233,7 @@ class Creature(entity2d.Entity2D):
 
         # billboard is effect to ensure that node always face camera the same
         # e.g this is the key to achieve that "2.5D style" I aim for
-        #self.node.set_billboard_point_eye()
+        # self.node.set_billboard_point_eye()
         self.visuals.set_billboard_point_eye()
 
         # used to avoid issue with getting multiple damage func calls per frame
@@ -238,7 +251,10 @@ class Creature(entity2d.Entity2D):
     def spawn(self, position):
         """Spawn entity on provided position"""
         super().spawn(position)
-        self.shadow.look_at(0, 0, 1)
+        # for now this is kinda bugged - shadow will look at cam and thus adjust
+        # its look to player's direction, which isnt optimal. However I cant find
+        # better solution rn, so it will do
+        self.shadow.look_at(0, 0, -1)
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
     def status_effects_handler(self, event):

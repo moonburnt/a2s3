@@ -6,7 +6,7 @@ spritesheet = "player_heads"
 size = [ 16, 16 ]
 # Positional offset from creature's center. Because of how toml parsing library
 # works, we cant mix ints and floats in one array. Thus 0 is passed as 0.0
-position = [ 0.2, 0.0, 4.4 ]
+position = [ 0.2, 0.0, 0.5 ]
 
 # Default head to be chosen, if creature its attached to dont have "default_head"
 # preference or (in case its player) didnt set default head manually

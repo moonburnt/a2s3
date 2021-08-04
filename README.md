@@ -56,8 +56,6 @@ features should be implemented (in no particular order):
 - Ability to roll
 - Maybe ability to overcharge basic attack by holding down the button
   (like knights/archers in king arthur's gold work), coz its fun
-- Maybe move hitboxes under the legs of characters (e.g to some sort of "shadow")
-  and reshape them to be ovals or rectangles, to make combat feel the same regardless of camera angle
 - Maybe make camera angle adjustable in game (with mouse wheel or something, between some degrees)
 
 ## License:
