@@ -51,6 +51,8 @@ game_data.enemy_category = "enemy"
 game_data.player_category = "player"
 game_data.player_projectile_category = "player_projectile"
 game_data.enemy_projectile_category = "enemy_projectile"
+# This is the name of map border that prevents leaving the map's sides
+game_data.border_category = "border"
 
 # Default map size. I will probably purge this later in favor of per-map configs
 # #TODO

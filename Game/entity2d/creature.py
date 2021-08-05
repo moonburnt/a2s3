@@ -248,6 +248,10 @@ class Creature(entity2d.Entity2D):
         # default rgba values. Saved on init, used in blinking
         self.default_colorscheme = self.node.get_color_scale()
 
+        # id variable that will be set from game_window. Placed it there to avoid
+        # possible crashes and to remind that its a thing that exists
+        self.id = None
+
     def spawn(self, position):
         """Spawn entity on provided position"""
         super().spawn(position)

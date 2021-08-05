@@ -19,6 +19,7 @@ from .game_window import *
 from .entity2d import *
 from .map_loader import *
 from .assets_loader import *
+from .collision_events import *
 from .level_loader import *
 from .userdata import *
 from .interface import *

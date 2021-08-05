@@ -20,14 +20,11 @@ import logging
 from panda3d.core import CollisionTraverser, CollisionHandlerEvent, PandaNode, Vec3
 from time import time
 from random import randint, choice
-from Game import entity2d, map_loader, shared, interface
+from . import entity2d, map_loader, shared, interface, collision_events
 
 log = logging.getLogger(__name__)
 
 DEAD_CLEANUP_TIME = 5
-# pause between calls to per-node's damage function. Making it anyhow lower will
-# reintroduce the bug with multiple damage calls occuring during single frame
-COLLISION_CHECK_PAUSE = 0.2
 DEFAULT_SCORE_VALUE = 0
 DEFAULT_SCORE_MULTIPLIER = 1
 MAX_SCORE_MULTIPLIER = 5  # maybe just make it MULTIPLIER_INCREASE_STEP*10 ?
@@ -75,66 +72,75 @@ class LoadLevel:
         # with enemy projectile and causing related function to trigger on these
         base.accept(
             f"{shared.game_data.player_category}-into-{shared.game_data.enemy_projectile_category}",
-            self.damage_player,
+            collision_events.creature_with_projectile,
+            [shared.game_data.player_category],
         )
         base.accept(
             f"{shared.game_data.enemy_projectile_category}-into-{shared.game_data.player_category}",
-            self.damage_player,
+            collision_events.creature_with_projectile,
+            [shared.game_data.player_category],
         )
         base.accept(
             f"{shared.game_data.player_category}-again-{shared.game_data.enemy_projectile_category}",
-            self.damage_player,
+            collision_events.creature_with_projectile,
+            [shared.game_data.player_category],
         )
         base.accept(
             f"{shared.game_data.enemy_projectile_category}-again-{shared.game_data.player_category}",
-            self.damage_player,
+            collision_events.creature_with_projectile,
+            [shared.game_data.player_category],
         )
 
         # also tracking collisions of enemy with player's attack projectile
         base.accept(
             f"{shared.game_data.player_projectile_category}-into-{shared.game_data.enemy_category}",
-            self.damage_enemy,
+            collision_events.creature_with_projectile,
+            [shared.game_data.enemy_category],
         )
         base.accept(
             f"{shared.game_data.enemy_category}-into-{shared.game_data.player_projectile_category}",
-            self.damage_enemy,
+            collision_events.creature_with_projectile,
+            [shared.game_data.enemy_category],
         )
         base.accept(
             f"{shared.game_data.player_projectile_category}-again-{shared.game_data.enemy_category}",
-            self.damage_enemy,
+            collision_events.creature_with_projectile,
+            [shared.game_data.enemy_category],
         )
         base.accept(
             f"{shared.game_data.enemy_category}-again-{shared.game_data.player_projectile_category}",
-            self.damage_enemy,
+            collision_events.creature_with_projectile,
+            [shared.game_data.enemy_category],
         )
 
-        # tracking collisions with walls, in order to create custom pusher-like
-        # behaviour with collisioneventhandler
+        # tracking collisions with map borders, in order to create custom
+        # pusher-like behaviour with collisioneventhandler
         base.accept(
-            f"{shared.game_data.player_category}-into-wall", self.on_wall_collision
+            f"{shared.game_data.player_category}-into-{shared.game_data.border_category}",
+            collision_events.creature_with_border,
         )
         base.accept(
-            f"{shared.game_data.player_category}-again-wall", self.on_wall_collision
+            f"{shared.game_data.player_category}-again-{shared.game_data.border_category}",
+            collision_events.creature_with_border,
         )
         base.accept(
-            f"{shared.game_data.enemy_category}-into-wall", self.on_wall_collision
+            f"{shared.game_data.enemy_category}-into-{shared.game_data.border_category}",
+            collision_events.creature_with_border,
         )
         base.accept(
-            f"{shared.game_data.enemy_category}-again-wall", self.on_wall_collision
+            f"{shared.game_data.enemy_category}-again-{shared.game_data.border_category}",
+            collision_events.creature_with_border,
         )
 
-        # temporary solution for tracking collision of projectiles with objects
-        # TODO: find a better name for function, add support for non-wall objects
+        # same for projectiles
         base.accept(
-            f"{shared.game_data.player_projectile_category}-into-wall",
-            self.on_object_collision,
+            f"{shared.game_data.player_projectile_category}-into-{shared.game_data.border_category}",
+            collision_events.projectile_with_border,
         )
-        # base.accept(f'{shared.game_data.player_projectile_category}-again-wall', self.on_object_collision)
         base.accept(
-            f"{shared.game_data.enemy_projectile_category}-into-wall",
-            self.on_object_collision,
+            f"{shared.game_data.enemy_projectile_category}-into-{shared.game_data.border_category}",
+            collision_events.projectile_with_border,
         )
-        # base.accept(f'{shared.game_data.enemy_projectile_category}-again-wall', self.on_object_collision)
 
         log.debug("Setting up camera")
         # this will set camera to be right above card.
@@ -256,12 +262,23 @@ class LoadLevel:
         self.map.generate()
 
         log.debug("Initializing player")
+        # variables for spawners to make debugging process easier. Basically,
+        # its meant to increase with each new creature of that type and never
+        # reset until game over. This can also be potentially used for some
+        # highscore stats
+        self.enemy_id = 0
+        # same for player, to unify the process
+        self.player_id = 0
+
         # character's position should always render on shared.game_data.entity_layer
         # setting this lower may cause glitches, as below lies the floor_layer
         # hitbox is adjusted to match our current sprites. In case of change - will
         # need to tweak it manually
         self.player = entity2d.Player(self.player_class)
         self.player.spawn(self.map.player_spawnpoint)
+        self.player.id = self.player_id
+        self.player.node.set_python_tag("id", self.player.id)
+        self.player_id += 1
 
         self.wave_number = 0
         self.enemy_increase = 10
@@ -275,11 +292,6 @@ class LoadLevel:
         self.projectiles = []
         # and this is amount of time, per which dead objects get removed from these
         self.cleanup_timer = DEAD_CLEANUP_TIME
-
-        # variable for enemy spawner to make debugging process easier. Basically,
-        # its meant to increase with each new enemy and never reset until game over.
-        # this can also be potentially used for some highscore stats
-        self.enemy_id = 0
 
         # amount of enemies, killed by player
         self.kill_counter = 0
@@ -467,241 +479,6 @@ class LoadLevel:
                 self.projectiles.remove(entity)
 
         return event.cont
-
-    def sort_collision(self, collision_event, hitter_category: str):
-        """Getting collision event and name of python tag "category", we are seeking
-        for. Checking both collisions for this tag and return tuple of objects (hitter,
-        target) (actual objects, NOT collision nodes). If none match, return None"""
-        # maybe I should rename this function to something like "find hitter", idk
-
-        hit = collision_event.get_from_node_path()
-        hitter_object = hit.get_parent()
-        tar = collision_event.get_into_node_path()
-        target_object = tar.get_parent()
-
-        # log.debug(f"{hit} collides with {tar}")
-
-        hit_category = hitter_object.get_python_tag("category")
-        tar_category = target_object.get_python_tag("category")
-
-        # workaround for "None Type" exception that rarely occurs if one of colliding
-        # nodes has died the very second it needs to be used in another collision
-        if not hit_category or not tar_category:
-            log.warning(
-                f"Either {hitter_object} or {target_object} is dead, "
-                "collision wont occur"
-            )
-            return
-
-        if hit_category == hitter_category:
-            hitter = hitter_object
-            target = target_object
-        elif tar_category == hitter_category:
-            hitter = target_object
-            target = hitter_object
-        else:
-            log.warning(
-                f"No nodes with {hitter_category} category tag has been "
-                f"found in {collision_event} collision!"
-            )
-            return
-
-        return (hitter, target)
-
-    def check_damage_possibility(self, target):
-        """Checking if its possible to damage specified target right now, based
-        on its "last_collision_time" python tag"""
-        # this is a workaround for issue caused by multiple collisions occuring
-        # at single frame, so damage check function cant keep up with it. Basically,
-        # we allow new target's collisions to only trigger damage function each
-        # 0.2 seconds. It may be good idea to abandon this thing in future in favor
-        # of something like collisionhandlerqueue, but for now it works
-
-        last_collision_time = target.get_python_tag("last_collision_time")
-        current_time = time()
-        if current_time - last_collision_time < COLLISION_CHECK_PAUSE:
-            return False
-
-        return True
-
-    def damage_player(self, entry):
-        """Should be called from base.accept event handler when player collides
-        with something that may hurt it. Checks if its possible to deal damage
-        right now, then trigger player's "get_damage" function"""
-
-        # colliders = self.sort_collision(entry, shared.game_data.enemy_category)
-        colliders = self.sort_collision(
-            entry, shared.game_data.enemy_projectile_category
-        )
-        if not colliders:
-            # log.warning("Collision cant occur")
-            return
-
-        hitter, target = colliders
-
-        if not self.check_damage_possibility(target):
-            # log.debug("Collision cant occur right now")
-            return
-
-        target.set_python_tag("last_collision_time", time())
-
-        # ds = hitter.get_python_tag("stats")
-        # damage = ds['dmg']
-        damage = hitter.get_python_tag("damage")
-        damage_function = target.get_python_tag("get_damage")
-        effects = hitter.get_python_tag("effects")
-
-        log.debug(f"Attempting to deal {damage} damage to player")
-        damage_function(damage, effects)
-
-        if not hitter.get_python_tag("die_on_creature_collision"):
-            return
-
-        kill_hitter = hitter.get_python_tag("die_command")
-        if kill_hitter:
-            kill_hitter()
-
-    def damage_enemy(self, entry):
-        """Should be called from base.accept event handler when enemy collides
-        with something that may hurt it. Checks if its possible to deal damage
-        right now, then trigger enemy's "get_damage" function"""
-
-        colliders = self.sort_collision(
-            entry, shared.game_data.player_projectile_category
-        )
-        if not colliders:
-            # log.warning("Collision cant occur")
-            return
-
-        hitter, target = colliders
-
-        if not self.check_damage_possibility(target):
-            # log.debug("Collision cant occur right now")
-            return
-
-        # idk if I should've saved time from above...
-        target.set_python_tag("last_collision_time", time())
-
-        damage = hitter.get_python_tag("damage")
-        damage_function = target.get_python_tag("get_damage")
-        effects = hitter.get_python_tag("effects")
-
-        target_name = target.get_python_tag("name")
-        target_id = target.get_python_tag("id")
-        log.debug(f"Attempting to deal {damage} damage to {target_name} ({target_id})")
-        damage_function(damage, effects)
-
-        # now solving the case when projectile needs to die on collision with creature
-        if not hitter.get_python_tag("die_on_creature_collision"):
-            return
-
-        kill_hitter = hitter.get_python_tag("die_command")
-        if kill_hitter:
-            kill_hitter()
-
-    def on_wall_collision(self, entry):
-        """Function that triggers if player or enemy collides with wall and pushes
-        them back"""
-        col = entry.get_from_node_path()
-        col_obj = col.get_parent()
-        wall = entry.get_into_node_path()
-        # safety check for situations when object is in process of dying but hasnt
-        # been removed completely yet
-        if not col_obj:
-            log.warning(f"{col} seems to be dead, collision wont occur")
-            return
-
-        # first, lets get wall's parent, coz render/wall/wall is collision node,
-        # and our tags are attached to render/wall, which is nodepath itself
-        wall_obj = wall.get_parent()
-        # getting pos like that, because of check mapgen's comments on wall init
-        wall_pos = wall.get_python_tag("position")[0]
-
-        col_pos = col_obj.get_pos()
-
-        vector = col_pos - wall_pos
-        vx, vy = vector.get_xy()
-
-        # this will be ideal knockback if we collide with wall right on its center
-        knockback = col_obj.get_python_tag("mov_spd")
-
-        # workaround to fix the issue with entity running into a wall getting
-        # pushed to wall's center. This way it wont hapen anymore... I think
-        if wall_pos[1] < 0:
-            vx = 0
-            vy = 1
-        elif wall_pos[1] > 0:
-            vx = 0
-            vy = -1
-        else:
-            pass
-
-        if wall_pos[0] < 0:
-            vx = 1
-            vy = 0
-        elif wall_pos[0] > 0:
-            vx = -1
-            vy = 0
-        else:
-            pass
-
-        vector = Vec3(vx, vy, 0).normalized()
-
-        # this works for entities with any movement speed. However, there is some
-        # old issue, I was unable to fix:
-        # - Character will get pushed back as far as its running speed is. Meaning
-        # creatures that move faster will get pushed closer to map's center. Its
-        # not an issue for enemies (I think), but it may get annoying for player.
-        #
-        # For now, I have no idea how to solve both of these. Maybe at some point
-        # I will re-implement collisionhandlerpusher for player, to deal with the
-        # most annoying part of it #TODO
-        new_pos = col_pos - vector * knockback
-
-        col_obj.set_pos(new_pos)
-
-    def on_object_collision(self, entry):
-        """Function that triggers if projectile collides with non-creature objects
-        (walls and such)"""
-        # It may need rework if I will ever implement ability to push objects
-        col = entry.get_from_node_path()
-        col_obj = col.get_parent()
-
-        ricochets_amount = col_obj.get_python_tag("ricochets_amount")
-        direction = col_obj.get_python_tag("direction")
-        # this will break on negative ricochets_amount, but it shouldnt happen
-        if ricochets_amount and direction:
-            col_obj.set_python_tag("ricochets_amount", (ricochets_amount - 1))
-
-            # this workaround obviously wont work for non-wall objects
-            # but for now it will do #TODO
-            wall = entry.get_into_node_path()
-            wall_pos = wall.get_python_tag("position")[0]
-
-            x, y, h = direction
-
-            if wall_pos[0]:
-                x = -x
-                # dont ask me why and how rotation works, because "it just works"
-                col_obj.set_h(180)
-
-            if wall_pos[1]:
-                y = -y
-
-            col_obj.set_python_tag("direction", Vec3(x, y, h))
-            # see comment above. I have no idea why it works and it will probably
-            # break on billboard projectiles #TODO
-            col_obj.set_r(-(col_obj.get_r()))
-
-            # returning right there, because ricochets override whatever below
-            return
-
-        if not col_obj.get_python_tag("die_on_object_collision"):
-            return
-
-        kill_hitter = col_obj.get_python_tag("die_command")
-        if kill_hitter:
-            kill_hitter()
 
     def increase_score(self, amount):
         """Increase score variable and displayed score amount by int(amount * self.score_multiplier)"""

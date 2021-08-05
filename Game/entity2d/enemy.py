@@ -77,10 +77,6 @@ class Enemy(entity2d.Creature):
 
         # base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")
 
-        # id variable that will be set from game_window. Placed it there to avoid
-        # possible crashes and to remind that its a thing that exists
-        self.id = None
-
     def spawn(self, position):
         super().spawn(position)
         base.task_mgr.add(self.ai_movement_handler, "enemy movement handler")

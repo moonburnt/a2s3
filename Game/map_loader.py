@@ -136,7 +136,7 @@ class FlatMap:
         ]
 
         for sizes in wall_coordinates:
-            wall_node = CollisionNode("wall")
+            wall_node = CollisionNode(shared.game_data.border_category)
             # it looks like without adding node to pusher (we dont need that there),
             # masks wont work. Thus for now I wont use them, as defaults seem to work
             # wall_node.set_collide_mask(BitMask32(shared.WALLS_COLLISION_MASK))
