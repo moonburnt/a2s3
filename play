@@ -82,11 +82,11 @@ if args.show_collisions:
 if args.show_fps:
     shared.settings.fps_meter = True
 
-if args.music_vol and (0 <= args.music_vol <= 100):
+if args.music_vol is not None and (0 <= args.music_vol <= 100):
     shared.settings.music_volume = args.music_vol / 100
     log.debug(f"Music volume has been set to {args.music_vol}%")
 
-if args.sfx_vol and (0 <= args.sfx_vol <= 100):
+if args.sfx_vol is not None and (0 <= args.sfx_vol <= 100):
     shared.settings.sfx_volume = args.sfx_vol / 100
     log.debug(f"Music volume has been set to {args.sfx_vol}%")
 

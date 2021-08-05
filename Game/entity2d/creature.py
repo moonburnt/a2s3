@@ -179,13 +179,13 @@ class Creature(entity2d.Entity2D):
         shadow_node.set_texture(shadow_texture)
         shadow_node.set_transparency(1)
         # without it shadow may be invisible
-        shadow_node.set_two_sided(True)
+        # shadow_node.set_two_sided(True)
         self.shadow = shadow_node
         # Attaching it to collision node and setting height together didnt work
-        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer + 1)
+        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer + 0.1)
 
         # Moving visuals a bit higher to make shadow appear somewhat on center
-        self.visuals.set_pos(0, 0, 4)
+        self.visuals.set_pos(0, 0, 3)
 
         if death_sound and (death_sound in shared.assets.sfx):
             self.death_sound = shared.assets.sfx[death_sound]
@@ -254,7 +254,8 @@ class Creature(entity2d.Entity2D):
         # for now this is kinda bugged - shadow will look at cam and thus adjust
         # its look to player's direction, which isnt optimal. However I cant find
         # better solution rn, so it will do
-        self.shadow.look_at(0, 0, -1)
+        # self.shadow.look_at(0, 0, -1)
+        self.shadow.set_p(shared.game_data.floor_angle)
         base.task_mgr.add(self.status_effects_handler, "status effects handler")
 
     def status_effects_handler(self, event):

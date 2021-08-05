@@ -120,7 +120,8 @@ class FlatMap:
         # repeating texture to avoid stretching when possible
         floor_object.set_tex_scale(TextureStage.getDefault(), repeats_x, repeats_y)
         # arranging card's angle
-        floor_object.look_at((0, 0, -1))
+        # floor_object.look_at((0, 0, -1))
+        floor_object.set_p(shared.game_data.floor_angle)
         floor_object.set_pos(0, 0, shared.game_data.floor_layer)
         self.floor = floor_object
 

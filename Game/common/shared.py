@@ -56,6 +56,9 @@ game_data.enemy_projectile_category = "enemy_projectile"
 # #TODO
 game_data.map_size = (600, 300)
 
+# Value of set_p() applied to floor's tiles
+game_data.floor_angle = -90
+
 # Default variables for things that can be altered by user
 default_settings = classes.Storage()
 default_settings.window_size = (1280, 720)  # (x, y)
