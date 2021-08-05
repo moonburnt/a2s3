@@ -238,12 +238,15 @@ class Creature(entity2d.Entity2D):
 
         # used to avoid issue with getting multiple damage func calls per frame
         # see game_window's damage functions
-        self.last_collision_time = 0
-        self.node.set_python_tag("last_collision_time", self.last_collision_time)
+        self.node.set_python_tag("last_collision_time", 0)
 
         # proxifying self.apply_effect, so it will be possible for skills and
         # projectiles to trigger this function
         self.node.set_python_tag("apply_effect", self.apply_effect)
+
+        # this tag specifies if its possible to push node on collision
+        # #TODO: make it configurable on per-entity basis
+        self.node.set_python_tag("is_pushable", True)
 
         # default rgba values. Saved on init, used in blinking
         self.default_colorscheme = self.node.get_color_scale()

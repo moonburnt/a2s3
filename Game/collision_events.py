@@ -67,7 +67,7 @@ def creature_with_projectile(creature: str, collision: CollisionEntry):
     # workaround for "None Type" exception that rarely occurs if one of colliding
     # nodes has died the very second it needs to be used in another collision
     if not hitter_category or not target_category:
-        log.warning(f"{hitter} or {target} is dead, ignored collision")
+        log.debug(f"{hitter} or {target} is dead, ignored collision")
         return
 
     # Now lets maybe flip over hitter and target based on their category
@@ -99,9 +99,8 @@ def creature_with_projectile(creature: str, collision: CollisionEntry):
         kill_hitter()
 
 
-def creature_with_border(collision: CollisionEntry):
-    """Function that triggers if creature collides with map's border.
-    It pushes creatures back"""
+def entity_with_border(collision: CollisionEntry):
+    """Function that triggers on collision of entity with map's border"""
     col_obj = collision.get_from_node_path().get_parent()
     # safety check for situations when object is in process of dying but hasnt
     # been removed completely yet
@@ -112,64 +111,17 @@ def creature_with_border(collision: CollisionEntry):
     # getting pos like that, because of how map borders work
     wall_pos = collision.get_into_node_path().get_python_tag("position")[0]
 
-    col_pos = col_obj.get_pos()
+    # This is projectile-exclusive, but... maybe at some point creatures could
+    # use this too? #TODO
+    if col_obj.get_python_tag("ricochets_amount") and col_obj.get_python_tag(
+        "direction"
+    ):
+        # this will crash on non-int and break on negative ricochets_amount
+        col_obj.set_python_tag(
+            "ricochets_amount", (col_obj.get_python_tag("ricochets_amount") - 1)
+        )
 
-    vector = col_pos - wall_pos
-    vx, vy = vector.get_xy()
-
-    # this will be ideal knockback if we collide with wall right on its center
-    knockback = col_obj.get_python_tag("mov_spd")
-
-    # workaround to fix the issue with entity running into a wall getting
-    # pushed to wall's center. This way it wont hapen anymore... I think
-    if wall_pos[1] < 0:
-        vx = 0
-        vy = 1
-    elif wall_pos[1] > 0:
-        vx = 0
-        vy = -1
-    else:
-        pass
-
-    if wall_pos[0] < 0:
-        vx = 1
-        vy = 0
-    elif wall_pos[0] > 0:
-        vx = -1
-        vy = 0
-    else:
-        pass
-
-    vector = Vec3(vx, vy, 0).normalized()
-
-    # this works for entities with any movement speed. However, there is some
-    # old issue, I was unable to fix:
-    # - Character will get pushed back as far as its running speed is. Meaning
-    # creatures that move faster will get pushed closer to map's center. Its
-    # not an issue for enemies (I think), but it may get annoying for player.
-    #
-    # For now, I have no idea how to solve both of these. Maybe at some point
-    # I will re-implement collisionhandlerpusher for player, to deal with the
-    # most annoying part of it #TODO
-    new_pos = col_pos - vector * knockback
-
-    col_obj.set_pos(new_pos)
-
-
-def projectile_with_border(collision: CollisionEntry):
-    """Function that triggers if projectile collides with map's border"""
-    # It may need rework if I will ever implement ability to push objects
-    col_obj = collision.get_from_node_path().get_parent()
-
-    ricochets_amount = col_obj.get_python_tag("ricochets_amount")
-    direction = col_obj.get_python_tag("direction")
-    # this will break on negative ricochets_amount, but it shouldnt happen
-    if ricochets_amount and direction:
-        col_obj.set_python_tag("ricochets_amount", (ricochets_amount - 1))
-
-        wall_pos = collision.get_into_node_path().get_python_tag("position")[0]
-
-        x, y, h = direction
+        x, y, h = col_obj.get_python_tag("direction")
 
         if wall_pos[0]:
             x = -x
@@ -187,9 +139,77 @@ def projectile_with_border(collision: CollisionEntry):
         # returning right there, because ricochets override whatever below
         return
 
+    # this will be ideal knockback if we collide with wall right on its center
+    if col_obj.get_python_tag("mov_spd"):
+        col_pos = col_obj.get_pos()
+        vector = col_pos - wall_pos
+        vx, vy = vector.get_xy()
+
+        # workaround to fix the issue with entity running into a wall getting
+        # pushed to wall's center. This way it wont hapen anymore... I think
+        if wall_pos[1] < 0:
+            vx = 0
+            vy = 1
+        elif wall_pos[1] > 0:
+            vx = 0
+            vy = -1
+        else:
+            pass
+
+        if wall_pos[0] < 0:
+            vx = 1
+            vy = 0
+        elif wall_pos[0] > 0:
+            vx = -1
+            vy = 0
+        else:
+            pass
+
+        vector = Vec3(vx, vy, 0).normalized()
+
+        # this works for entities with any movement speed. However, there is some
+        # old issue, I was unable to fix:
+        # - Entity will get pushed back as far as its mov_spd is. Meaning entities
+        # that move faster will get pushed closer to map's center. Its not an
+        # issue for enemies (I think), but it may get annoying for player.
+        #
+        # For now, I have no idea how to solve both of these. Maybe at some point
+        # I will re-implement collisionhandlerpusher for player, to deal with the
+        # most annoying part of it #TODO
+        new_pos = col_pos - vector * col_obj.get_python_tag("mov_spd")
+
+        col_obj.set_pos(new_pos)
+
     if not col_obj.get_python_tag("die_on_object_collision"):
         return
 
     kill_hitter = col_obj.get_python_tag("die_command")
     if kill_hitter:
         kill_hitter()
+
+
+def entity_with_entity(collision: CollisionEntry):
+    """Things to do when unspecified entity collides with other entity.
+    This is effectively a collisionhandlerpusher - if target has "is_pushable"
+    python tag set to True, it will be slightly moved away"""
+
+    hitter = collision.get_from_node_path().get_parent()
+    target = collision.get_into_node_path().get_parent()
+
+    # Ensuring that we can push target (its not turret or something)
+    if not target.get_python_tag("is_pushable") or not hitter.get_python_tag("mov_spd"):
+        # TODO: maybe if target isnt pushable, hitter shouldnt be able to move 
+        # into target's direction? 
+        return
+
+    # Pushing target into general direction of hitter's movement with hitter's
+    # mov_spd. This works, but right now also introduce some shaking. Maybe I
+    # should temporarily decrease someone's movement speed? #TODO
+    vec_to_target = target.get_pos() - hitter.get_pos()
+    vec_to_target = vec_to_target.normalized()
+    vxy = vec_to_target.get_xy()
+    new_pos = target.get_pos() + (vxy * hitter.get_python_tag("mov_spd"), 0)
+    target.set_pos(new_pos)
+
+    # if vec_to_target.length() < 1:
+    #    hitter.set_python_tag("mov_spd", 0)

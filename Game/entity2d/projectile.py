@@ -244,6 +244,7 @@ class ChasingProjectile(Projectile):
             die_on_object_collision=die_on_object_collision,
             die_on_creature_collision=die_on_creature_collision,
         )
+        self.node.set_python_tag("mov_spd", self.speed)
 
     def spawn(self, **kwargs):
         self.target = kwargs["target"]
@@ -310,6 +311,8 @@ class MovingProjectile(Projectile):
         # it makes no sense to ricochet chasing or static projectile, thus its there
         if ricochets_amount:
             self.node.set_python_tag("ricochets_amount", ricochets_amount)
+
+        self.node.set_python_tag("mov_spd", self.speed)
 
     def spawn(self, **kwargs):
         super().spawn(**kwargs)

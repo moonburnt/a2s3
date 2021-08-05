@@ -117,29 +117,39 @@ class LoadLevel:
         # pusher-like behaviour with collisioneventhandler
         base.accept(
             f"{shared.game_data.player_category}-into-{shared.game_data.border_category}",
-            collision_events.creature_with_border,
+            collision_events.entity_with_border,
         )
         base.accept(
             f"{shared.game_data.player_category}-again-{shared.game_data.border_category}",
-            collision_events.creature_with_border,
+            collision_events.entity_with_border,
         )
         base.accept(
             f"{shared.game_data.enemy_category}-into-{shared.game_data.border_category}",
-            collision_events.creature_with_border,
+            collision_events.entity_with_border,
         )
         base.accept(
             f"{shared.game_data.enemy_category}-again-{shared.game_data.border_category}",
-            collision_events.creature_with_border,
+            collision_events.entity_with_border,
         )
 
         # same for projectiles
         base.accept(
             f"{shared.game_data.player_projectile_category}-into-{shared.game_data.border_category}",
-            collision_events.projectile_with_border,
+            collision_events.entity_with_border,
         )
         base.accept(
             f"{shared.game_data.enemy_projectile_category}-into-{shared.game_data.border_category}",
-            collision_events.projectile_with_border,
+            collision_events.entity_with_border,
+        )
+
+        # pushing enemies from eachother
+        base.accept(
+            f"{shared.game_data.enemy_category}-into-{shared.game_data.enemy_category}",
+            collision_events.entity_with_entity,
+        )
+        base.accept(
+            f"{shared.game_data.enemy_category}-again-{shared.game_data.enemy_category}",
+            collision_events.entity_with_entity,
         )
 
         log.debug("Setting up camera")
