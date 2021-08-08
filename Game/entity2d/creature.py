@@ -91,13 +91,23 @@ class Creature(entity2d.Entity2D):
         parts = []
 
         if bspritesheet and animations:
-            body = p3dss.SpritesheetObject(
+            body = p3dss.SpritesheetNode(
                 name=f"{name}_body",
                 spritesheet=bspritesheet,
-                sprites=animations,
-                sprite_size=sprite_size or shared.game_data.sprite_size,
-                parent=NodePath(),
+                sprite_sizes=sprite_size or shared.game_data.sprite_size,
+                # #TODO: ability to set custom scale
+                scale=shared.game_data.node_scale,
             )
+            for sprite_name in list(animations):
+                item = p3dss.SpritesheetItem(
+                    name=sprite_name,
+                    sprites=animations[sprite_name]["sprites"],
+                    loop=animations[sprite_name].get("loop", False),
+                    playback_speed=animations[sprite_name].get(
+                        "speed", shared.game_data.playback_speed
+                    ),
+                )
+                body.add_item(item)
             parts.append(entity2d.VisualsNode(body, (0, 0, 0), 0.0, 0, False))
 
         # placeholder code that implements support for attachable heads
@@ -118,27 +128,39 @@ class Creature(entity2d.Entity2D):
                 head_name = list(head_data["Animations"].keys())[0]
                 sprites = head_data["Animations"][head_name]
 
-            default_action = list(sprites.keys())[0]
-            # if default action's sprite isnt single - it should be tuple or list
-            if isinstance(sprites[default_action]["sprites"], int):
-                default_sprite = sprites[default_action]["sprites"]
-            else:
-                default_sprite = sprites[default_action]["sprites"][0]
+            # default_action = list(sprites.keys())[0]
+            # # if default action's sprite isnt single - it should be tuple or list
+            # if isinstance(sprites[default_action]["sprites"], int):
+            #     default_sprite = sprites[default_action]["sprites"]
+            # else:
+            #     default_sprite = sprites[default_action]["sprites"][0]
 
             hspritesheet_name = head_data["Main"]["spritesheet"]
             hspritesheet = shared.assets.sprite[hspritesheet_name]
 
-            head = p3dss.SpritesheetObject(
+            head_sizes = (
+                head_data["Main"].get("size", None) or shared.game_data.sprite_size
+            )
+            head = p3dss.SpritesheetNode(
                 name=f"{name}_head",
                 spritesheet=hspritesheet,
-                sprites=sprites,
-                sprite_size=(
-                    head_data["Main"].get("size", None) or shared.game_data.sprite_size
-                ),
-                default_sprite=default_sprite,
-                parent=NodePath(),
-                default_action=default_action,
+                sprite_sizes=head_sizes,
+                scale=shared.game_data.node_scale,
             )
+
+            for sprite_name in list(sprites):
+                item = p3dss.SpritesheetItem(
+                    name=sprite_name,
+                    sprites=sprites[sprite_name]["sprites"],
+                    loop=sprites[sprite_name].get("loop", False),
+                    playback_speed=sprites[sprite_name].get(
+                        "speed", shared.game_data.playback_speed
+                    ),
+                    reset_on_complete=True,
+                )
+                head.add_item(item)
+
+            head.set_default(list(sprites)[0])
 
             # Depending on values, sprite may render slightly different.
             # Been told that it happens because of lack of antialiasing #TODO
@@ -146,14 +168,7 @@ class Creature(entity2d.Entity2D):
             position = tuple(head_data["Main"].get("position", (0, 0, 0)))
             parts.append(entity2d.VisualsNode(head, position, HEAD_HEIGHT, 0, True))
 
-        # #TODO: since all entities would have one shadow, maybe we should keep
-        # it pre-generated somewhere else?
-        shadow_texture = shared.assets.sprite["shadow"]
-        shadow_texture.set_wrap_u(Texture.WM_clamp)
-        shadow_texture.set_wrap_v(Texture.WM_clamp)
-        shadow_frame = CardMaker(f"{name}_shadow")
         hitbox_size = hitbox_size or shared.game_data.hitbox_size
-        shadow_frame.set_frame(-hitbox_size, hitbox_size, -hitbox_size, hitbox_size)
 
         # its collision shape is capsule and not sphere, coz this way it will be
         # possible to hit things somewhat consistently regardless of their size
@@ -175,14 +190,19 @@ class Creature(entity2d.Entity2D):
             animated_parts=parts,
         )
 
-        shadow_node = self.node.attach_new_node(shadow_frame.generate())
-        shadow_node.set_texture(shadow_texture)
-        shadow_node.set_transparency(1)
-        # without it shadow may be invisible
-        # shadow_node.set_two_sided(True)
-        self.shadow = shadow_node
-        # Attaching it to collision node and setting height together didnt work
-        self.shadow.set_pos(0, 0, -shared.game_data.entity_layer + 0.1)
+        # #TODO: since all entities would have one shadow, maybe we should keep
+        # it pre-generated somewhere else?
+        self.shadow = p3dss.make_sprite_node(
+            sprite=shared.assets.sprite["shadow"],
+            size=(hitbox_size, hitbox_size),
+            name=f"{name}_shadow",
+            is_transparent=True,
+            # Toggle this in case shadow appears invisible
+            is_two_sided=False,
+            parent=self.node,
+            # Attaching it to collision node and setting height together didnt work
+            position=(0, 0, -shared.game_data.entity_layer + 0.1),
+        )
 
         # Moving visuals a bit higher to make shadow appear somewhat on center
         self.visuals.set_pos(0, 0, 3)

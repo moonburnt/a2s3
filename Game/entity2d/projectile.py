@@ -61,7 +61,9 @@ class Projectile(entity2d.Entity2D):
         if assets:
             sheet = data["Assets"].get("sprite", None)
             animations = data.get("Animations", None)
+            sprite_sizes = data.get("size", None)
         else:
+            sprite_sizes = None
             sheet = None
             animations = None
 
@@ -81,13 +83,25 @@ class Projectile(entity2d.Entity2D):
 
         parts = []
         if spritesheet and animations:
-            body = p3dss.SpritesheetObject(
+            body = p3dss.SpritesheetNode(
                 name=f"{name}_body",
                 spritesheet=spritesheet,
-                sprites=animations,
-                sprite_size=shared.game_data.sprite_size,
-                parent=NodePath(),
+                sprite_sizes=sprite_sizes or shared.game_data.sprite_size,
+                # #TODO: add ability to set custom scale
+                scale=shared.game_data.node_scale,
             )
+
+            for sprite_name in list(animations):
+                item = p3dss.SpritesheetItem(
+                    name=sprite_name,
+                    sprites=animations[sprite_name]["sprites"],
+                    loop=animations[sprite_name].get("loop", False),
+                    playback_speed=animations[sprite_name].get(
+                        "speed", shared.game_data.playback_speed
+                    ),
+                )
+                body.add_item(item)
+
             parts.append(entity2d.VisualsNode(body, (0, 0, 0), 0.0, 0, False))
 
         # #TODO: make shape configurable (say, for rays)

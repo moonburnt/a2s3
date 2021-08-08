@@ -12,9 +12,9 @@ sprite = "mine"
 #Because of how this one's nature, the need for explosion animation is obvious
 #however right now game doesnt support custom death anims for projectiles. #TODO
 [Animations.default]
-sprites = [ 0, 0 ]
+sprites = [ 0 ]
 loop = false
 
 [Animations.dying]
-sprites = [ 4, 7 ]
+sprites = [ 4, 5, 6, 7 ]
 loop = false

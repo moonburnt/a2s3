@@ -16,7 +16,7 @@ sprite = "slash"
 
 #In case sprite isnt set, this whole category will be ignored. Otherwise mandatory
 [Animations.default]
-sprites = [ 0, 3 ]
+sprites = [ 0, 1, 2, 3 ]
 loop = false
 
 #It may also be good to optionally attach some anim that plays on hit.

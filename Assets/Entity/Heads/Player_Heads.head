@@ -17,35 +17,33 @@ default_head = "Ushanka"
 # static but animated - animations should come after and be named the same way
 # as body's animations
 [Animations.Ushanka.idle]
-sprites = 0
+sprites = [ 0 ]
+speed = 0.4
 
 [Animations.Ushanka.attack]
-sprites = 1
-length = 0.4
+sprites = [ 1 ]
 reset_on_complete = true
 
 [Animations.Punk.idle]
-sprites = 2
+sprites = [ 2 ]
+speed = 0.4
 
 [Animations.Punk.attack]
-sprites = 3
-length = 0.4
+sprites = [ 3 ]
 reset_on_complete = true
 
 [Animations.Emo.idle]
-sprites = 4
-length = 0.4
-reset_on_complete = true
+sprites = [ 4 ]
+speed = 0.4
 
 [Animations.Emo.attack]
-sprites = 5
-length = 0.4
+sprites = [ 5 ]
 reset_on_complete = true
 
 [Animations.Afro.idle]
-sprites = 6
+speed = 0.4
+sprites = [ 6 ]
 
 [Animations.Afro.attack]
-sprites = 7
-length = 0.4
+sprites = [ 7 ]
 reset_on_complete = true

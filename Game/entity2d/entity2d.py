@@ -15,7 +15,7 @@
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
 from panda3d.core import CollisionNode, BitMask32, PandaNode, NodePath
-import p3dss
+from p3dss import SpritesheetNode
 from collections import namedtuple
 from Game import shared
 import logging
@@ -140,7 +140,7 @@ class Entity2D:
         """Attach provided visual part to node"""
         data = VisualsNode(instance, position, layer, scale, remove_on_death)
 
-        if isinstance(instance, p3dss.SpritesheetObject):
+        if isinstance(instance, SpritesheetNode):
             self.animated_parts.append(data)
         else:
             self.static_parts.append(data)
@@ -148,7 +148,7 @@ class Entity2D:
     def change_animation(self, action):
         """Change animation of self.animated_parts items"""
         for item in self.animated_parts:
-            item.instance.switch(action)
+            item.instance.play(action)
         # log.debug(f"Changed animation of {self.name} to {action}")
 
     def change_direction(self, direction: str):

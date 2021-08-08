@@ -3,19 +3,16 @@ name = "Cuboid Body"
 spritesheet = "cuboid"
 
 [Animations.idle]
-sprites = [ 0, 0 ]
+sprites = [ 0 ]
 loop = true
 
 [Animations.move]
-sprites = [ 0, 3 ]
+sprites = [ 0, 1, 2, 3 ]
 loop = true
 
 [Animations.attack]
-sprites = [ 4, 7 ]
+sprites = [ 4, 5, 6, 7 ]
 loop = true
 
-[Animations.hurt]
-sprites = [ 8, 11 ]
-
 [Animations.dying]
-sprites = [ 12, 15 ]
+sprites = [ 8, 9, 10, 11 ]

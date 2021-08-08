@@ -198,8 +198,8 @@ def entity_with_entity(collision: CollisionEntry):
 
     # Ensuring that we can push target (its not turret or something)
     if not target.get_python_tag("is_pushable") or not hitter.get_python_tag("mov_spd"):
-        # TODO: maybe if target isnt pushable, hitter shouldnt be able to move 
-        # into target's direction? 
+        # TODO: maybe if target isnt pushable, hitter shouldnt be able to move
+        # into target's direction?
         return
 
     # Pushing target into general direction of hitter's movement with hitter's

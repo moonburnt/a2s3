@@ -9,4 +9,4 @@ angle = 90
 sprite = "bullet"
 
 [Animations.default]
-sprites = 0
+sprites = [ 0 ]

@@ -34,6 +34,9 @@ game_data.name = "A2S3"
 # (x, y) of sprites, to avoid specifying these manually except when necessary.
 # Also to enable autoadjusting of values for things that rely on these
 game_data.sprite_size = (32, 32)
+# Above is used to cut sprites. This one is used to set scale of SpritesheetNode
+game_data.node_scale = 0.5
+# Default size of entity's hitbox
 game_data.hitbox_size = game_data.sprite_size[0] / 2
 # The height at which character's object will appear. This needs to be half of
 # character object's y, because character's placement counts from center of it.
@@ -43,6 +46,8 @@ game_data.hitbox_size = game_data.sprite_size[0] / 2
 game_data.entity_layer = game_data.sprite_size[1] / 2
 # Floor layer is always zero. Because yes
 game_data.floor_layer = 0
+# Default speed of playback of SpritesheetNode items
+game_data.playback_speed = 0.1
 
 # These are collision category names, used to mark multiple objects of same type
 # to always act the same on collision with other type (and thus make writing of

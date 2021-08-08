@@ -3,16 +3,16 @@ name = "Ranger Body"
 spritesheet = "ranger"
 
 [Animations.idle]
-sprites = [ 0, 0 ]
+sprites = [ 0 ]
 loop = true
 
 [Animations.move]
-sprites = [ 4, 7 ]
+sprites = [ 4, 5, 6, 7 ]
 loop = true
 
 [Animations.attack]
-sprites = [ 8, 11 ]
+sprites = [ 8, 9, 10, 11 ]
 loop = true
 
 [Animations.dying]
-sprites = [ 12, 15 ]
+sprites = [ 12, 13, 14, 15 ]
