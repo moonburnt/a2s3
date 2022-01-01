@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 ## a2s3 - action arena game, written in python + panda3d
 ## Copyright (c) 2021 moonburnt
 ##

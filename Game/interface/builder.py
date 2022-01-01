@@ -24,7 +24,7 @@ from direct.gui.DirectGui import (
     DGG,
 )
 from collections import namedtuple
-from .parts import *
+from Game.interface.parts import *
 from Game import shared
 import logging
 

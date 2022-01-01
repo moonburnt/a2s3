@@ -14,9 +14,9 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-from .parts import *
-from .builder import *
-from .interfaces import *
+from Game.interface.parts import *
+from Game.interface.builder import *
+from Game.interface.interfaces import *
 
 import logging
 

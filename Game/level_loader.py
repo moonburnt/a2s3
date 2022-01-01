@@ -20,7 +20,7 @@ import logging
 from panda3d.core import CollisionTraverser, CollisionHandlerEvent, PandaNode, Vec3
 from time import time
 from random import randint, choice
-from . import entity2d, map_loader, shared, interface, collision_events
+from Game import entity2d, map_loader, shared, interface, collision_events
 
 log = logging.getLogger(__name__)
 

@@ -20,8 +20,8 @@
 # Game.common import shared"), coz otherwise variables get copied and not linked,
 # which breaks whole "cross-module sharing" thing and kills purpose of this
 
-from .. import assets_loader, userdata
-from . import classes
+from Game import assets_loader, userdata
+from Game.common import classes
 from copy import deepcopy
 import logging
 

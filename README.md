@@ -2,13 +2,13 @@
 
 ## Description:
 
-**a2s3** is work-in-progress action arena game, written in python + panda3d. For
-now there is not much to do, but the goal is to make a survival wave-based arena,
-where you fight hordes of enemies in order to get to the top of leaderboard.
+**a2s3** is a simple action arena game, written in python + panda3d. There is
+not much to do, but the goal was to make a survival wave-based arena, where you
+fight hordes of enemies in order to get to the top of leaderboard.
 
 ## Project's Status:
 
-**Early pre-alpha**
+**Cancelled. Feel free to fork!**
 
 ## Contributing:
 
@@ -33,7 +33,7 @@ these things in mind and format related stuff accordingly.
 - Install all dependencies with pip (no setup.py available yet):
 `pip install -r requirements.txt`
 - Run the game:
-`./play`
+`python -m Game`
 
 ## Compiling natively for your platform:
 

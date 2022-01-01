@@ -20,7 +20,7 @@ from os import makedirs
 from os.path import join, isfile
 from sys import exit
 from panda3d.core import loadPrcFileData
-from . import assets_loader
+from Game import assets_loader
 import json
 import logging
 

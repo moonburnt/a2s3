@@ -20,7 +20,7 @@ import logging
 from panda3d.core import NodePath
 from direct.gui.OnscreenText import OnscreenText, TextNode
 from direct.gui.OnscreenImage import OnscreenImage
-from .parts import *
+from Game.interface.parts import *
 from Game import shared
 
 log = logging.getLogger(__name__)

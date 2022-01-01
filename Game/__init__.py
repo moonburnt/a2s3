@@ -14,17 +14,17 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.txt
 
-from .common import *
-from .game_window import *
-from .entity2d import *
-from .map_loader import *
-from .assets_loader import *
-from .collision_events import *
-from .level_loader import *
-from .userdata import *
-from .interface import *
-from .music_manager import *
-from .skill import *
+from Game.common import *
+from Game.game_window import *
+from Game.entity2d import *
+from Game.map_loader import *
+from Game.assets_loader import *
+from Game.collision_events import *
+from Game.level_loader import *
+from Game.userdata import *
+from Game.interface import *
+from Game.music_manager import *
+from Game.skill import *
 
 import logging
 
