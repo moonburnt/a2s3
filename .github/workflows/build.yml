@@ -4,7 +4,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    name: ${{ matrix.os }} ${{ matrix.arch }} python ${{ matrix.python-version }}
+    name: ${{ matrix.target-platform }} python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -12,6 +12,7 @@ jobs:
         os: ["ubuntu-latest"]
         arch: [x86_64]
         python-version: ["3.8"]
+        target-platform: ["manylinux2010_x86_64", "win_amd64"]
 
     defaults:
       run:
@@ -40,25 +41,11 @@ jobs:
 
     - name: Build
       run: |
-        python setup.py build_apps
+        python setup.py build_apps --build-base ./build --platforms ${{ matrix.target-platform }}
 
-    - name: Upload Linux Binaries
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: Linux-${{ matrix.arch }}
-        path: build/manylinux1_x86_64/
-        if-no-files-found: error
-
-    - name: Upload Windows Binaries
-      uses: actions/upload-artifact@v3
-      with:
-        name: Windows-${{ matrix.arch }}
-        path: build/win_amd64/
-        if-no-files-found: error
-
-    - name: Upload MacOS Binaries
-      uses: actions/upload-artifact@v3
-      with:
-        name: MacOS-${{ matrix.arch }}
-        path: build/macosx_10_9_x86_64/
+        name: ${{ matrix.target-platform }}
+        path: build/${{ matrix.target-platform }}/
         if-no-files-found: error
