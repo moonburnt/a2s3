@@ -2,6 +2,7 @@ from setuptools import setup
 from os.path import join
 
 setup(
+    packages=["Game"],
     name = "A2S3",
     options = {
         "build_apps": {

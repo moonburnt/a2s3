@@ -1,0 +1,64 @@
+name: Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} ${{ matrix.arch }} python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        arch: [x86_64]
+        python-version: ["3.8"]
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        lfs: true
+
+    - name: Checkout LFS objects
+      run: git lfs checkout
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Setup Environment
+      run: |
+        # Update pip
+        python -m pip install -U pip setuptools wheel
+
+        # Install dependencies
+        pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        python setup.py build_apps
+
+    - name: Upload Linux Binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: Linux-${{ matrix.arch }}
+        path: build/manylinux1_x86_64/
+        if-no-files-found: error
+
+    - name: Upload Windows Binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows-${{ matrix.arch }}
+        path: build/win_amd64/
+        if-no-files-found: error
+
+    - name: Upload MacOS Binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: MacOS-${{ matrix.arch }}
+        path: build/macosx_10_9_x86_64/
+        if-no-files-found: error

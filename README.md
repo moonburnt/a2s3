@@ -1,5 +1,7 @@
 # a2s3
 
+[![Build](https://github.com/moonburnt/a2s3/actions/workflows/build.yml/badge.svg)](https://github.com/moonburnt/a2s3/actions/workflows/build.yml)
+
 ## Description:
 
 **a2s3** is a simple action arena game, written in python + panda3d. There is
@@ -60,7 +62,7 @@ python setup.py build_apps
 ```
 
 If everything has been done correctly - game's binaries will be generated into
-**build/{name-of-your-platform}**
+**build/{name-of-your-platform}**.
 
 ## TODO:
 
