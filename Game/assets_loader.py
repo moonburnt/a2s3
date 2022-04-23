@@ -218,7 +218,7 @@ class AssetsLoader:
                         sprite_data[sprite.get_name()] = sprite
 
                     # maybe should do that after removal of original file?
-                    textures = textures | sprite_data
+                    textures = {**textures, **sprite_data}
 
                     # textures[f"{sheet}_sprites"] = sprites
                     textures[sheet] = sprites
@@ -238,7 +238,7 @@ class AssetsLoader:
             data[name_without_extension] = loader.load_music(item)
 
         log.debug("Updating music storage")
-        self.music = self.music | data
+        self.music = {**self.music, **data}
 
     def load_sfx(self, pathtodir: str, extension: str = ".ogg"):
         """Load and update currently known sfx from provided directory and its subdirs"""
@@ -251,56 +251,56 @@ class AssetsLoader:
             data[name_without_extension] = loader.load_sfx(item)
 
         log.debug("Updating sfx storage")
-        self.sfx = self.sfx | data
+        self.sfx = {**self.sfx, **data}
 
     def load_sprite(self, pathtodir: str, extension: str = ".png"):
         """Load and update currently known sprites from provided directory"""
         data = self.get_textures(pathtodir)
 
         log.debug("Updating sprite storage")
-        self.sprite = self.sprite | data
+        self.sprite = {**self.sprite, **data}
 
     def load_classes(self, pathtodir: str):
         """Load and update configuration files of player classes from provided
         directory and its subdirs"""
         data = self.get_tomls(pathtodir, ".player")
         log.debug("Updating player classes storage")
-        self.classes = self.classes | data
+        self.classes = {**self.classes, **data}
 
     def load_enemies(self, pathtodir: str):
         """Load and update enemy configuration files from provided directory
         and its subdirs"""
         data = self.get_tomls(pathtodir, ".enemy")
         log.debug("Updating enemies storage")
-        self.enemies = self.enemies | data
+        self.enemies = {**self.enemies, **data}
 
     def load_skills(self, pathtodir: str):
         """Load and update skill configuration files from provided directory
         and its subdirs"""
         data = self.get_tomls(pathtodir, ".skill")
         log.debug("Updating skills storage")
-        self.skills = self.skills | data
+        self.skills = {**self.skills, **data}
 
     def load_projectiles(self, pathtodir: str):
         """Load and update projectile configuration files from provided directory
         and its subdirs"""
         data = self.get_tomls(pathtodir, ".projectile")
         log.debug("Updating projectiles storage")
-        self.projectiles = self.projectiles | data
+        self.projectiles = {**self.projectiles, **data}
 
     def load_heads(self, pathtodir: str):
         """Load and update head configuration files from provided directory
         and its subdirs"""
         data = self.get_tomls(pathtodir, ".head")
         log.debug("Updating heads storage")
-        self.heads = self.heads | data
+        self.heads = {**self.heads, **data}
 
     def load_bodies(self, pathtodir: str):
         """Load and update body configuration files from provided directory
         and its subdirs"""
         data = self.get_tomls(pathtodir, ".body")
         log.debug("Updating bodies storage")
-        self.bodies = self.bodies | data
+        self.bodies = {**self.bodies, **data}
 
     def load_all(self):
         """Load all assets from default paths"""
