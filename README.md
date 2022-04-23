@@ -29,15 +29,38 @@ these things in mind and format related stuff accordingly.
 
 ## How to Play:
 
-- Clone git repo locally (no release versions available yet)
-- Install all dependencies with pip (no setup.py available yet):
-`pip install -r requirements.txt`
-- Run the game:
-`python -m Game`
+```
+# Clone git repo locally
+git clone https://github.com/moonburnt/a2s3.git
 
-## Compiling natively for your platform:
+# Get into game's directory
+cd A2S3
 
-*Not yet*
+# Initialize and activate virtual environment
+virtualenv .venv && source .venv/bin/activate
+
+# Install all required dependencies
+pip install -r requirements.txt
+
+# Run the game
+python -m Game
+```
+
+## How to Compile:
+
+Since this is a python game, its not necessary to compile it in order to play.
+However, if you want to create an executable to use on systems without python
+being preinstalled - you can surely do that.
+
+In order to achieve this, you must do all steps from "How to Play" part, except
+from the last one. Then do the following:
+
+```
+python setup.py build_apps
+```
+
+If everything has been done correctly - game's binaries will be generated into
+**build/{name-of-your-platform}**
 
 ## TODO:
 
