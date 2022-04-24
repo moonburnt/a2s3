@@ -4,15 +4,15 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    name: ${{ matrix.target-platform }} python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest"]
-        arch: [x86_64]
-        python-version: ["3.8"]
-        target-platform: ["manylinux2010_x86_64", "win_amd64"]
+        config:
+          - { name: "Linux x86_64", os: ubuntu-latest, python-version: "3.8", target-platform: "manylinux2010_x86_64" }
+          - { name: "Windows x86_64", os: windows-latest, python-version: "3.8", target-platform: "win_amd64" }
+
+    name: ${{ matrix.config.name }} python ${{ matrix.config.python-version }}
+    runs-on: ${{ matrix.config.os }}
 
     defaults:
       run:
@@ -26,10 +26,10 @@ jobs:
     - name: Checkout LFS objects
       run: git lfs checkout
 
-    - name: Setup Python ${{ matrix.python-version }}
+    - name: Setup Python ${{ matrix.config.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ matrix.config.python-version }}
 
     - name: Setup Environment
       run: |
@@ -41,11 +41,11 @@ jobs:
 
     - name: Build
       run: |
-        python setup.py build_apps --build-base ./build --platforms ${{ matrix.target-platform }}
+        python setup.py build_apps --build-base ./build --platforms ${{ matrix.config.target-platform }}
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.target-platform }}
-        path: build/${{ matrix.target-platform }}/
+        name: ${{ matrix.config.name }}
+        path: build/${{ matrix.config.target-platform }}/
         if-no-files-found: error
