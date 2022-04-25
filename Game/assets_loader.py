@@ -17,7 +17,11 @@
 # module where I specify functions related to loading game assets into memory
 
 from os import listdir
-from os.path import isfile, isdir, basename, join, splitext
+from os.path import isfile, isdir, basename, splitext
+
+# For the reasoning behind this rework, see documentation:
+# https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax
+from pathlib import Path
 from toml import load as tomload
 import json
 from panda3d.core import SamplerState
@@ -27,19 +31,19 @@ import logging
 log = logging.getLogger(__name__)
 
 GAME_DIR = "."
-ASSETS_DIR = join(GAME_DIR, "Assets")
-UI_DIR = join(ASSETS_DIR, "UI")
-SPRITE_DIR = join(ASSETS_DIR, "Sprites")
-MUSIC_DIR = join(ASSETS_DIR, "BGM")
-SFX_DIR = join(ASSETS_DIR, "SFX")
-ENTITY_DIR = join(ASSETS_DIR, "Entity")
-CLASSES_DIR = join(ENTITY_DIR, "Classes")
-ENEMIES_DIR = join(ENTITY_DIR, "Enemies")
-SKILLS_DIR = join(ENTITY_DIR, "Skills")
-PROJECTILES_DIR = join(ENTITY_DIR, "Projectiles")
-HEADS_DIR = join(ENTITY_DIR, "Heads")
-BODIES_DIR = join(ENTITY_DIR, "Bodies")
-FONTS_DIR = join(ASSETS_DIR, "Fonts")
+ASSETS_DIR = Path(GAME_DIR, "Assets")
+UI_DIR = Path(ASSETS_DIR, "UI")
+SPRITE_DIR = Path(ASSETS_DIR, "Sprites")
+MUSIC_DIR = Path(ASSETS_DIR, "BGM")
+SFX_DIR = Path(ASSETS_DIR, "SFX")
+ENTITY_DIR = Path(ASSETS_DIR, "Entity")
+CLASSES_DIR = Path(ENTITY_DIR, "Classes")
+ENEMIES_DIR = Path(ENTITY_DIR, "Enemies")
+SKILLS_DIR = Path(ENTITY_DIR, "Skills")
+PROJECTILES_DIR = Path(ENTITY_DIR, "Projectiles")
+HEADS_DIR = Path(ENTITY_DIR, "Heads")
+BODIES_DIR = Path(ENTITY_DIR, "Bodies")
+FONTS_DIR = Path(ASSETS_DIR, "Fonts")
 
 
 class AssetsLoader:
@@ -77,7 +81,7 @@ class AssetsLoader:
 
         for item in directory_content:
             log.debug(f"Processing {item}")
-            itempath = join(pathtodir, item)
+            itempath = Path(pathtodir, item)
             if isdir(itempath):
                 if include_subdirs:
                     log.debug(
